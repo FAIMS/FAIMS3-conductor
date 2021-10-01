@@ -22,11 +22,22 @@ process.on('unhandledRejection', error => {
 const app = express();
 
 app.get('/auth/:auth_id', (req, res) => {
-  passport.authenticate(req.params.auth_id)(req, res);
+  if (
+    typeof req.query?.state === 'string' ||
+    typeof req.query?.state === 'undefined'
+  ) {
+    passport.authenticate(req.params.auth_id)(req, res, (err?: {}) => {
+      throw err ?? Error('Authentication failed (next, no error)');
+    });
+  } else {
+    throw Error(
+      `state must be a string, or not set, not ${typeof req.query?.state}`
+    );
+  }
 });
 
 app.get(
-  '/auth/example/callback',
+  '/auth-return',
   passport.authenticate('oauth2', {failureRedirect: '/login'}),
   (req, res) => {
     // Successful authentication, redirect home.
