@@ -13,6 +13,10 @@ import {
   register_projects_created,
 } from './sync/state';
 import {auth_mechanisms} from './authconfig';
+import {NonUniqueProjectID} from './datamodel/core';
+import {getUserByEmail, updateUser} from './users';
+import {v4 as uuidv4} from 'uuid';
+import {PouchUser} from './datamodel/database';
 
 process.on('unhandledRejection', error => {
   console.error(error); // This prints error with stack included (as for normal errors)
@@ -20,6 +24,38 @@ process.on('unhandledRejection', error => {
 });
 
 const app = express();
+
+// Only parse query parameters into strings, not objects
+app.set('query parser', 'simple');
+
+app.post('/project/:project_id/invite/:role', async (req, res) => {
+  if (typeof req.query['email'] !== 'string') {
+    throw Error('Expected 1 string parameter email');
+  }
+  if (typeof req.query['role'] !== 'string') {
+    throw Error('Expected 1 string parameter role');
+  }
+  const email: string = req.query['email'];
+  const project_id: NonUniqueProjectID = req.params.project_id;
+  const role: string = req.query['role'];
+
+  // TODO: Check if you're authenticated
+
+  // Create a user with the email if it doesn't exist yet
+  const existing_user = (await getUserByEmail(email)) ?? {
+    _id: uuidv4(),
+    emails: [email],
+  };
+
+  // Append to the role list for the given project:
+
+  existing_user.roles = {
+    ...(existing_user.roles ?? {}),
+    [project_id]: [...(existing_user.roles?.[project_id] ?? []), role],
+  };
+
+  updateUser(existing_user);
+});
 
 app.get('/auth/:auth_id', (req, res) => {
   if (

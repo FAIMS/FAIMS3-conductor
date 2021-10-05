@@ -196,7 +196,12 @@ export type ProjectMetaObject =
   // | EncodedProjectUIModel
   EncodedProjectMetadata;
 
-export type PouchUser = {};
+export type PouchUser = {
+  _id: string;
+  emails: string[];
+  owned?: NonUniqueProjectID[];
+  roles?: {[NonUniqueProjectID: string]: string[]};
+};
 
 /*
  * Elements of a Project's dataDB can be any one of these,
