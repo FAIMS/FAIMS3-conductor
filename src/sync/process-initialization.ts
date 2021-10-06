@@ -49,9 +49,9 @@ import {SyncHandler} from './sync-handler';
 import {NonUniqueProjectID, resolve_project_id} from '../datamodel/core';
 const METADATA_DBNAME_PREFIX = 'metadata-';
 const DATA_DBNAME_PREFIX = 'data-';
-const DIRECTORY_TIMEOUT = 2000;
-const LISTINGS_TIMEOUT = 2000;
-const PROJECT_TIMEOUT = 2000;
+const DIRECTORY_TIMEOUT = 6000;
+const LISTINGS_TIMEOUT = 6000;
+const PROJECT_TIMEOUT = 6000;
 
 export async function process_directory(
   directory_connection_info: ConnectionInfo
@@ -259,7 +259,7 @@ export async function process_listing(listing_object: ListingsObject) {
     projects_dbs,
     project_sync_handler,
     // Filters to only projects that are active
-    unupdated_projects_in_this_listing.map(v => v._id)
+    {doc_ids: unupdated_projects_in_this_listing.map(v => v._id)}
   );
 }
 

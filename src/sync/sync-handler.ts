@@ -19,7 +19,7 @@
  */
 interface EmissionsArg {
   active(): unknown;
-  paused(err?: {}): unknown;
+  paused(): unknown;
   error(err: {}): unknown;
 }
 /**
@@ -77,7 +77,11 @@ export class SyncHandler {
         */
         this.lastActive = undefined;
         this.clearTimeout();
-        this.emissions.paused(err);
+        if (err !== undefined) {
+          this.emissions.error(err);
+        } else {
+          this.emissions.paused();
+        }
       })
     );
     db.on(
