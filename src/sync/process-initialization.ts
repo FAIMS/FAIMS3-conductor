@@ -264,8 +264,11 @@ export async function process_listing(listing_object: ListingsObject) {
     projects_connection,
     projects_dbs,
     project_sync_handler,
-    // Filters to only projects that are active
-    {doc_ids: unupdated_projects_in_this_listing.map(v => v._id)}
+    // We no longer use this filter, as it cannot be changed
+    // and the first call to unupdated_projects_in_this_listing may go
+    // stale so new projects won't come in (and in fact existing ones
+    // don't come in either.)
+    // {doc_ids: unupdated_projects_in_this_listing.map(v => v._id)}
   );
 }
 
