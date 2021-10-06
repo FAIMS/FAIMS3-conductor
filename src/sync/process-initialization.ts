@@ -92,7 +92,8 @@ export async function process_directory(
   events.emit('directory_local', unupdated_listings_in_this_directory);
 
   if (directory_db.remote !== null) {
-    return; //Already hooked up
+    console.debug('Directory already hooked up.');
+    return;
   }
   const directory_paused = ConnectionInfo_create_pouch<ListingsObject>(
     directory_connection_info
@@ -128,6 +129,7 @@ export async function process_directory(
     options: {},
   };
 
+  console.debug('Setting up directory local connection');
   setLocalConnection(
     directory_db as unknown as Parameters<typeof setLocalConnection>[0]
   );

@@ -317,6 +317,7 @@ export function setLocalConnection<Content extends {}>(
   db_info: LocalDB<Content> & {remote: LocalDBRemote<Content>}
 ) {
   const options = db_info.remote.options;
+  console.debug("Setting local connection:", db_info);
 
   if (db_info.is_sync && db_info.remote.connection === null) {
     // Start a new connection
@@ -347,6 +348,10 @@ export function setLocalConnection<Content extends {}>(
     db_info.remote.handler!.detach(db_info.remote.connection);
     db_info.remote.connection.cancel();
     db_info.remote.connection = null;
+    console.debug('Removed sync for', db_info);
+  }
+  else {
+    console.error("This is an odd state", db_info);
   }
 }
 
