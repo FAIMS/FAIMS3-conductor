@@ -1,5 +1,5 @@
 import express from 'express';
-import {self_listing_info, users_db} from './sync/databases';
+import {users_db} from './sync/databases';
 import passport from 'passport';
 import OAuth2Strategy from 'passport-oauth2';
 import {initialize} from './sync/initialize';
@@ -42,16 +42,17 @@ app.post('/project/:project_id/invite/:role', async (req, res) => {
   // TODO: Check if you're authenticated
 
   // Create a user with the email if it doesn't exist yet
-  const existing_user = (await getUserByEmail(email)) ?? {
-    _id: uuidv4(),
+  const user_id = uuidv4();
+  const existing_user: PouchUser = (await getUserByEmail(email)) ?? {
+    _id: 'org.couchdb.user:' + user_id,
+    name: user_id,
     emails: [email],
   };
 
   // Append to the role list for the given project:
-
-  existing_user.roles = {
-    ...(existing_user.roles ?? {}),
-    [project_id]: [...(existing_user.roles?.[project_id] ?? []), role],
+  existing_user.project_roles = {
+    ...(existing_user.project_roles ?? {}),
+    [project_id]: [...(existing_user.project_roles?.[project_id] ?? []), role],
   };
 
   updateUser(existing_user);

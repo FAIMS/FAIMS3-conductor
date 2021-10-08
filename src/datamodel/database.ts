@@ -196,11 +196,13 @@ export type ProjectMetaObject =
   // | EncodedProjectUIModel
   EncodedProjectMetadata;
 
+// https://docs.couchdb.org/en/stable/intro/security.html#users-documents
 export type PouchUser = {
   _id: string;
+  name: string;
   emails: string[];
   owned?: NonUniqueProjectID[];
-  roles?: {[NonUniqueProjectID: string]: string[]};
+  project_roles?: {[NonUniqueProjectID: string]: string[]};
 };
 
 /*
