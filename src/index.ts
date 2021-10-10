@@ -58,6 +58,11 @@ app.post('/project/:project_id/invite/:role', async (req, res) => {
   updateUser(existing_user);
 });
 
+app.get('/auth', (req, res)=> {
+  // Allow the user to decide what auth mechanism to use
+  res.send()
+})
+
 app.get('/auth/:auth_id', (req, res) => {
   if (
     typeof req.query?.state === 'string' ||
