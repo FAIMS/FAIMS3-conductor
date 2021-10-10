@@ -1,6 +1,8 @@
 import OAuth2Strategy from 'passport-oauth2';
 import {AuthInfo} from './datamodel/database';
 
+export const secret = 'Your secret phrase here.';
+
 export const auth_mechanisms: {
   [auth_id: string]: {
     public: AuthInfo;
