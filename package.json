@@ -8,6 +8,7 @@
     "clean": "gts clean",
     "compile": "tsc",
     "fix": "gts fix",
+    "prestart": "npm run-script compile",
     "start": "node .",
     "watch": "nodemon --ignore build --ext ts --exec 'tsc --incremental && node .'"
   },
