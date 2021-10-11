@@ -13,6 +13,7 @@
     "watch": "nodemon --ignore build --ext ts --exec 'tsc --incremental && node .'"
   },
   "dependencies": {
+    "@types/jsonwebtoken": "^8.5.5",
     "@types/passport": "^1.0.7",
     "@types/passport-oauth2": "^1.4.11",
     "@types/pouchdb": "^6.4.0",
