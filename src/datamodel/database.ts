@@ -201,7 +201,9 @@ export type PouchUser = {
   _id: string;
   name: string;
   emails: string[];
+  type: 'user';
   owned?: NonUniqueProjectID[];
+  roles: [];
   project_roles?: {[NonUniqueProjectID: string]: string[]};
 };
 

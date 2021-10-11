@@ -30,7 +30,7 @@ const app = express();
 app.set('query parser', 'simple');
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.post('/project/:project_id/invite/:role', async (req, res) => {
+app.post('/project/:project_id/invite', async (req, res) => {
   if (typeof req.body['email'] !== 'string') {
     throw Error('Expected 1 string parameter email');
   }
@@ -48,6 +48,8 @@ app.post('/project/:project_id/invite/:role', async (req, res) => {
   const existing_user: PouchUser = (await getUserByEmail(email)) ?? {
     _id: 'org.couchdb.user:' + user_id,
     name: user_id,
+    type: 'user',
+    roles: [],
     emails: [email],
   };
 

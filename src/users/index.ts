@@ -3,7 +3,7 @@ import {users_db} from '../sync/databases';
 
 export async function getUserByEmail(email: string): Promise<null | PouchUser> {
   const result = await users_db.find({
-    selector: {emails: {$elemMatch: email}},
+    selector: {emails: {$elemMatch: {$eq: email}}},
   });
   if (result.docs.length === 0) {
     return null;
