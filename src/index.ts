@@ -17,6 +17,7 @@ import {NonUniqueProjectID} from './datamodel/core';
 import {getUserByEmail, updateUser} from './users';
 import {v4 as uuidv4} from 'uuid';
 import {PouchUser} from './datamodel/database';
+import bodyParser from 'body-parser';
 
 process.on('unhandledRejection', error => {
   console.error(error); // This prints error with stack included (as for normal errors)
@@ -27,17 +28,18 @@ const app = express();
 
 // Only parse query parameters into strings, not objects
 app.set('query parser', 'simple');
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.post('/project/:project_id/invite/:role', async (req, res) => {
-  if (typeof req.query['email'] !== 'string') {
+  if (typeof req.body['email'] !== 'string') {
     throw Error('Expected 1 string parameter email');
   }
-  if (typeof req.query['role'] !== 'string') {
+  if (typeof req.body['role'] !== 'string') {
     throw Error('Expected 1 string parameter role');
   }
-  const email: string = req.query['email'];
+  const email: string = req.body['email'];
   const project_id: NonUniqueProjectID = req.params.project_id;
-  const role: string = req.query['role'];
+  const role: string = req.body['role'];
 
   // TODO: Check if you're authenticated
 
