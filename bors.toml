@@ -1,6 +1,6 @@
 status = [
   "build (lts/*, false)",
-  "test (lts/*, false)",
+#  "test (lts/*, false)", # commented until we create integration tests
   "license",
 #  "DCO",
 ]

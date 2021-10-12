@@ -111,3 +111,7 @@ active
 directory
 .DS_Store
 staging
+*data_dummy_listing||*
+local_auth/
+local_state/
+projects_dummy_listing/
