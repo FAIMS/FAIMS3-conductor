@@ -13,28 +13,17 @@
  * See, the License, for the specific language governing permissions and
  * limitations under the License.
  *
- * Filename: index.ts
+ * Filename: core.ts
  * Description:
  *   This module exports the configuration of the build, including things like
  *   which server to use and whether to include test data
  */
 
-import {PouchUser} from '../datamodel/database';
-import {users_db} from '../sync/databases';
+import express from 'express';
+import bodyParser from 'body-parser';
 
-export async function getUserByEmail(email: string): Promise<null | PouchUser> {
-  const result = await users_db.find({
-    selector: {emails: {$elemMatch: {$eq: email}}},
-  });
-  if (result.docs.length === 0) {
-    return null;
-  } else if (result.docs.length === 1) {
-    return result.docs[0];
-  } else {
-    throw Error(`Multiple conflicting users with email ${email}`);
-  }
-}
+export const app = express();
 
-export async function updateUser(user: PouchUser): Promise<void> {
-  await users_db.put(user);
-}
+// Only parse query parameters into strings, not objects
+app.set('query parser', 'simple');
+app.use(bodyParser.urlencoded({extended: true}));
