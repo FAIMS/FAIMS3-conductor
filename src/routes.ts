@@ -1,3 +1,24 @@
+/*
+ * Copyright 2021 Macquarie University
+ *
+ * Licensed under the Apache License Version 2.0 (the, "License");
+ * you may not use, this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing software
+ * distributed under the License is distributed on an "AS IS" BASIS
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND either express or implied.
+ * See, the License, for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Filename: routes.ts
+ * Description:
+ *   This module exports the configuration of the build, including things like
+ *   which server to use and whether to include test data
+ */
+
 import passport from 'passport';
 import {v4 as uuidv4} from 'uuid';
 
@@ -41,10 +62,10 @@ app.post('/project/:project_id/invite', async (req, res) => {
   updateUser(existing_user);
 });
 
-app.get('/auth', (req, res)=> {
+app.get('/auth', (req, res) => {
   // Allow the user to decide what auth mechanism to use
-  res.send()
-})
+  res.send();
+});
 
 app.get('/auth/:auth_id', (req, res) => {
   if (
@@ -74,6 +95,6 @@ app.get('/', async (req, res) => {
   res.send(await users_db.allDocs({include_docs: true, endkey: '_'}));
 });
 
-app.get('/up', function(req, res) {
-  res.status(200).json({ up: 'true' });
+app.get('/up', (req, res) => {
+  res.status(200).json({up: 'true'});
 });
