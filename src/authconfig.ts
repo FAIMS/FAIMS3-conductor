@@ -1,5 +1,24 @@
 import OAuth2Strategy from 'passport-oauth2';
-import {AuthInfo} from './datamodel/database';
+import {
+  DIRECTORY_PROTOCOL,
+  DIRECTORY_HOST,
+  DIRECTORY_PORT,
+  DIRECTORY_AUTH,
+} from './buildconfig';
+import {AuthInfo, ListingsObject} from './datamodel/database';
+
+export const cluster_info: Omit<ListingsObject, 'auth_mechanisms'> = {
+  _id: 'dummy_listing',
+  name: 'Dummy Listing (Replace me)',
+  description: 'This listing info is supposed to be replaced with config file',
+  projects_db: {
+    proto: DIRECTORY_PROTOCOL,
+    host: DIRECTORY_HOST,
+    port: DIRECTORY_PORT,
+    db_name: 'projects',
+    auth: DIRECTORY_AUTH,
+  },
+};
 
 export const auth_mechanisms: {
   [auth_id: string]: {

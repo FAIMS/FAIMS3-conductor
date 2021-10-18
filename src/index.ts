@@ -1,5 +1,5 @@
 import express from 'express';
-import {self_listing_info, users_db} from './sync/databases';
+import {projects_dbs, self_listing_info, users_db} from './sync/databases';
 import passport from 'passport';
 import OAuth2Strategy from 'passport-oauth2';
 import {initialize} from './sync/initialize';
@@ -83,6 +83,15 @@ app.get(
 
 app.get('/', async (req, res) => {
   res.send(await users_db.allDocs({include_docs: true, endkey: '_'}));
+});
+
+app.get('/projects', async (req, res) => {
+  res.send(
+    await projects_dbs[self_listing_info._id].local.allDocs({
+      include_docs: true,
+      endkey: '_',
+    })
+  );
 });
 
 PouchDB.plugin(PouchDBFind);

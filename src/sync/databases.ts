@@ -19,7 +19,7 @@
  */
 
 import PouchDB from 'pouchdb';
-import {auth_mechanisms} from '../authconfig';
+import {auth_mechanisms, cluster_info} from '../authconfig';
 import {
   DIRECTORY_PROTOCOL,
   DIRECTORY_HOST,
@@ -54,16 +54,7 @@ export const directory_connection_info: ConnectionInfo = {
 };
 
 export const self_listing_info: ListingsObject = {
-  _id: 'dummy_listing',
-  name: 'Dummy Listing (Replace me)',
-  description: 'This listing info is supposed to be replaced with config file',
-  projects_db: {
-    proto: DIRECTORY_PROTOCOL,
-    host: DIRECTORY_HOST,
-    port: DIRECTORY_PORT,
-    db_name: 'projects',
-    auth: DIRECTORY_AUTH,
-  },
+  ...cluster_info,
   auth_mechanisms: Object.keys(auth_mechanisms).reduce((acc, auth_id) => {
     acc[auth_id] = auth_mechanisms[auth_id].public;
     return acc;
