@@ -62,39 +62,53 @@ app.post('/project/:project_id/invite', async (req, res) => {
   updateUser(existing_user);
 });
 
-app.get('/auth', (req, res) => {
+app.get('/auth/', (req, res) => {
   // Allow the user to decide what auth mechanism to use
   res.send();
 });
 
-app.get('/auth/:auth_id', (req, res) => {
-  if (
-    typeof req.query?.state === 'string' ||
-    typeof req.query?.state === 'undefined'
-  ) {
-    passport.authenticate(req.params.auth_id)(req, res, (err?: {}) => {
-      throw err ?? Error('Authentication failed (next, no error)');
-    });
-  } else {
-    throw Error(
-      `state must be a string, or not set, not ${typeof req.query?.state}`
-    );
-  }
-});
-
-app.get(
-  '/auth-return',
-  passport.authenticate('oauth2', {failureRedirect: '/login'}),
-  (req, res) => {
-    // Successful authentication, redirect home.
-    res.redirect('/');
-  }
-);
+//app.get('/auth/:auth_id/', (req, res) => {
+//  if (
+//    typeof req.query?.state === 'string' ||
+//    typeof req.query?.state === 'undefined'
+//  ) {
+//    passport.authenticate(req.params.auth_id)(req, res, (err?: {}) => {
+//      throw err ?? Error('Authentication failed (next, no error)');
+//    });
+//  } else {
+//    throw Error(
+//      `state must be a string, or not set, not ${typeof req.query?.state}`
+//    );
+//  }
+//});
+//
+//app.get('/auth-return/:auth_id/', (req, res) => {
+//  passport.authenticate(req.params.auth_id, {
+//    successRedirect: '/good',
+//    failureRedirect: '/bad',
+//    //failureFlash: true,
+//    //successFlash: 'Welcome!',
+//  })(req, res, (err?: {}) => {
+//    throw err ?? Error('Authentication failed (next, no error)');
+//  });
+//});
 
 app.get('/', async (req, res) => {
   res.send(await users_db.allDocs({include_docs: true, endkey: '_'}));
 });
 
-app.get('/up', (req, res) => {
+app.get('/up/', (req, res) => {
   res.status(200).json({up: 'true'});
+});
+
+app.get('/good', (req, res) => {
+  res.status(200).json({req: Object.keys(req), res: Object.keys(res)});
+});
+
+app.get('/bad', (req, res) => {
+  //console.log("request");
+  //console.log(req);
+  //console.log("response");
+  //console.log(res);
+  res.status(200).json({req: Object.keys(req), res: Object.keys(res)});
 });

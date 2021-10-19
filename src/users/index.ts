@@ -22,6 +22,18 @@
 import {PouchUser} from '../datamodel/database';
 import {users_db} from '../sync/databases';
 
+/* eslint-disable @typescript-eslint/no-namespace */
+// See https://stackoverflow.com/questions/65772869/how-do-i-type-hint-the-user-argument-when-calling-passport-serializeuser-in-type
+declare global {
+  namespace Express {
+    interface User {
+      user_id: string;
+      user_props?: any;
+    }
+  }
+}
+/* eslint-enable @typescript-eslint/no-namespace */
+
 export async function getUserByEmail(email: string): Promise<null | PouchUser> {
   const result = await users_db.find({
     selector: {emails: {$elemMatch: {$eq: email}}},

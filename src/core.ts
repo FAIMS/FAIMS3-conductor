@@ -21,9 +21,22 @@
 
 import express from 'express';
 import bodyParser from 'body-parser';
+import session from 'express-session';
+import cors from 'cors';
+import passport from 'passport';
 
 export const app = express();
 
 // Only parse query parameters into strings, not objects
 app.set('query parser', 'simple');
+app.use(
+  session({
+    secret: 'very-secret',
+    resave: false,
+    saveUninitialized: true,
+  })
+);
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(cors());
+app.use(passport.initialize());
+app.use(passport.session());
