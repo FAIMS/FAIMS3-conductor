@@ -1,12 +1,7 @@
 import OAuth2Strategy from 'passport-oauth2';
 import {OAuth2} from 'oauth';
 
-export type DoneFunction = (err?: Error | null, profile?: any) => void;
-export type UserProfileCallback = (
-  oauth: OAuth2,
-  accessToken: string,
-  done: DoneFunction
-) => void;
+import {UserProfileCallback, DoneFunction} from './types';
 
 export class CleanOAuth2Strategy extends OAuth2Strategy {
   _userProfileHook: UserProfileCallback | null = null;

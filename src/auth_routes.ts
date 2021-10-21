@@ -1,11 +1,12 @@
 import passport from 'passport';
+import {DoneFunction} from './types';
 
-passport.serializeUser((user, done) => {
+passport.serializeUser((user: Express.User, done: DoneFunction) => {
   console.log('user', user);
   done(null, user.user_id);
 });
 
-passport.deserializeUser((id: string, done) => {
+passport.deserializeUser((id: string, done: DoneFunction) => {
   console.log('id', id);
   done(null, {user_id: id});
 });
@@ -30,7 +31,7 @@ export function add_auth_routes(app: any, handlers: any) {
     app.get(
       `/auth-return/${handler}/`,
       passport.authenticate(handler, {
-        successRedirect: '/good',
+        successRedirect: '/',
         failureRedirect: '/bad',
         failureFlash: true,
         //successFlash: 'Welcome!',

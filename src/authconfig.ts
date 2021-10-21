@@ -21,12 +21,7 @@
 
 import OAuth2Strategy from 'passport-oauth2';
 import {AuthInfo} from './datamodel/database';
-
-type VerifyCallback = (
-  err?: Error | null,
-  user?: Express.User,
-  info?: object
-) => void;
+import {VerifyCallback} from './types';
 
 export const secret = 'Your secret phrase here.';
 
