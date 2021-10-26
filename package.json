@@ -23,6 +23,7 @@
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "express-session": "^1.17.2",
+    "jose": "^4.1.2",
     "jsonwebtoken": "^8.5.1",
     "passport": "^0.4.1",
     "passport-oauth2": "^1.6.0",
