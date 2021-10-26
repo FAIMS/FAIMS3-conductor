@@ -29,25 +29,29 @@ import {users_db} from './sync/databases';
 
 export {app};
 
-app.post('/project/:project_id/invite', requireAuthentication, async (req, res) => {
-  if (typeof req.body['email'] !== 'string') {
-    throw Error('Expected 1 string parameter email');
-  }
-  if (typeof req.body['role'] !== 'string') {
-    throw Error('Expected 1 string parameter role');
-  }
-  const email: string = req.body['email'];
-  const project_id: NonUniqueProjectID = req.params.project_id;
-  const role: string = req.body['role'];
+app.post(
+  '/project/:project_id/invite',
+  requireAuthentication,
+  async (req, res) => {
+    if (typeof req.body['email'] !== 'string') {
+      throw Error('Expected 1 string parameter email');
+    }
+    if (typeof req.body['role'] !== 'string') {
+      throw Error('Expected 1 string parameter role');
+    }
+    const email: string = req.body['email'];
+    const project_id: NonUniqueProjectID = req.params.project_id;
+    const role: string = req.body['role'];
 
-  const can_invite = await userCanInviteToProject(req.user, project_id);
-  if (! can_invite) {
-    res.send("You cannot invite user to project");
-  } else {
-    await inviteEmailToProject(email, project_id, role);
-    res.send("Email invited to project");
+    const can_invite = await userCanInviteToProject(req.user, project_id);
+    if (!can_invite) {
+      res.send('You cannot invite user to project');
+    } else {
+      await inviteEmailToProject(email, project_id, role);
+      res.send('Email invited to project');
+    }
   }
-});
+);
 
 app.get('/auth/', (req, res) => {
   // Allow the user to decide what auth mechanism to use
@@ -56,9 +60,9 @@ app.get('/auth/', (req, res) => {
 
 app.get('/', async (req, res) => {
   if (req.user) {
-  res.send(req.user);
+    res.send(req.user);
   } else {
-  res.send("Not logged in, go to <a href='/auth/'>here</a>");
+    res.send("Not logged in, go to <a href='/auth/'>here</a>");
   }
 });
 

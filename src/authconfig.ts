@@ -13,7 +13,7 @@
  * See, the License, for the specific language governing permissions and
  * limitations under the License.
  *
- * Filename: authconfig.ts
+ * Filename: src/authconfig.ts
  * Description:
  *   This module exports the configuration of the build, including things like
  *   which server to use and whether to include test data
@@ -60,17 +60,10 @@ export function oauth_verify(
   profile: any,
   cb: VerifyCallback
 ) {
-  console.debug(
-    'oauth',
-    req,
-    accessToken,
-    refreshToken,
-    results,
-    profile,
-  );
+  console.debug('oauth', req, accessToken, refreshToken, results, profile);
   const user: Express.User = {
-      user_id: profile.id,
-      user_props: profile,
-  }
+    user_id: profile.id,
+    user_props: profile,
+  };
   cb(null, user, profile);
 }
