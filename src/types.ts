@@ -13,30 +13,33 @@
  * See, the License, for the specific language governing permissions and
  * limitations under the License.
  *
- * Filename: core.ts
+ * Filename: src/types.ts
  * Description:
  *   This module exports the configuration of the build, including things like
  *   which server to use and whether to include test data
  */
 
-import express from 'express';
-import bodyParser from 'body-parser';
-import session from 'express-session';
-import cors from 'cors';
-import passport from 'passport';
+/* eslint-disable node/no-extraneous-import */
+import type {OAuth2} from 'oauth';
 
-export const app = express();
-
-// Only parse query parameters into strings, not objects
-app.set('query parser', 'simple');
-app.use(
-  session({
-    secret: 'very-secret',
-    resave: false,
-    saveUninitialized: true,
-  })
-);
-app.use(bodyParser.urlencoded({extended: true}));
-app.use(cors());
-app.use(passport.initialize());
-app.use(passport.session());
+// See https://stackoverflow.com/questions/65772869/how-do-i-type-hint-the-user-argument-when-calling-passport-serializeuser-in-type
+declare global {
+  namespace Express {
+    interface User {
+      user_id: string;
+      user_props?: any;
+    }
+  }
+}
+export type DoneFunction = (err?: Error | null, profile?: any) => void;
+export type UserProfileCallback = (
+  oauth: OAuth2,
+  accessToken: string,
+  done: DoneFunction
+) => void;
+export type VerifyCallback = (
+  err?: Error | null,
+  user?: Express.User,
+  info?: object
+) => void;
+export type {OAuth2};

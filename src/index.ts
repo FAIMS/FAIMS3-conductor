@@ -25,8 +25,10 @@ import OAuth2Strategy from 'passport-oauth2';
 import PouchDB from 'pouchdb';
 import PouchDBFind from 'pouchdb-find';
 
-import {auth_mechanisms} from './authconfig';
+import {auth_mechanisms, oauth_verify} from './authconfig';
+import {CleanOAuth2Strategy, dc_auth_profile} from './authhelpers';
 import {app} from './routes';
+import {add_auth_routes} from './auth_routes';
 import {initialize} from './sync/initialize';
 import {add_initial_listener} from './sync/event-handler-registration';
 import {
@@ -48,30 +50,22 @@ add_initial_listener(register_projects_known, 'projects_known');
 add_initial_listener(register_metas_complete);
 add_initial_listener(register_projects_created);
 
-initialize().then(async () => {
-  for (const auth_id in auth_mechanisms) {
-    passport.use(
-      'default',
-      new OAuth2Strategy(
-        auth_mechanisms[auth_id].strategy,
-        (
-          accessToken: string,
-          refreshToken: string,
-          profile: any,
-          cb: (err?: Error | null, user?: Express.User, info?: unknown) => void
-        ) => {
-          console.debug(
-            accessToken,
-            refreshToken,
-            profile,
-            JSON.stringify(profile)
-          );
-          cb(null, undefined, undefined);
-        }
-      )
-    );
-  }
-  app.listen(8080, () => {
-    console.log('The hello is listening on port 8080!');
-  });
+for (const auth_id in auth_mechanisms) {
+  const st = new CleanOAuth2Strategy(
+    auth_mechanisms[auth_id].strategy,
+    oauth_verify as unknown as OAuth2Strategy.VerifyFunctionWithRequest
+  );
+  st.setUserProfileHook(dc_auth_profile);
+  passport.use('default', st);
+}
+add_auth_routes(app, ['default']);
+
+app.listen(8080, () => {
+  console.log('The hello is listening on port 8080!');
 });
+
+//initialize().then(async () => {
+//  app.listen(8080, () => {
+//    console.log('The hello is listening on port 8080!');
+//  });
+//});

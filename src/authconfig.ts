@@ -13,7 +13,7 @@
  * See, the License, for the specific language governing permissions and
  * limitations under the License.
  *
- * Filename: authconfig.ts
+ * Filename: src/authconfig.ts
  * Description:
  *   This module exports the configuration of the build, including things like
  *   which server to use and whether to include test data
@@ -21,13 +21,14 @@
 
 import OAuth2Strategy from 'passport-oauth2';
 import {AuthInfo} from './datamodel/database';
+import {VerifyCallback} from './types';
 
 export const secret = 'Your secret phrase here.';
 
 export const auth_mechanisms: {
   [auth_id: string]: {
     public: AuthInfo;
-    strategy: OAuth2Strategy.StrategyOptions;
+    strategy: OAuth2Strategy.StrategyOptionsWithRequest;
   };
 } = {
   default: {
@@ -45,7 +46,24 @@ export const auth_mechanisms: {
       clientID: '5c1dca8c5c10f7b96f50e5829816a260-datacentral.org.au',
       clientSecret:
         '3478721c4c92e9e6118aaa315712854087ebc4b01abb9e7977bd17dc66d0c67c',
-      callbackURL: 'http://localhost:3000/signin-return/',
+      callbackURL: 'http://localhost:8080/auth-return/default/',
+      passReqToCallback: true,
     },
   },
 };
+
+export function oauth_verify(
+  req: Request,
+  accessToken: string,
+  refreshToken: string,
+  results: any,
+  profile: any,
+  cb: VerifyCallback
+) {
+  console.debug('oauth', req, accessToken, refreshToken, results, profile);
+  const user: Express.User = {
+    user_id: profile.id,
+    user_props: profile,
+  };
+  cb(null, user, profile);
+}

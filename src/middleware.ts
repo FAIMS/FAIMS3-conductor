@@ -13,30 +13,24 @@
  * See, the License, for the specific language governing permissions and
  * limitations under the License.
  *
- * Filename: core.ts
+ * Filename: src/middleware.ts
  * Description:
  *   This module exports the configuration of the build, including things like
  *   which server to use and whether to include test data
  */
 
-import express from 'express';
-import bodyParser from 'body-parser';
-import session from 'express-session';
-import cors from 'cors';
-import passport from 'passport';
-
-export const app = express();
-
-// Only parse query parameters into strings, not objects
-app.set('query parser', 'simple');
-app.use(
-  session({
-    secret: 'very-secret',
-    resave: false,
-    saveUninitialized: true,
-  })
-);
-app.use(bodyParser.urlencoded({extended: true}));
-app.use(cors());
-app.use(passport.initialize());
-app.use(passport.session());
+import Express from 'express';
+/*
+ * Middleware to ensure that the route is only accessible to logged in users
+ */
+export function requireAuthentication(
+  req: Express.Request,
+  res: Express.Response,
+  next: Express.NextFunction
+) {
+  if (req.user) {
+    next();
+  } else {
+    res.redirect('/auth/');
+  }
+}

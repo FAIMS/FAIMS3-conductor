@@ -15,6 +15,7 @@
     "prettier/prettier": "warn",
     "no-trailing-spaces": "warn",
     "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-namespace": "off",
     "no-constant-condition": "off"
   }
 }

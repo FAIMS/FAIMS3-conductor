@@ -20,81 +20,64 @@
  */
 
 import passport from 'passport';
-import {v4 as uuidv4} from 'uuid';
 
 import {app} from './core';
 import {NonUniqueProjectID} from './datamodel/core';
-import {PouchUser} from './datamodel/database';
+import {requireAuthentication} from './middleware';
+import {userCanInviteToProject, inviteEmailToProject} from './registration';
 import {users_db} from './sync/databases';
-import {getUserByEmail, updateUser} from './users';
 
 export {app};
 
-app.post('/project/:project_id/invite', async (req, res) => {
-  if (typeof req.body['email'] !== 'string') {
-    throw Error('Expected 1 string parameter email');
-  }
-  if (typeof req.body['role'] !== 'string') {
-    throw Error('Expected 1 string parameter role');
-  }
-  const email: string = req.body['email'];
-  const project_id: NonUniqueProjectID = req.params.project_id;
-  const role: string = req.body['role'];
+app.post(
+  '/project/:project_id/invite',
+  requireAuthentication,
+  async (req, res) => {
+    if (typeof req.body['email'] !== 'string') {
+      throw Error('Expected 1 string parameter email');
+    }
+    if (typeof req.body['role'] !== 'string') {
+      throw Error('Expected 1 string parameter role');
+    }
+    const email: string = req.body['email'];
+    const project_id: NonUniqueProjectID = req.params.project_id;
+    const role: string = req.body['role'];
 
-  // TODO: Check if you're authenticated
-
-  // Create a user with the email if it doesn't exist yet
-  const user_id = uuidv4();
-  const existing_user: PouchUser = (await getUserByEmail(email)) ?? {
-    _id: 'org.couchdb.user:' + user_id,
-    name: user_id,
-    type: 'user',
-    roles: [],
-    emails: [email],
-  };
-
-  // Append to the role list for the given project:
-  existing_user.project_roles = {
-    ...(existing_user.project_roles ?? {}),
-    [project_id]: [...(existing_user.project_roles?.[project_id] ?? []), role],
-  };
-
-  updateUser(existing_user);
-});
-
-app.get('/auth', (req, res) => {
-  // Allow the user to decide what auth mechanism to use
-  res.send();
-});
-
-app.get('/auth/:auth_id', (req, res) => {
-  if (
-    typeof req.query?.state === 'string' ||
-    typeof req.query?.state === 'undefined'
-  ) {
-    passport.authenticate(req.params.auth_id)(req, res, (err?: {}) => {
-      throw err ?? Error('Authentication failed (next, no error)');
-    });
-  } else {
-    throw Error(
-      `state must be a string, or not set, not ${typeof req.query?.state}`
-    );
-  }
-});
-
-app.get(
-  '/auth-return',
-  passport.authenticate('oauth2', {failureRedirect: '/login'}),
-  (req, res) => {
-    // Successful authentication, redirect home.
-    res.redirect('/');
+    const can_invite = await userCanInviteToProject(req.user, project_id);
+    if (!can_invite) {
+      res.send('You cannot invite user to project');
+    } else {
+      await inviteEmailToProject(email, project_id, role);
+      res.send('Email invited to project');
+    }
   }
 );
 
+app.get('/auth/', (req, res) => {
+  // Allow the user to decide what auth mechanism to use
+  res.send("Select provider: <a href='/auth/default/'>Data Central</a>");
+});
+
 app.get('/', async (req, res) => {
+  if (req.user) {
+    res.send(req.user);
+  } else {
+    res.send("Not logged in, go to <a href='/auth/'>here</a>");
+  }
+});
+
+app.get('/users/', async (req, res) => {
   res.send(await users_db.allDocs({include_docs: true, endkey: '_'}));
 });
 
-app.get('/up', (req, res) => {
+app.get('/up/', (req, res) => {
   res.status(200).json({up: 'true'});
+});
+
+app.get('/good', (req, res) => {
+  res.status(200).json({req: Object.keys(req), res: Object.keys(res)});
+});
+
+app.get('/bad', (req, res) => {
+  res.status(200).json({req: Object.keys(req), res: Object.keys(res)});
 });
