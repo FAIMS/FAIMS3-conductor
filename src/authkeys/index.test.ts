@@ -24,6 +24,7 @@ import {importPKCS8, importSPKI} from 'jose';
 
 import {create_auth_key} from './create';
 import {read_auth_key} from './read';
+import type {CouchDBUsername, CouchDBUserRoles, SigningKey} from './types';
 
 const SIGNING_ALGORITHM = 'RS256';
 const INSTANCE_NAME = 'test';
@@ -68,7 +69,7 @@ wztFltRZKDluFLxqAEWgiMppBIqSiGmdBbL+rVKtp6AcQIqjy/fFLqR6PzacMqJl
 KwIDAQAB
 -----END PUBLIC KEY-----`;
 
-async function get_test_key() {
+async function get_test_key(): Promise<SigningKey> {
   const private_key = await importPKCS8(
     TEST_PRIVATE_KEY_STRING,
     SIGNING_ALGORITHM
@@ -93,8 +94,7 @@ describe('roundtrip creating and reading token', () => {
       fc.fullUnicodeString(), // username name
       fc.array(fc.fullUnicodeString()), // roles
     ],
-    async (username, roles) => {
-      fc.pre(username.replace(/\s/g, '') !== '');
+    async (username: CouchDBUsername, roles: CouchDBUserRoles) => {
       const signing_key = await get_test_key();
 
       return create_auth_key(username, roles, signing_key)
