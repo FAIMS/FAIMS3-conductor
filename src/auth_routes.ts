@@ -52,7 +52,7 @@ export function add_auth_routes(app: any, handlers: any) {
     app.get(
       `/auth-return/${handler}/`,
       passport.authenticate(handler, {
-        successRedirect: '/',
+        successRedirect: '/send-token/',
         failureRedirect: '/bad',
         failureFlash: true,
         //successFlash: 'Welcome!',

@@ -13,33 +13,12 @@
  * See, the License, for the specific language governing permissions and
  * limitations under the License.
  *
- * Filename: core.ts
+ * Filename: src/authkeys/user.ts
  * Description:
  *   This module exports the configuration of the build, including things like
  *   which server to use and whether to include test data
  */
 
-import express from 'express';
-import bodyParser from 'body-parser';
-import session from 'express-session';
-import cors from 'cors';
-import passport from 'passport';
-import express_handlebars from 'express-handlebars';
-
-export const app = express();
-
-// Only parse query parameters into strings, not objects
-app.set('query parser', 'simple');
-app.use(
-  session({
-    secret: 'very-secret',
-    resave: false,
-    saveUninitialized: true,
-  })
-);
-app.use(bodyParser.urlencoded({extended: true}));
-app.use(cors());
-app.use(passport.initialize());
-app.use(passport.session());
-app.engine('handlebars', express_handlebars());
-app.set('view engine', 'handlebars');
+export async function get_user_auth_token(user: Express.User) {
+  return user;
+}

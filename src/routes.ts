@@ -22,6 +22,7 @@
 import passport from 'passport';
 
 import {app} from './core';
+import {get_user_auth_token} from './authkeys/user';
 import {NonUniqueProjectID} from './datamodel/core';
 import {requireAuthentication} from './middleware';
 import {userCanInviteToProject, inviteEmailToProject} from './registration';
@@ -63,6 +64,23 @@ app.get('/', async (req, res) => {
     res.send(req.user);
   } else {
     res.send("Not logged in, go to <a href='/auth/'>here</a>");
+  }
+});
+
+app.get('/send-token/', (req, res) => {
+  if (req.user) {
+    console.log('hello send-token');
+    res.render('send-token', {user: req.user});
+  } else {
+    res.redirect('/');
+  }
+});
+
+app.get('/get-token/', async (req, res) => {
+  if (req.user) {
+    res.send(await get_user_auth_token(req.user));
+  } else {
+    res.status(403).end();
   }
 });
 

@@ -22,6 +22,7 @@
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
     "express": "^4.17.1",
+    "express-handlebars": "^5.3.4",
     "express-session": "^1.17.2",
     "jose": "^4.1.2",
     "jsonwebtoken": "^8.5.1",
@@ -35,6 +36,7 @@
   "devDependencies": {
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",
+    "@types/express-handlebars": "^5.3.1",
     "@types/express-session": "^1.17.4",
     "@types/jest": "^27.0.2",
     "@types/node": "^16.6.2",
