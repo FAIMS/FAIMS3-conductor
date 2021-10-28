@@ -1,1 +1,10 @@
 <h1>Sending Auth</h1>
+<script>
+const token_url = new URL('/get-token/', window.location.href);
+console.log(token_url);
+fetch(
+    token_url
+).then(
+    res => {console.log(res.text())}
+).catch(console.error);
+</script>

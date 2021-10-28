@@ -61,7 +61,7 @@ app.get('/auth/', (req, res) => {
 
 app.get('/', async (req, res) => {
   if (req.user) {
-    res.send(req.user);
+    res.render("home", {user: req.user});
   } else {
     res.send("Not logged in, go to <a href='/auth/'>here</a>");
   }
@@ -78,7 +78,15 @@ app.get('/send-token/', (req, res) => {
 
 app.get('/get-token/', async (req, res) => {
   if (req.user) {
-    res.send(await get_user_auth_token(req.user));
+    const signing_key = app.get('faims3_token_signing_key');
+    if (signing_key === null || signing_key === undefined) {
+        res.status(500).send("Signing key not set up");
+    }
+    else {
+    res.send(
+      await get_user_auth_token(req.user.user_id, signing_key)
+    );
+    }
   } else {
     res.status(403).end();
   }

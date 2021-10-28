@@ -19,6 +19,23 @@
  *   which server to use and whether to include test data
  */
 
-export async function get_user_auth_token(user: Express.User) {
-  return user;
+import {create_auth_key} from './create';
+import type {CouchDBUsername, CouchDBUserRoles, SigningKey} from './types';
+import {get_couchdb_user_from_username} from '../couchdb/users';
+
+export async function get_user_auth_token(
+  username: CouchDBUsername,
+  signing_key: SigningKey
+) {
+  const roles = await get_couchdb_user_roles(username);
+  const token = await create_auth_key(username, roles, signing_key);
+  return token;
+}
+
+async function get_couchdb_user_roles(username: CouchDBUsername): Promise<CouchDBUserRoles> {
+  const user = await get_couchdb_user_from_username(username);
+  if (user === null) {
+    return [];
+  }
+  return user.roles;
 }
