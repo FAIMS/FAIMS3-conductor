@@ -32,7 +32,9 @@ export async function get_user_auth_token(
   return token;
 }
 
-async function get_couchdb_user_roles(username: CouchDBUsername): Promise<CouchDBUserRoles> {
+async function get_couchdb_user_roles(
+  username: CouchDBUsername
+): Promise<CouchDBUserRoles> {
   const user = await get_couchdb_user_from_username(username);
   if (user === null) {
     return [];

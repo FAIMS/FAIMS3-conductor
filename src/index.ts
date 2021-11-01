@@ -27,9 +27,10 @@ import PouchDBFind from 'pouchdb-find';
 
 import {auth_mechanisms, oauth_verify} from './authconfig';
 import {CleanOAuth2Strategy, dc_auth_profile} from './authhelpers';
+import {load_signing_key} from './authkeys/signing_keys';
 import {app} from './routes';
 import {add_auth_routes} from './auth_routes';
-import {initialize} from './sync/initialize';
+import {initialize as pouch_initialize} from './sync/initialize';
 import {add_initial_listener} from './sync/event-handler-registration';
 import {
   register_listings_known,
@@ -37,6 +38,8 @@ import {
   register_metas_complete,
   register_projects_created,
 } from './sync/state';
+
+const CONDUCTOR_PORT = 8080;
 
 process.on('unhandledRejection', error => {
   console.error(error); // This prints error with stack included (as for normal errors)
@@ -60,12 +63,19 @@ for (const auth_id in auth_mechanisms) {
 }
 add_auth_routes(app, ['default']);
 
-app.listen(8080, () => {
-  console.log('The hello is listening on port 8080!');
-});
+async function initialize() {
+  const signing_key = await load_signing_key({
+    signing_algorithm: 'RS256',
+    instance_name: 'test',
+    key_id: 'test_key',
+    public_key_file: 'public_key.pem',
+    private_key_file: 'private_key.pem',
+  });
+  app.set('faims3_token_signing_key', signing_key);
+}
 
-//initialize().then(async () => {
-//  app.listen(8080, () => {
-//    console.log('The hello is listening on port 8080!');
-//  });
-//});
+initialize().then(async () => {
+  app.listen(CONDUCTOR_PORT, () => {
+    console.log(`The hello is listening on port ${CONDUCTOR_PORT}!`);
+  });
+});

@@ -5,6 +5,15 @@ console.log(token_url);
 fetch(
     token_url
 ).then(
-    res => {console.log(res.text())}
+    res => res.text()
+).then(
+    token => {
+        const app_window = window.opener;
+        app_window.postMessage({
+          token: token,
+          origin: window.location.href,
+        }, "*");
+        window.close();
+    }
 ).catch(console.error);
 </script>
