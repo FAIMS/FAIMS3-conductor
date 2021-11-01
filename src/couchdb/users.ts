@@ -19,8 +19,29 @@
  *   which server to use and whether to include test data
  */
 
+import PouchDB from 'pouchdb';
+
+import {
+  LOCAL_COUCHDB_PROTOCOL,
+  LOCAL_COUCHDB_HOST,
+  LOCAL_COUCHDB_PORT,
+  LOCAL_COUCHDB_AUTH,
+} from '../buildconfig';
 import {PouchUser} from '../datamodel/database';
-import {users_db} from '../sync/databases';
+import type {CouchDBUsername} from '../authkeys/types';
+import {
+  ConnectionInfo_create_pouch,
+  local_pouch_options,
+  materializeConnectionInfo,
+} from '../sync/connection';
+
+const users_db: PouchDB.Database<PouchUser> = ConnectionInfo_create_pouch({
+  db_name: 'FAIMS3_users',
+  proto: LOCAL_COUCHDB_PROTOCOL,
+  host: LOCAL_COUCHDB_HOST,
+  port: LOCAL_COUCHDB_PORT,
+  auth: LOCAL_COUCHDB_AUTH,
+});
 
 export async function getUserByEmail(email: string): Promise<null | PouchUser> {
   const result = await users_db.find({
@@ -37,4 +58,16 @@ export async function getUserByEmail(email: string): Promise<null | PouchUser> {
 
 export async function updateUser(user: PouchUser): Promise<void> {
   await users_db.put(user);
+}
+
+export async function get_couchdb_user_from_username(
+  username: CouchDBUsername
+): Promise<PouchUser | null> {
+  try {
+    const user = await users_db.get(username);
+    return user;
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
 }

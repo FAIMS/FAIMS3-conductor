@@ -13,33 +13,31 @@
  * See, the License, for the specific language governing permissions and
  * limitations under the License.
  *
- * Filename: core.ts
+ * Filename: src/authkeys/user.ts
  * Description:
  *   This module exports the configuration of the build, including things like
  *   which server to use and whether to include test data
  */
 
-import express from 'express';
-import bodyParser from 'body-parser';
-import session from 'express-session';
-import cors from 'cors';
-import passport from 'passport';
-import express_handlebars from 'express-handlebars';
+import {create_auth_key} from './create';
+import type {CouchDBUsername, CouchDBUserRoles, SigningKey} from './types';
+import {get_couchdb_user_from_username} from '../couchdb/users';
 
-export const app = express();
+export async function get_user_auth_token(
+  username: CouchDBUsername,
+  signing_key: SigningKey
+) {
+  const roles = await get_couchdb_user_roles(username);
+  const token = await create_auth_key(username, roles, signing_key);
+  return token;
+}
 
-// Only parse query parameters into strings, not objects
-app.set('query parser', 'simple');
-app.use(
-  session({
-    secret: 'very-secret',
-    resave: false,
-    saveUninitialized: true,
-  })
-);
-app.use(bodyParser.urlencoded({extended: true}));
-app.use(cors());
-app.use(passport.initialize());
-app.use(passport.session());
-app.engine('handlebars', express_handlebars());
-app.set('view engine', 'handlebars');
+async function get_couchdb_user_roles(
+  username: CouchDBUsername
+): Promise<CouchDBUserRoles> {
+  const user = await get_couchdb_user_from_username(username);
+  if (user === null) {
+    return [];
+  }
+  return user.roles;
+}
