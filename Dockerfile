@@ -7,7 +7,8 @@ ENV NODE_ENV=production
 WORKDIR /app
 COPY ["package.json", "package-lock.json*", "./"]
 RUN npm install -g typescript
-RUN npm ci --production
+RUN npm ci --only=production
+#RUN npm install
 #ARG REACT_APP_DIRECTORY_HOST
 #RUN mkdir -p /etc/keys/
 #COPY local.ini /opt/couchdb/etc/local.d/from-docker-install.ini
@@ -19,7 +20,8 @@ EXPOSE 8080
 #CMD [ "npm", "run", "start"]
 #RUN npm ci
 RUN keymanagement/makeTestKeys.sh 
-RUN npm run start
+CMD ["node", "."]
+#RUN npm run start DOES NOT WORK
 #RUN curl -X PUT http://127.0.0.1:5984/_users
 #RUN curl -X PUT http://127.0.0.1:5984/_replicator
 #RUN curl -X PUT http://127.0.0.1:5984/_global_changes
