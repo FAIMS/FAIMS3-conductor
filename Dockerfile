@@ -20,6 +20,8 @@ EXPOSE 8080
 #CMD [ "npm", "run", "start"]
 #RUN npm ci
 RUN keymanagement/makeTestKeys.sh 
+VOLUME ["/keys"]
+#VOLUME exposes the dir to the outside, but is static... 
 CMD ["node", "."]
 #RUN npm run start DOES NOT WORK
 #RUN curl -X PUT http://127.0.0.1:5984/_users

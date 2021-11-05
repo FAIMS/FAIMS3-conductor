@@ -18,6 +18,9 @@ openssl rsa -pubout -in "private_key.pem" -out "public_key.pem"
 # #" Derive the public key from the private key
 # openssl ec -in "$TARGET_DIR/ecdsa_p256v1_private_key.pem" -pubout -out "$TARGET_DIR/ecdsa_p256v1_public_key.pem"
 
-
+mkdir -p /keys
 cat "public_key.pem" | sed ':a;N;$!ba;s/\n/\\n/g' > "rsa_2048_public_key.pem.flattened"
+cp *.pem /keys/
+cp *.flattened /keys/
+ls /keys/
 #cat "$TARGET_DIR/ecdsa_p256v1_public_key.pem" | sed ':a;N;$!ba;s/\n/\\n/g' > "$TARGET_DIR/ecdsa_p256v1_public_key.pem.flattened"
