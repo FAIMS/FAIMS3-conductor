@@ -304,19 +304,20 @@ async function activate_project(
     await active_db.get(active_id);
     console.debug('Have already activated', active_id);
   } catch (err) {
-    if (err.status === 404) {
-      // TODO: work out a better way to do this
-      await active_db.put({
-        _id: active_id,
-        listing_id: listing_id,
-        project_id: project_id,
-        username: username,
-        password: password,
-        is_sync: is_sync,
-      });
-    } else {
-      throw err;
-    }
+    // JAMES, this ... didn't work?
+    // if (err.status === 404) {
+    //   // TODO: work out a better way to do this
+    //   await active_db.put({
+    //     _id: active_id,
+    //     listing_id: listing_id,
+    //     project_id: project_id,
+    //     username: username,
+    //     password: password,
+    //     is_sync: is_sync,
+    //   });
+    // } else {
+    //   throw err;
+    // }
   }
 }
 

@@ -1,3 +1,5 @@
+*.pem
+*.pem.flattened
 # Logs
 logs
 *.log
