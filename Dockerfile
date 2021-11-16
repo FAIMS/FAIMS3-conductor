@@ -5,20 +5,10 @@
 FROM node:lts-buster@sha256:ca24d3d8d30987e0ff4b6c2e72fb7d1d487e6cfd8f2d0ecda84f53d3e95f1831
 ENV NODE_ENV=production
 WORKDIR /app
-COPY ["package.json", "package-lock.json*", "./"]
-RUN npm install -g typescript
-RUN npm ci --only=production
-#RUN npm install
-#ARG REACT_APP_DIRECTORY_HOST
-#RUN mkdir -p /etc/keys/
-#COPY local.ini /opt/couchdb/etc/local.d/from-docker-install.ini
-COPY . .
 EXPOSE 8080
-#VOLUME ["/etc/keys/"]
-#RUN bin/makeTestKeys.sh
-#CMD [ "npm", "ci"]
-#CMD [ "npm", "run", "start"]
-#RUN npm ci
+COPY . .
+RUN npm ci
+RUN npm run compile
 RUN keymanagement/makeTestKeys.sh 
 VOLUME ["/keys"]
 #VOLUME exposes the dir to the outside, but is static... 
