@@ -83,6 +83,14 @@ function directory_protocol(): string {
   }
 }
 
+function local_hostname(): string {
+  const host = process.env.REACT_APP_HOST_NAME;
+  if (host === '' || host === undefined) {
+    return 'http://localhost:8080';
+  }
+  return host;
+}
+
 function directory_host(): string {
   const host = process.env.REACT_APP_DIRECTORY_HOST;
   if (host === '' || host === undefined) {
@@ -142,4 +150,5 @@ export const LOCAL_COUCHDB_PORT = directory_port();
 export const LOCAL_COUCHDB_AUTH = directory_auth();
 export const RUNNING_UNDER_TEST = is_testing();
 export const COMMIT_VERSION = commit_version();
+export const HOST_NAME = local_hostname();
 export const AUTOACTIVATE_PROJECTS = true; // for alpha, beta will change this
