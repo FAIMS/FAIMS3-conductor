@@ -26,6 +26,8 @@ import {HOST_NAME} from './buildconfig';
 
 export const secret = 'Your secret phrase here.';
 
+console.error("Hostname is:", HOST_NAME);
+
 export const auth_mechanisms: {
   [auth_id: string]: {
     public: AuthInfo;
