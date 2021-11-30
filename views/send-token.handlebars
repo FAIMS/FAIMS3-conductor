@@ -1,7 +1,7 @@
 <h1>Sending Auth</h1>
 <script>
 const token_url = new URL('/get-token/', window.location.href);
-console.log(token_url);
+console.error("fetching token");
 fetch(
     token_url
 ).then(
@@ -9,6 +9,7 @@ fetch(
 ).then(
     token => {
         const app_window = window.opener;
+        console.error("sending token");
         app_window.postMessage({
           token: token,
           origin: window.location.href,
