@@ -33,7 +33,7 @@
     "express-session": "^1.17.2",
     "fast-check": "^2.20.0",
     "gts": "^3.1.0",
-    "jest": "^27.4.2",
+    "jest": "^27.4.3",
     "jest-fast-check": "^1.0.2",
     "jose": "^4.3.7",
     "jsonwebtoken": "^8.5.1",
