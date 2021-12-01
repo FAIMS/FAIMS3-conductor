@@ -15,7 +15,6 @@ COPY . .
 RUN npm ci
 RUN npm run compile
 RUN keymanagement/makeTestKeys.sh 
-RUN bash echo $REACT_APP_HOST_NAME
 VOLUME ["/keys"]
 #VOLUME exposes the dir to the outside, but is static... 
 CMD ["node", "."]
