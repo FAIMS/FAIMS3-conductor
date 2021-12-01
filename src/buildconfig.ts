@@ -140,14 +140,74 @@ function is_testing() {
   return jest_worker_is_running || jest_imported || test_node_env;
 }
 
+function local_couchdb_protocol(): string {
+  const usehttps = process.env.REACT_APP_USE_HTTPS;
+  if (PROD_BUILD) {
+    return 'https';
+  } else if (
+    usehttps === '' ||
+    usehttps === undefined ||
+    FALSEY_STRINGS.includes(usehttps.toLowerCase())
+  ) {
+    return 'http';
+  } else if (TRUTHY_STRINGS.includes(usehttps.toLowerCase())) {
+    return 'https';
+  } else {
+    console.error('REACT_APP_USE_HTTPS badly defined, assuming false');
+    return 'http';
+  }
+}
+
+function local_couchdb_host(): string {
+  const host = process.env.REACT_APP_LOCAL_COUCHDB_HOST;
+  if (host === '' || host === undefined) {
+    return '10.80.11.44';
+  }
+  return host;
+}
+
+function local_couchdb_port(): number {
+  const port = process.env.REACT_APP_LOCAL_COUCHDB_PORT;
+  if (port === '' || port === undefined) {
+    if (PROD_BUILD) {
+      return 443;
+    }
+    return 5984;
+  }
+  try {
+    return parseInt(port);
+  } catch (err) {
+    console.error(err);
+    console.error('Falling back to default port');
+    return 5984;
+  }
+}
+
+function local_couchdb_auth(): undefined | {username: string; password: string} {
+  // Used in the server, as opposed to COUCHDB_USER and PASSWORD for testing.
+  const username = process.env.REACT_APP_LOCAL_COUCHDB_USERNAME;
+  const password = process.env.REACT_APP_LOCAL_COUCHDB_PASSWORD;
+
+  if (
+    username === '' ||
+    username === undefined ||
+    password === '' ||
+    password === undefined
+  ) {
+    return undefined;
+  } else {
+    return {username: username, password: password};
+  }
+}
+
 export const DIRECTORY_PROTOCOL = directory_protocol();
 export const DIRECTORY_HOST = directory_host();
 export const DIRECTORY_PORT = directory_port();
 export const DIRECTORY_AUTH = directory_auth();
-export const LOCAL_COUCHDB_PROTOCOL = directory_protocol();
-export const LOCAL_COUCHDB_HOST = directory_host();
-export const LOCAL_COUCHDB_PORT = directory_port();
-export const LOCAL_COUCHDB_AUTH = directory_auth();
+export const LOCAL_COUCHDB_PROTOCOL = local_couchdb_protocol();
+export const LOCAL_COUCHDB_HOST = local_couchdb_host();
+export const LOCAL_COUCHDB_PORT = local_couchdb_port();
+export const LOCAL_COUCHDB_AUTH = local_couchdb_auth();
 export const RUNNING_UNDER_TEST = is_testing();
 export const COMMIT_VERSION = commit_version();
 export const HOST_NAME = local_hostname();
