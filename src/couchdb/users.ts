@@ -22,26 +22,25 @@
 import PouchDB from 'pouchdb';
 
 import {
-  LOCAL_COUCHDB_PROTOCOL,
-  LOCAL_COUCHDB_HOST,
-  LOCAL_COUCHDB_PORT,
+  CONDUCTOR_USER_DB,
   LOCAL_COUCHDB_AUTH,
 } from '../buildconfig';
 import {PouchUser} from '../datamodel/database';
 import type {CouchDBUsername} from '../authkeys/types';
-import {
-  ConnectionInfo_create_pouch,
-  local_pouch_options,
-  materializeConnectionInfo,
-} from '../sync/connection';
 
-const users_db: PouchDB.Database<PouchUser> = ConnectionInfo_create_pouch({
-  db_name: 'FAIMS3_users',
-  proto: LOCAL_COUCHDB_PROTOCOL,
-  host: LOCAL_COUCHDB_HOST,
-  port: LOCAL_COUCHDB_PORT,
-  auth: LOCAL_COUCHDB_AUTH,
-});
+function createUsersDB(): PouchDB.Database<PouchUser> {
+  const pouch_options: PouchDB.Configuration.RemoteDatabaseConfiguration = {};
+
+  if (LOCAL_COUCHDB_AUTH !== undefined) {
+    pouch_options.auth = LOCAL_COUCHDB_AUTH;
+  }
+  return new PouchDB(
+    CONDUCTOR_USER_DB,
+    pouch_options
+  );
+}
+
+const users_db = createUsersDB();
 
 export async function getUserByEmail(email: string): Promise<null | PouchUser> {
   const result = await users_db.find({
