@@ -21,10 +21,7 @@
 
 import PouchDB from 'pouchdb';
 
-import {
-  CONDUCTOR_USER_DB,
-  LOCAL_COUCHDB_AUTH,
-} from '../buildconfig';
+import {CONDUCTOR_USER_DB, LOCAL_COUCHDB_AUTH} from '../buildconfig';
 import {PouchUser} from '../datamodel/database';
 import type {CouchDBUsername} from '../authkeys/types';
 
@@ -34,10 +31,7 @@ function createUsersDB(): PouchDB.Database<PouchUser> {
   if (LOCAL_COUCHDB_AUTH !== undefined) {
     pouch_options.auth = LOCAL_COUCHDB_AUTH;
   }
-  return new PouchDB(
-    CONDUCTOR_USER_DB,
-    pouch_options
-  );
+  return new PouchDB(CONDUCTOR_USER_DB, pouch_options);
 }
 
 const users_db = createUsersDB();

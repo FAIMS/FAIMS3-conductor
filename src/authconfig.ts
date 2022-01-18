@@ -22,11 +22,11 @@
 import OAuth2Strategy from 'passport-oauth2';
 import {AuthInfo} from './datamodel/database';
 import {VerifyCallback} from './types';
-import {HOST_NAME} from './buildconfig';
+import {HOST_NAME, REQUIRED_GROUP} from './buildconfig';
 
 export const secret = 'Your secret phrase here.';
 
-console.error("Hostname is:", HOST_NAME);
+console.error('Hostname is:', HOST_NAME);
 
 export const auth_mechanisms: {
   [auth_id: string]: {
@@ -55,6 +55,11 @@ export const auth_mechanisms: {
   },
 };
 
+// This is for February where we're going to use groups to manage access
+function check_in_allowed_groups(user: Express.User): boolean {
+  return user.user_props.attributes.groups.includes(REQUIRED_GROUP);
+}
+
 export function oauth_verify(
   req: Request,
   accessToken: string,
@@ -68,5 +73,10 @@ export function oauth_verify(
     user_id: profile.id,
     user_props: profile,
   };
-  cb(null, user, profile);
+  const allowed = check_in_allowed_groups(user);
+  if (allowed) {
+    cb(null, user, profile);
+  } else {
+    cb(new Error('Not Allowed'), undefined);
+  }
 }

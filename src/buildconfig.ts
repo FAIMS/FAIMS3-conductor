@@ -142,7 +142,7 @@ function is_testing() {
 
 function conductor_user_db(): string {
   const userdb = process.env.FAIMS_USERDB;
-  const userdb_default = "http://localhost:5984/people";
+  const userdb_default = 'http://localhost:5984/people';
   if (userdb === '' || userdb === undefined) {
     console.log('FAIMS_USERDB not set, using default');
     return userdb_default;
@@ -151,7 +151,9 @@ function conductor_user_db(): string {
   }
 }
 
-function local_couchdb_auth(): undefined | {username: string; password: string} {
+function local_couchdb_auth():
+  | undefined
+  | {username: string; password: string} {
   // Used in the server, as opposed to COUCHDB_USER and PASSWORD for testing.
   const username = process.env.REACT_APP_LOCAL_COUCHDB_USERNAME;
   const password = process.env.REACT_APP_LOCAL_COUCHDB_PASSWORD;
@@ -168,6 +170,16 @@ function local_couchdb_auth(): undefined | {username: string; password: string} 
   }
 }
 
+function required_group(): string {
+  const req_group = process.env.FAIMS_REQUIRED_GROUP;
+  if (req_group === '' || req_group === undefined) {
+    console.log('FAIMS_REQUIRED_GROUP not set, using default');
+    return "CN=test_ppr,OU=Groups,OU=Accounts,DC=ASVO,DC=AAO,DC=GOV,DC=AU";
+  } else {
+    return `CN=${req_group},OU=Groups,OU=Accounts,DC=ASVO,DC=AAO,DC=GOV,DC=AU`;
+  }
+}
+
 export const CONDUCTOR_USER_DB = conductor_user_db();
 export const DIRECTORY_PROTOCOL = directory_protocol();
 export const DIRECTORY_HOST = directory_host();
@@ -178,3 +190,4 @@ export const RUNNING_UNDER_TEST = is_testing();
 export const COMMIT_VERSION = commit_version();
 export const HOST_NAME = local_hostname();
 export const AUTOACTIVATE_PROJECTS = true; // for alpha, beta will change this
+export const REQUIRED_GROUP = required_group();
