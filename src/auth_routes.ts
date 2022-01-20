@@ -21,6 +21,7 @@
 
 import passport from 'passport';
 import {DoneFunction} from './types';
+import {get_couchdb_user_from_username} from './couchdb/users';
 
 passport.serializeUser((user: Express.User, done: DoneFunction) => {
   console.log('user', user);
@@ -29,7 +30,9 @@ passport.serializeUser((user: Express.User, done: DoneFunction) => {
 
 passport.deserializeUser((id: string, done: DoneFunction) => {
   console.log('id', id);
-  done(null, {user_id: id});
+  get_couchdb_user_from_username(id).then(user_data => {
+    done(null, user_data);
+  });
 });
 
 export function add_auth_routes(app: any, handlers: any) {

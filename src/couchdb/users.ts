@@ -64,3 +64,19 @@ export async function get_couchdb_user_from_username(
     return null;
   }
 }
+
+// TODO: This will need some work to work out how to handle many different auth
+// providers
+function express_user_to_pouch_user(user: Express.User): PouchUser {
+    return {
+        type: 'user',
+        _id: user.user_id,
+        name: user.user_id,
+        roles: user.user_props.attributes.groups,
+        other_props: user.user_props,
+    }
+}
+
+export async function saveUserToDB(user: Express.User) {
+    await updateUser(express_user_to_pouch_user(user));
+}

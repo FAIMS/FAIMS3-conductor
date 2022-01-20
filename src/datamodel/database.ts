@@ -200,11 +200,12 @@ export type ProjectMetaObject =
 export type PouchUser = {
   _id: string;
   name: string;
-  emails: string[];
+  emails?: string[];
   type: 'user';
   owned?: NonUniqueProjectID[];
-  roles: [];
+  roles: string[];
   project_roles?: {[NonUniqueProjectID: string]: string[]};
+  other_props?: any;
 };
 
 /*

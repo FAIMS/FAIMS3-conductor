@@ -23,6 +23,7 @@ import OAuth2Strategy from 'passport-oauth2';
 import {AuthInfo} from './datamodel/database';
 import {VerifyCallback} from './types';
 import {HOST_NAME, REQUIRED_GROUP} from './buildconfig';
+import {saveUserToDB} from './couchdb/users';
 
 export const secret = 'Your secret phrase here.';
 
@@ -75,7 +76,12 @@ export function oauth_verify(
   };
   const allowed = check_in_allowed_groups(user);
   if (allowed) {
-    cb(null, user, profile);
+    saveUserToDB(user)
+      .then(() => cb(null, user, profile))
+      .catch(err => {
+        console.error('User saving error', err);
+        cb(new Error('Failed to save user'), undefined);
+      });
   } else {
     cb(new Error('Not Allowed'), undefined);
   }
