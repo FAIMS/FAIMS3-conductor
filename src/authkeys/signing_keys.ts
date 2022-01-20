@@ -52,6 +52,7 @@ export async function load_signing_key(config: KeyConfig): Promise<SigningKey> {
   return {
     private_key: private_key,
     public_key: public_key,
+    public_key_string: public_key_string,
     instance_name: config.instance_name,
     alg: config.signing_algorithm,
     kid: config.key_id,
