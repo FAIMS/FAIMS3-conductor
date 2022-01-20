@@ -29,6 +29,7 @@ export interface SigningKey {
   kid: string; // JWS kid
   private_key: KeyLike;
   public_key: KeyLike;
+  public_key_string: string;
   instance_name: string;
 }
 export interface KeyConfig {

@@ -5,13 +5,15 @@ console.error("fetching token");
 fetch(
     token_url
 ).then(
-    res => res.text()
+    res => res.json()
 ).then(
-    token => {
+    token_json => {
         const app_window = window.opener;
         console.error("sending token");
         app_window.postMessage({
-          token: token,
+          token: token_json.token,
+          pubkey: token_json.pubkey,
+          pubalg: token_json.pubalg,
           origin: window.location.href,
         }, "*");
         window.close();

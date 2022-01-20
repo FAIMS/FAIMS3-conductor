@@ -81,6 +81,7 @@ async function get_test_key(): Promise<SigningKey> {
   return {
     private_key: private_key,
     public_key: public_key,
+    public_key_string: TEST_PUBLIC_KEY_STRING,
     instance_name: INSTANCE_NAME,
     alg: SIGNING_ALGORITHM,
     kid: KEY_ID,

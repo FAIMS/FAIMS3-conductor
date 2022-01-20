@@ -174,7 +174,7 @@ function required_group(): string {
   const req_group = process.env.FAIMS_REQUIRED_GROUP;
   if (req_group === '' || req_group === undefined) {
     console.log('FAIMS_REQUIRED_GROUP not set, using default');
-    return "CN=test_ppr,OU=Groups,OU=Accounts,DC=ASVO,DC=AAO,DC=GOV,DC=AU";
+    return 'CN=test_ppr,OU=Groups,OU=Accounts,DC=ASVO,DC=AAO,DC=GOV,DC=AU';
   } else {
     return `CN=${req_group},OU=Groups,OU=Accounts,DC=ASVO,DC=AAO,DC=GOV,DC=AU`;
   }
