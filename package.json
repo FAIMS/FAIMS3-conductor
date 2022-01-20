@@ -35,7 +35,7 @@
     "gts": "^3.1.0",
     "jest": "^27.4.2",
     "jest-fast-check": "^1.0.2",
-    "jose": "^4.3.7",
+    "jose": "^4.3.8",
     "jsonwebtoken": "^8.5.1",
     "passport": "^0.5.0",
     "passport-oauth2": "^1.6.0",
