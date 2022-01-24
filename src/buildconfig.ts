@@ -164,7 +164,8 @@ function local_couchdb_auth():
     password === '' ||
     password === undefined
   ) {
-    return undefined;
+    console.warn('Falling back to default local couchdb auth');
+    return {username: 'admin', password: 'password'};
   } else {
     return {username: username, password: password};
   }

@@ -82,6 +82,7 @@ app.get('/get-token/', async (req, res) => {
     if (signing_key === null || signing_key === undefined) {
       res.status(500).send('Signing key not set up');
     } else {
+      console.log('req user is', req.user);
       res.send({
         token: await get_user_auth_token(req.user.user_id, signing_key),
         pubkey: signing_key.public_key_string,

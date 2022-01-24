@@ -199,6 +199,7 @@ export type ProjectMetaObject =
 // https://docs.couchdb.org/en/stable/intro/security.html#users-documents
 export type PouchUser = {
   _id: string;
+  _rev?: string;
   name: string;
   emails?: string[];
   type: 'user';

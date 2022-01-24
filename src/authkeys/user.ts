@@ -27,11 +27,11 @@ export async function get_user_auth_token(
   username: CouchDBUsername,
   signing_key: SigningKey
 ) {
-  console.log('Getting user roles');
+  console.log('Getting user roles for', username);
   const roles = await get_couchdb_user_roles(username);
-  console.log('Getting user token');
+  console.log('Getting user token for', username, roles);
   const token = await create_auth_key(username, roles, signing_key);
-  console.log('Returning user token');
+  console.log('Returning user token for', username, token);
   return token;
 }
 
@@ -40,6 +40,7 @@ async function get_couchdb_user_roles(
 ): Promise<CouchDBUserRoles> {
   const user = await get_couchdb_user_from_username(username);
   if (user === null) {
+    console.log('No roles found for', username);
     return [];
   }
   return user.roles;
