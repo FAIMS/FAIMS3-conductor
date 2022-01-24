@@ -50,7 +50,23 @@ export async function getUserByEmail(email: string): Promise<null | PouchUser> {
 }
 
 export async function updateUser(user: PouchUser): Promise<void> {
-  await users_db.put(user);
+  try {
+    await users_db.put(user);
+  } catch (err: any) {
+    if (err.status === 409) {
+      try {
+        const existing_user = await users_db.get(user._id);
+        user._rev = existing_user._rev;
+        await users_db.put(user);
+      } catch(err) {
+        console.error(err);
+        throw Error("Failed to update user in conflict");
+      }
+    } else {
+      console.error(err);
+      throw Error("Failed to update user");
+    }
+  }
 }
 
 export async function get_couchdb_user_from_username(
@@ -65,18 +81,43 @@ export async function get_couchdb_user_from_username(
   }
 }
 
+export async function get_user_from_username(
+  username: CouchDBUsername
+): Promise<Express.User | null> {
+  try {
+    const couch_user = await get_couchdb_user_from_username(username);
+    if (couch_user === null) {
+      return null;
+    }
+    const user = pouch_user_to_express_user(couch_user);
+    return user;
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
+}
+
 // TODO: This will need some work to work out how to handle many different auth
 // providers
 function express_user_to_pouch_user(user: Express.User): PouchUser {
-    return {
-        type: 'user',
-        _id: user.user_id,
-        name: user.user_id,
-        roles: user.user_props.attributes.groups,
-        other_props: user.user_props,
-    }
+  return {
+    type: 'user',
+    _id: user.user_id,
+    name: user.user_id,
+    roles: user.user_props.attributes.groups,
+    other_props: user.user_props,
+  };
+}
+
+// TODO: This will need some work to work out how to handle many different auth
+// providers
+function pouch_user_to_express_user(user: PouchUser): Express.User {
+  return {
+    user_id: user._id,
+    user_props: user.other_props,
+  };
 }
 
 export async function saveUserToDB(user: Express.User) {
-    await updateUser(express_user_to_pouch_user(user));
+  await updateUser(express_user_to_pouch_user(user));
 }
