@@ -27,6 +27,7 @@ import PouchDBFind from 'pouchdb-find';
 
 import {auth_mechanisms, oauth_verify} from './authconfig';
 import {CleanOAuth2Strategy, dc_auth_profile} from './authhelpers';
+import {CONDUCTOR_KEY_ID, CONDUCTOR_PORT} from './buildconfig';
 import {load_signing_key} from './authkeys/signing_keys';
 import {app} from './routes';
 import {add_auth_routes} from './auth_routes';
@@ -38,8 +39,6 @@ import {
   register_metas_complete,
   register_projects_created,
 } from './sync/state';
-
-const CONDUCTOR_PORT = 8080;
 
 process.on('unhandledRejection', error => {
   console.error(error); // This prints error with stack included (as for normal errors)
@@ -67,7 +66,7 @@ async function initialize() {
   const signing_key = await load_signing_key({
     signing_algorithm: 'RS256',
     instance_name: 'test',
-    key_id: 'test_key',
+    key_id: CONDUCTOR_KEY_ID,
     public_key_file: 'public_key.pem',
     private_key_file: 'private_key.pem',
   });

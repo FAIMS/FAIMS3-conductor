@@ -181,6 +181,16 @@ function required_group(): string {
   }
 }
 
+function signing_key_id(): string {
+  const key_id = process.env.FAIMS_CONDUCTOR_KID;
+  if (key_id === '' || key_id === undefined) {
+    console.log('FAIMS_CONDUCTOR_KID not set, using default');
+    return 'test_key';
+  } else {
+    return key_id;
+  }
+}
+
 export const CONDUCTOR_USER_DB = conductor_user_db();
 export const DIRECTORY_PROTOCOL = directory_protocol();
 export const DIRECTORY_HOST = directory_host();
@@ -192,3 +202,5 @@ export const COMMIT_VERSION = commit_version();
 export const HOST_NAME = local_hostname();
 export const AUTOACTIVATE_PROJECTS = true; // for alpha, beta will change this
 export const REQUIRED_GROUP = required_group();
+export const CONDUCTOR_PORT = 8080;
+export const CONDUCTOR_KEY_ID = signing_key_id();
