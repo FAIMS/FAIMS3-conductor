@@ -58,13 +58,13 @@ export async function updateUser(user: PouchUser): Promise<void> {
         const existing_user = await users_db.get(user._id);
         user._rev = existing_user._rev;
         await users_db.put(user);
-      } catch(err) {
+      } catch (err) {
         console.error(err);
-        throw Error("Failed to update user in conflict");
+        throw Error('Failed to update user in conflict');
       }
     } else {
       console.error(err);
-      throw Error("Failed to update user");
+      throw Error('Failed to update user');
     }
   }
 }
