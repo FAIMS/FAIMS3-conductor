@@ -21,10 +21,11 @@ ENV NODE_ENV=production
 WORKDIR /app
 EXPOSE 8080
 COPY . .
+COPY ../keys ./keys
 RUN npm ci
 RUN npm run compile
 #RUN keymanagement/makeTestKeys.sh 
-#VOLUME ["/keys"]
+VOLUME ["/app/keys"]
 #VOLUME exposes the dir to the outside, but is static... 
 CMD ["node", "."]
 #RUN npm run start DOES NOT WORK

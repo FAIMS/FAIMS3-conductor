@@ -5,13 +5,13 @@ set -euo pipefail
 
 if [ $# -eq 1 ]; then
 	HOST_TARGET="$1"
-else;
-	echo "./makeTestKeys.sh host"
+else
+	echo "./makeTestKeys.sh host";
 	exit 0;
 fi
 
-mkdir -p keys
-cd keys
+mkdir -p ../keys
+cd ../keys
 echo date > ${HOST_TARGET}start
 rm -f *.pem *.flattened
 openssl genpkey -algorithm RSA -out "${HOST_TARGET}_private_key.pem" -pkeyopt rsa_keygen_bits:2048
