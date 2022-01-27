@@ -27,7 +27,13 @@ import PouchDBFind from 'pouchdb-find';
 
 import {auth_mechanisms, oauth_verify} from './authconfig';
 import {CleanOAuth2Strategy, dc_auth_profile} from './authhelpers';
-import {CONDUCTOR_KEY_ID, CONDUCTOR_PORT} from './buildconfig';
+import {
+  CONDUCTOR_KEY_ID,
+  CONDUCTOR_PORT,
+  CONDUCTOR_PUBLIC_KEY_PATH,
+  CONDUCTOR_PRIVATE_KEY_PATH,
+  CONDUCTOR_INSTANCE_NAME,
+} from './buildconfig';
 import {load_signing_key} from './authkeys/signing_keys';
 import {app} from './routes';
 import {add_auth_routes} from './auth_routes';
@@ -65,10 +71,10 @@ add_auth_routes(app, ['default']);
 async function initialize() {
   const signing_key = await load_signing_key({
     signing_algorithm: 'RS256',
-    instance_name: 'test',
+    instance_name: CONDUCTOR_INSTANCE_NAME,
     key_id: CONDUCTOR_KEY_ID,
-    public_key_file: 'public_key.pem',
-    private_key_file: 'private_key.pem',
+    public_key_file: CONDUCTOR_PUBLIC_KEY_PATH,
+    private_key_file: CONDUCTOR_PRIVATE_KEY_PATH,
   });
   app.set('faims3_token_signing_key', signing_key);
 }

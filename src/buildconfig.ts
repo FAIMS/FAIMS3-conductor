@@ -191,6 +191,36 @@ function signing_key_id(): string {
   }
 }
 
+function private_key_path(): string {
+  const key_path = process.env.FAIMS_CONDUCTOR_PRIVATE_KEY_PATH;
+  if (key_path === '' || key_path === undefined) {
+    console.log('FAIMS_CONDUCTOR_PRIVATE_KEY_PATH not set, using default');
+    return 'private_key.pem';
+  } else {
+    return key_path;
+  }
+}
+
+function public_key_path(): string {
+  const key_path = process.env.FAIMS_CONDUCTOR_PUBLIC_KEY_PATH;
+  if (key_path === '' || key_path === undefined) {
+    console.log('FAIMS_CONDUCTOR_PUBLIC_KEY_PATH not set, using default');
+    return 'public_key.pem';
+  } else {
+    return key_path;
+  }
+}
+
+function instance_name(): string {
+  const name = process.env.FAIMS_CONDUCTOR_INSTANCE_NAME;
+  if (name === '' || name === undefined) {
+    console.log('FAIMS_CONDUCTOR_INSTANCE_NAME not set, using default');
+    return 'test';
+  } else {
+    return name;
+  }
+}
+
 export const CONDUCTOR_USER_DB = conductor_user_db();
 export const DIRECTORY_PROTOCOL = directory_protocol();
 export const DIRECTORY_HOST = directory_host();
@@ -204,3 +234,6 @@ export const AUTOACTIVATE_PROJECTS = true; // for alpha, beta will change this
 export const REQUIRED_GROUP = required_group();
 export const CONDUCTOR_PORT = 8080;
 export const CONDUCTOR_KEY_ID = signing_key_id();
+export const CONDUCTOR_PRIVATE_KEY_PATH = private_key_path();
+export const CONDUCTOR_PUBLIC_KEY_PATH = public_key_path();
+export const CONDUCTOR_INSTANCE_NAME = instance_name();
