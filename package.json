@@ -14,6 +14,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@types/cookie-session": "^2.0.44",
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",
     "@types/express-handlebars": "^5.3.1",
@@ -27,10 +28,10 @@
     "@types/supertest": "^2.0.11",
     "@types/uuid": "^8.3.3",
     "body-parser": "^1.19.0",
+    "cookie-session": "^2.0.0",
     "cors": "^2.8.5",
     "express": "^4.17.2",
     "express-handlebars": "^5.3.4",
-    "express-session": "^1.17.2",
     "fast-check": "^2.21.0",
     "gts": "^3.1.0",
     "jest": "^27.4.7",
