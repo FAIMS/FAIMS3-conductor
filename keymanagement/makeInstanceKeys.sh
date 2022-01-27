@@ -26,7 +26,7 @@ openssl rsa -pubout -in "${HOST_TARGET}_private_key.pem" -out "${HOST_TARGET}_pu
 
 
 cat "${HOST_TARGET}_public_key.pem" | sed ':a;N;$!ba;s/\n/\\n/g' > "${HOST_TARGET}_rsa_2048_public_key.pem.flattened"
-cat "${HOST_TARGET}_rsa_2048_public_key.pem.flattened"
+ssh-keygen -lf "${HOST_TARGET}_public_key.pem"
 
 mkdir -p ../../FAIMS3-Dev-DB/keys
 cp ${HOST_TARGET}* ../../FAIMS3-Dev-DB/keys
