@@ -21,7 +21,6 @@ ENV NODE_ENV=production
 WORKDIR /app
 EXPOSE 8080
 COPY . .
-COPY ../keys ./keys
 RUN npm ci
 RUN npm run compile
 #RUN keymanagement/makeTestKeys.sh 
