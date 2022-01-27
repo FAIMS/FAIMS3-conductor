@@ -221,6 +221,16 @@ function instance_name(): string {
   }
 }
 
+function cookie_secret(): string {
+  const cookie = process.env.FAIMS_COOKIE_SECRET;
+  if (cookie === '' || cookie === undefined) {
+    console.log('FAIMS_COOKIE_SECRET not set, using default');
+    return 'ahquoo4ohfaGh1oozoinai9ulah8ouge';
+  } else {
+    return cookie;
+  }
+}
+
 export const CONDUCTOR_USER_DB = conductor_user_db();
 export const DIRECTORY_PROTOCOL = directory_protocol();
 export const DIRECTORY_HOST = directory_host();
@@ -237,3 +247,4 @@ export const CONDUCTOR_KEY_ID = signing_key_id();
 export const CONDUCTOR_PRIVATE_KEY_PATH = private_key_path();
 export const CONDUCTOR_PUBLIC_KEY_PATH = public_key_path();
 export const CONDUCTOR_INSTANCE_NAME = instance_name();
+export const COOKIE_SECRET = cookie_secret();

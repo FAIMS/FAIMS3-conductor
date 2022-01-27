@@ -21,20 +21,22 @@
 
 import express from 'express';
 import bodyParser from 'body-parser';
-import session from 'express-session';
+import cookieSession from 'cookie-session';
 import cors from 'cors';
 import passport from 'passport';
 import express_handlebars from 'express-handlebars';
+
+import {COOKIE_SECRET} from './buildconfig';
 
 export const app = express();
 
 // Only parse query parameters into strings, not objects
 app.set('query parser', 'simple');
 app.use(
-  session({
-    secret: 'very-secret',
-    resave: false,
-    saveUninitialized: true,
+  cookieSession({
+    name: 'session',
+    secret: COOKIE_SECRET,
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
   })
 );
 app.use(bodyParser.urlencoded({extended: true}));
