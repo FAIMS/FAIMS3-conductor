@@ -20,11 +20,11 @@ ARG FAIMS_USERDB
 ENV NODE_ENV=production
 WORKDIR /app
 EXPOSE 8080
+VOLUME ["/app/keys"]
 COPY . .
 RUN npm ci
 RUN npm run compile
 #RUN keymanagement/makeTestKeys.sh 
-#VOLUME ["/app/keys"]
 #VOLUME exposes the dir to the outside, but is static... 
 CMD ["node", "."]
 #RUN npm run start DOES NOT WORK
