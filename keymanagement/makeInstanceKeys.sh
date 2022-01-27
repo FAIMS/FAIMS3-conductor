@@ -12,7 +12,7 @@ fi
 
 mkdir -p keys
 cd keys
-echo date > ${HOST_TARGET}start
+date > ${HOST_TARGET}start
 rm -f *.pem *.flattened
 openssl genpkey -algorithm RSA -out "${HOST_TARGET}_private_key.pem" -pkeyopt rsa_keygen_bits:2048
 openssl rsa -pubout -in "${HOST_TARGET}_private_key.pem" -out "${HOST_TARGET}_public_key.pem"
@@ -27,6 +27,10 @@ openssl rsa -pubout -in "${HOST_TARGET}_private_key.pem" -out "${HOST_TARGET}_pu
 
 cat "${HOST_TARGET}_public_key.pem" | sed ':a;N;$!ba;s/\n/\\n/g' > "${HOST_TARGET}_rsa_2048_public_key.pem.flattened"
 cat "${HOST_TARGET}_rsa_2048_public_key.pem.flattened"
+
+mkdir -p ../../FAIMS3-Dev-DB/keys
+cp ${HOST_TARGET}* ../../FAIMS3-Dev-DB/keys
+
 # cp *.pem /keys/
 # cp *.flattened /keys/
 # ls /keys/
