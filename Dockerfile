@@ -2,7 +2,7 @@
 
 #https://stackoverflow.com/a/10544510
 #https://github.com/apache/couchdb-docker
-FROM node:lts-buster@sha256:ca24d3d8d30987e0ff4b6c2e72fb7d1d487e6cfd8f2d0ecda84f53d3e95f1831
+FROM node:lts-buster@sha256:d3d1a02bab20f7956676ff17e901f7c5054114a902a152cbebdf60cda362584f
 ARG REACT_APP_HOST_NAME
 ARG REACT_APP_LOCAL_COUCHDB_HOST
 ARG REACT_APP_LOCAL_COUCHDB_USERNAME
