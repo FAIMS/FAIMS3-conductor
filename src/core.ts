@@ -27,6 +27,7 @@ import passport from 'passport';
 import express_handlebars from 'express-handlebars';
 
 import {COOKIE_SECRET} from './buildconfig';
+import path from 'path/posix';
 
 export const app = express();
 
@@ -45,3 +46,5 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.engine('handlebars', express_handlebars());
 app.set('view engine', 'handlebars');
+app.use(express.static('public'));
+

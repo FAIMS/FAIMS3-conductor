@@ -56,14 +56,14 @@ app.post(
 
 app.get('/auth/', (req, res) => {
   // Allow the user to decide what auth mechanism to use
-  res.send("Select provider: <a href='/auth/default/'>Data Central</a>");
+  res.render("auth");
 });
 
 app.get('/', async (req, res) => {
   if (req.user) {
     res.render('home', {user: req.user});
   } else {
-    res.send("Not logged in, go to <a href='/auth/'>here</a>");
+    res.redirect('/auth/');
   }
 });
 
