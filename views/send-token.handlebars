@@ -8,15 +8,19 @@ fetch(
     res => res.json()
 ).then(
     token_json => {
-        const app_window = window.opener;
-        console.log("sending token");
-        app_window.postMessage({
-          token: token_json.token,
-          pubkey: token_json.pubkey,
-          pubalg: token_json.pubalg,
-          origin: window.location.href,
-        }, "*");
-        window.close();
+        const app_window = window.opener ?? window.parent;
+        if (app_window === null) {
+            alert("Cannot find app");
+        } else {
+            console.error("sending token");
+            app_window.postMessage({
+              token: token_json.token,
+              pubkey: token_json.pubkey,
+              pubalg: token_json.pubalg,
+              origin: window.location.href,
+            }, "*");
+            window.close();
+        }
     }
 ).catch(console.error);
 </script>
