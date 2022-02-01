@@ -1,7 +1,7 @@
 <h1>Sending Auth</h1>
 <script>
 const token_url = new URL('/get-token/', window.location.href);
-console.error("fetching token");
+console.log("fetching token");
 fetch(
     token_url
 ).then(
@@ -9,7 +9,7 @@ fetch(
 ).then(
     token_json => {
         const app_window = window.opener;
-        console.error("sending token");
+        console.log("sending token");
         app_window.postMessage({
           token: token_json.token,
           pubkey: token_json.pubkey,
