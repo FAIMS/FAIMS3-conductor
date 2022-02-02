@@ -8,18 +8,28 @@ fetch(
     res => res.json()
 ).then(
     token_json => {
-        const app_window = window.opener ?? window.parent;
-        if (app_window === null) {
-            alert("Cannot find app");
+        if (window.cordova_iab !== undefined) {
+            window.cordova_iab.postMessage(JSON.stringify({
+                token: token_json.token,
+                pubkey: token_json.pubkey,
+                pubalg: token_json.pubalg,
+                origin: window.location.href,
+            }));
+            alert("Token send, hit back button");
         } else {
-            console.error("sending token");
-            app_window.postMessage({
-              token: token_json.token,
-              pubkey: token_json.pubkey,
-              pubalg: token_json.pubalg,
-              origin: window.location.href,
-            }, "*");
-            window.close();
+            const app_window = window.opener ?? window.parent;
+            if (app_window === null) {
+                alert("Cannot find app");
+            } else {
+                console.error("sending token");
+                app_window.postMessage({
+                  token: token_json.token,
+                  pubkey: token_json.pubkey,
+                  pubalg: token_json.pubalg,
+                  origin: window.location.href,
+                }, "*");
+                window.close();
+            }
         }
     }
 ).catch(console.error);
