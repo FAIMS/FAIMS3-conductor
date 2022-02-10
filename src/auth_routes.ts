@@ -43,7 +43,11 @@ export function add_auth_routes(app: any, handlers: any) {
         typeof req.query?.state === 'undefined'
       ) {
         passport.authenticate(handler)(req, res, (err?: {}) => {
-          throw err ?? Error('Authentication failed (next, no error)');
+          // Hack to avoid users getting caught when they're not in the right
+          // groups.
+          console.error('Authentication Error', err);
+          res.redirect('https://auth.datacentral.org.au/cas/logout');
+          //throw err ?? Error('Authentication failed (next, no error)');
         });
       } else {
         throw Error(
