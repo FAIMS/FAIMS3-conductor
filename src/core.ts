@@ -47,4 +47,3 @@ app.use(passport.session());
 app.engine('handlebars', express_handlebars());
 app.set('view engine', 'handlebars');
 app.use(express.static('public'));
-

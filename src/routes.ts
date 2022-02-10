@@ -56,7 +56,7 @@ app.post(
 
 app.get('/auth/', (req, res) => {
   // Allow the user to decide what auth mechanism to use
-  res.render("auth");
+  res.render('auth');
 });
 
 app.get('/', async (req, res) => {
