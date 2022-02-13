@@ -67,6 +67,13 @@ app.get('/', async (req, res) => {
   }
 });
 
+app.get('/logout/', (req, res) => {
+  if (req.user) {
+    req.logout();
+  }
+  res.redirect('/');
+});
+
 app.get('/send-token/', (req, res) => {
   if (req.user) {
     console.log('hello send-token');
