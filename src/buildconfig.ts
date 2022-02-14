@@ -31,7 +31,7 @@ const FALSEY_STRINGS = ['false', '0', 'off', 'no'];
 
 function commit_version(): string {
   const commitver = process.env.REACT_APP_COMMIT_VERSION;
-  console.log(commitver);
+  console.log("commitver", commitver);
   if (
     commitver === '' ||
     commitver === undefined ||
@@ -110,8 +110,7 @@ function directory_port(): number {
   try {
     return parseInt(port);
   } catch (err) {
-    console.error(err);
-    console.error('Falling back to default port');
+    console.error('Falling back to default port', err);
     return 5984;
   }
 }

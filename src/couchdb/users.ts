@@ -59,11 +59,11 @@ export async function updateUser(user: PouchUser): Promise<void> {
         user._rev = existing_user._rev;
         await users_db.put(user);
       } catch (err) {
-        console.error(err);
+        console.error('Failed to update user in conflict', err);
         throw Error('Failed to update user in conflict');
       }
     } else {
-      console.error(err);
+      console.error('Failed to update user', err);
       throw Error('Failed to update user');
     }
   }
@@ -76,7 +76,7 @@ export async function get_couchdb_user_from_username(
     const user = await users_db.get(username);
     return user;
   } catch (err) {
-    console.error(err);
+    console.error('Failed to get user', err);
     return null;
   }
 }
@@ -92,7 +92,7 @@ export async function get_user_from_username(
     const user = pouch_user_to_express_user(couch_user);
     return user;
   } catch (err) {
-    console.error(err);
+    console.error('Failed to get user', err);
     return null;
   }
 }

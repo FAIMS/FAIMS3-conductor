@@ -49,7 +49,7 @@ export function dc_auth_profile(
     accessToken,
     (err: any, body: any, res: any) => {
       if (err) {
-        console.error(err, body, res);
+        console.error('DC oauth profile error', err, body, res);
         return done(err, err);
       }
 
