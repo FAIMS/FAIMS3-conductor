@@ -13,7 +13,7 @@ fi
 mkdir -p keys
 cd keys
 date > ${HOST_TARGET}start
-rm -f *.pem *.flattened
+#rm -f *.pem *.flattened
 openssl genpkey -algorithm RSA -out "${HOST_TARGET}_private_key.pem" -pkeyopt rsa_keygen_bits:2048
 openssl rsa -pubout -in "${HOST_TARGET}_private_key.pem" -out "${HOST_TARGET}_public_key.pem"
 
