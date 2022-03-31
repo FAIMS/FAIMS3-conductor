@@ -15,7 +15,21 @@ fetch(
                 pubalg: token_json.pubalg,
                 origin: window.location.href,
             }));
-            alert("Token send, hit back button");
+            alert("Token sent, hit back button");
+        } else if (
+            window.webkit !== undefined &&
+            window.webkit.messageHandlers !== undefined &&
+            window.webkit.messageHandlers.cordova_iab !== undefined
+        ) {
+            window.webkit.messageHandlers.cordova_iab.postMessage(
+                JSON.stringify({
+                    token: token_json.token,
+                    pubkey: token_json.pubkey,
+                    pubalg: token_json.pubalg,
+                    origin: window.location.href,
+                })
+            );
+            alert("Token sent, hit done button");
         } else {
             const app_window = window.opener ?? window.parent;
             if (app_window === null) {
