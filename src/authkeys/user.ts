@@ -27,11 +27,11 @@ export async function get_user_auth_token(
   username: CouchDBUsername,
   signing_key: SigningKey
 ) {
-  console.log('Getting user roles for', username);
+  console.debug('Getting user roles for', username);
   const roles = await get_couchdb_user_roles(username);
-  console.log('Getting user token for', username, roles);
+  console.debug('Getting user token for', username, roles);
   const token = await create_auth_key(username, roles, signing_key);
-  console.log('Returning user token for', username, token);
+  console.debug('Returning user token for', username, token);
   return token;
 }
 
