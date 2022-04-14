@@ -38,7 +38,7 @@
     "jest-fast-check": "^1.0.2",
     "jose": "^4.6.0",
     "jsonwebtoken": "^8.5.1",
-    "passport": "^0.5.0",
+    "passport": "^0.5.2",
     "passport-oauth2": "^1.6.0",
     "pouchdb": "^7.2.2",
     "pouchdb-adapter-memory": "^7.2.2",
