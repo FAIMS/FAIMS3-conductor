@@ -22,9 +22,7 @@
 import OAuth2Strategy from 'passport-oauth2';
 
 import {HOST_NAME} from './buildconfig';
-import {saveUserToDB} from './couchdb/users';
 import {AuthInfo} from './datamodel/database';
-import {VerifyCallback} from './types';
 
 export const secret = 'Your secret phrase here.';
 
@@ -56,24 +54,3 @@ export const auth_mechanisms: {
     },
   },
 };
-
-export function oauth_verify(
-  req: Request,
-  accessToken: string,
-  refreshToken: string,
-  results: any,
-  profile: any,
-  cb: VerifyCallback
-) {
-  console.debug('oauth', req, accessToken, refreshToken, results, profile);
-  const user: Express.User = {
-    user_id: profile.id,
-    user_props: profile,
-  };
-  saveUserToDB(user)
-    .then(() => cb(null, user, profile))
-    .catch(err => {
-      console.error('User saving error', err);
-      cb(new Error('Failed to save user'), undefined);
-    });
-}
