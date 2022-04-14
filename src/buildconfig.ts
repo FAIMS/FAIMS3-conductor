@@ -220,6 +220,16 @@ function cookie_secret(): string {
   }
 }
 
+function datacentral_group_prefix(): string {
+  const name = process.env.DATACENTRAL_GROUP_PREFIX;
+  if (name === '' || name === undefined) {
+    console.log('DATACENTRAL_GROUP_PREFIX not set, using default');
+    return 'FAIMS';
+  } else {
+    return name;
+  }
+}
+
 export const CONDUCTOR_USER_DB = conductor_user_db();
 export const DIRECTORY_PROTOCOL = directory_protocol();
 export const DIRECTORY_HOST = directory_host();
@@ -236,3 +246,4 @@ export const CONDUCTOR_PRIVATE_KEY_PATH = private_key_path();
 export const CONDUCTOR_PUBLIC_KEY_PATH = public_key_path();
 export const CONDUCTOR_INSTANCE_NAME = instance_name();
 export const COOKIE_SECRET = cookie_secret();
+export const DATACENTRAL_GROUP_PREFIX = datacentral_group_prefix();

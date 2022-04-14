@@ -19,9 +19,7 @@
  */
 
 import PouchDB from 'pouchdb';
-import {RUNNING_UNDER_TEST} from '../buildconfig';
 import {ConnectionInfo, PossibleConnectionInfo} from '../datamodel/database';
-import PouchDBAdaptorMemory from 'pouchdb-adapter-memory';
 
 /**
  * Configure local pouchdb settings; note that this applies to *ALL* local
@@ -30,12 +28,6 @@ import PouchDBAdaptorMemory from 'pouchdb-adapter-memory';
  */
 
 export const local_pouch_options: any = {};
-if (RUNNING_UNDER_TEST) {
-  // enable memory adapter for testing
-  console.error('Using memory store');
-  PouchDB.plugin(PouchDBAdaptorMemory);
-  local_pouch_options['adapter'] = 'memory';
-}
 
 export function materializeConnectionInfo(
   base_info: ConnectionInfo,

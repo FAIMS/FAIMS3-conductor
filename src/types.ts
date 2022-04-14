@@ -27,7 +27,9 @@ declare global {
   namespace Express {
     interface User {
       user_id: string;
-      user_props?: any;
+      roles?: string[];
+      name?: string;
+      other_props?: any;
     }
   }
 }
