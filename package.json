@@ -25,7 +25,7 @@
     "@types/passport": "^1.0.7",
     "@types/passport-oauth2": "^1.4.11",
     "@types/pouchdb": "^6.4.0",
-    "@types/supertest": "^2.0.11",
+    "@types/supertest": "^2.0.12",
     "@types/uuid": "^8.3.4",
     "body-parser": "^1.20.0",
     "cookie-session": "^2.0.0",
