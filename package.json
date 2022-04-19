@@ -30,7 +30,7 @@
     "body-parser": "^1.20.0",
     "cookie-session": "^2.0.0",
     "cors": "^2.8.5",
-    "express": "^4.17.2",
+    "express": "^4.17.3",
     "express-handlebars": "^5.3.4",
     "fast-check": "^2.21.0",
     "gts": "^3.1.0",
@@ -44,7 +44,7 @@
     "pouchdb": "^7.2.2",
     "pouchdb-find": "^7.3.0",
     "supertest": "^6.1.6",
-    "ts-jest": "^27.1.3",
+    "ts-jest": "^27.1.4",
     "ts-node": "^10.7.0",
     "typescript": "^4.6.3",
     "uuid": "^8.3.2"
