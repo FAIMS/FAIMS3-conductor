@@ -24,7 +24,7 @@ import bodyParser from 'body-parser';
 import cookieSession from 'cookie-session';
 import cors from 'cors';
 import passport from 'passport';
-import express_handlebars from 'express-handlebars';
+import {engine as express_handlebars} from 'express-handlebars';
 
 import {COOKIE_SECRET} from './buildconfig';
 import path from 'path/posix';
