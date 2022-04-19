@@ -1,4 +1,10 @@
 <h6>Hello {{ user.user_id }}<h6>
+<p>Your roles on this conductor are:</p>
+<ul>
+{{ #each user.roles }}
+<li>{{ this }}</li>
+{{ /each }}
+</ul>
 <br/>
 <a href="/send-token/" class="btn btn-primary" style="background-color:#1B3E93;">Go back to App</a>
 <a href="/logout/" class="btn">Logout</a>
