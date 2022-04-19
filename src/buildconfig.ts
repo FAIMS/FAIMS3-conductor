@@ -170,16 +170,6 @@ function local_couchdb_auth():
   }
 }
 
-function required_group(): string {
-  const req_group = process.env.FAIMS_REQUIRED_GROUP;
-  if (req_group === '' || req_group === undefined) {
-    console.log('FAIMS_REQUIRED_GROUP not set, using default');
-    return 'CN=test_ppr,OU=Groups,OU=Accounts,DC=ASVO,DC=AAO,DC=GOV,DC=AU';
-  } else {
-    return `CN=${req_group},OU=Groups,OU=Accounts,DC=ASVO,DC=AAO,DC=GOV,DC=AU`;
-  }
-}
-
 function signing_key_id(): string {
   const key_id = process.env.FAIMS_CONDUCTOR_KID;
   if (key_id === '' || key_id === undefined) {
@@ -230,6 +220,16 @@ function cookie_secret(): string {
   }
 }
 
+function datacentral_group_prefix(): string {
+  const name = process.env.DATACENTRAL_GROUP_PREFIX;
+  if (name === '' || name === undefined) {
+    console.log('DATACENTRAL_GROUP_PREFIX not set, using default');
+    return 'FAIMS';
+  } else {
+    return name;
+  }
+}
+
 export const CONDUCTOR_USER_DB = conductor_user_db();
 export const DIRECTORY_PROTOCOL = directory_protocol();
 export const DIRECTORY_HOST = directory_host();
@@ -240,10 +240,10 @@ export const RUNNING_UNDER_TEST = is_testing();
 export const COMMIT_VERSION = commit_version();
 export const HOST_NAME = local_hostname();
 export const AUTOACTIVATE_PROJECTS = true; // for alpha, beta will change this
-export const REQUIRED_GROUP = required_group();
 export const CONDUCTOR_PORT = 8080;
 export const CONDUCTOR_KEY_ID = signing_key_id();
 export const CONDUCTOR_PRIVATE_KEY_PATH = private_key_path();
 export const CONDUCTOR_PUBLIC_KEY_PATH = public_key_path();
 export const CONDUCTOR_INSTANCE_NAME = instance_name();
 export const COOKIE_SECRET = cookie_secret();
+export const DATACENTRAL_GROUP_PREFIX = datacentral_group_prefix();

@@ -25,8 +25,12 @@ import OAuth2Strategy from 'passport-oauth2';
 import PouchDB from 'pouchdb';
 import PouchDBFind from 'pouchdb-find';
 
-import {auth_mechanisms, oauth_verify} from './authconfig';
-import {CleanOAuth2Strategy, dc_auth_profile} from './authhelpers';
+import {auth_mechanisms} from './authconfig';
+import {CleanOAuth2Strategy} from './authhelpers';
+import {
+  oauth_verify as dc_oauth_verify,
+  auth_profile as dc_auth_profile,
+} from './auth_providers/data_central';
 import {
   CONDUCTOR_KEY_ID,
   CONDUCTOR_PORT,
@@ -61,7 +65,7 @@ add_initial_listener(register_projects_created);
 for (const auth_id in auth_mechanisms) {
   const st = new CleanOAuth2Strategy(
     auth_mechanisms[auth_id].strategy,
-    oauth_verify as unknown as OAuth2Strategy.VerifyFunctionWithRequest
+    dc_oauth_verify as unknown as OAuth2Strategy.VerifyFunctionWithRequest
   );
   st.setUserProfileHook(dc_auth_profile);
   passport.use('default', st);
