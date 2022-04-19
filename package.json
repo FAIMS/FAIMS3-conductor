@@ -32,7 +32,7 @@
     "cors": "^2.8.5",
     "express": "^4.17.3",
     "express-handlebars": "^5.3.4",
-    "fast-check": "^2.21.0",
+    "fast-check": "^2.24.0",
     "gts": "^3.1.0",
     "jest": "^27.4.7",
     "jest-fast-check": "^1.0.2",
