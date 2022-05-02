@@ -61,7 +61,7 @@ app.get('/auth/', (req, res) => {
 
 app.get('/', async (req, res) => {
   if (req.user) {
-    res.render('home', {user: req.user});
+    res.render('home', {user: req.user, roles: req.user.roles});
   } else {
     res.redirect('/auth/');
   }
