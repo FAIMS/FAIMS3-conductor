@@ -38,6 +38,7 @@ function dc_groups_to_couchdb_roles(groups: string[]): string[] {
     ) {
       // This is either the main groups for the team, or not the team
       // we're interested in
+      console.debug("Skipping:", split_group[0], JSON.stringify(split_group));
       continue;
     }
     const project_name = split_group[1];
@@ -58,7 +59,7 @@ export function oauth_verify(
   profile: any,
   cb: VerifyCallback
 ) {
-  console.debug('oauth', req, accessToken, refreshToken, results, profile);
+  console.debug('DC oauth', accessToken, refreshToken, results, profile);
   const roles = dc_groups_to_couchdb_roles(profile.attributes.groups);
   const name = profile.attributes.displayName;
   const user: Express.User = {
