@@ -27,10 +27,16 @@ import {VerifyCallback, DoneFunction} from '../types';
 
 const MAIN_GROUPS = ['editor', 'admin', 'public', 'moderator'];
 
+function ldap_group_to_group_name(group: string): string {
+    const split_dn = group.split(',');
+    const cn = split_dn[0];
+    return cn.substring(3);
+}
+
 function dc_groups_to_couchdb_roles(groups: string[]): string[] {
   const roles: string[] = [];
   for (const group of groups) {
-    const split_group = group.split('-');
+    const split_group = ldap_group_to_group_name(group).split('-');
     if (
       split_group[0] !== DATACENTRAL_GROUP_PREFIX ||
       split_group.length < 2 ||
