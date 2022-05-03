@@ -19,7 +19,7 @@
     "@types/express": "4.17.13",
     "@types/express-handlebars": "5.3.1",
     "@types/express-session": "1.17.4",
-    "@types/jest": "27.4.1",
+    "@types/jest": "27.5.0",
     "@types/jsonwebtoken": "8.5.8",
     "@types/node": "17.0.31",
     "@types/passport": "1.0.7",
