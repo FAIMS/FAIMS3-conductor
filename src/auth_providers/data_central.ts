@@ -28,9 +28,9 @@ import {VerifyCallback, DoneFunction} from '../types';
 const MAIN_GROUPS = ['editor', 'admin', 'public', 'moderator'];
 
 function ldap_group_to_group_name(group: string): string {
-    const split_dn = group.split(',');
-    const cn = split_dn[0];
-    return cn.substring(3);
+  const split_dn = group.split(',');
+  const cn = split_dn[0];
+  return cn.substring(3);
 }
 
 function dc_groups_to_couchdb_roles(groups: string[]): string[] {
@@ -44,7 +44,7 @@ function dc_groups_to_couchdb_roles(groups: string[]): string[] {
     ) {
       // This is either the main groups for the team, or not the team
       // we're interested in
-      console.debug("Skipping:", split_group[0], JSON.stringify(split_group));
+      console.debug('Skipping:', split_group[0], JSON.stringify(split_group));
       continue;
     }
     const project_name = split_group[1];
@@ -57,6 +57,16 @@ function dc_groups_to_couchdb_roles(groups: string[]): string[] {
   return roles;
 }
 
+function ensure_string_array(groups: any): string[] {
+  if (typeof groups === 'string') {
+    return [groups];
+  } else if (!Array.isArray(groups)) {
+    console.error('DC groups not string or array', groups);
+    return [];
+  }
+  return groups;
+}
+
 export function oauth_verify(
   req: Request,
   accessToken: string,
@@ -66,7 +76,9 @@ export function oauth_verify(
   cb: VerifyCallback
 ) {
   console.debug('DC oauth', accessToken, refreshToken, results, profile);
-  const roles = dc_groups_to_couchdb_roles(profile.attributes.groups);
+  const roles = dc_groups_to_couchdb_roles(
+    ensure_string_array(profile.attributes.groups)
+  );
   const name = profile.attributes.displayName;
   const user: Express.User = {
     user_id: profile.id,
