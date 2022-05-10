@@ -99,10 +99,12 @@ app.get('/get-token/', async (req, res) => {
   } else {
     res.status(403).end();
   }
+  return;
 });
 
 app.get('/users/', async (req, res) => {
   res.send(await users_db.allDocs({include_docs: true, endkey: '_'}));
+  return;
 });
 
 app.get('/up/', (req, res) => {

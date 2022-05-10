@@ -30,9 +30,11 @@ passport.serializeUser((user: Express.User, done: DoneFunction) => {
 
 passport.deserializeUser((id: string, done: DoneFunction) => {
   console.log('id', id);
-  get_user_from_username(id).then(user_data => {
-    done(null, user_data);
-  });
+  get_user_from_username(id)
+    .then(user_data => {
+      done(null, user_data);
+    })
+    .catch(err => done(err, null));
 });
 
 export function add_auth_routes(app: any, handlers: any) {
