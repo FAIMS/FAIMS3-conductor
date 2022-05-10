@@ -230,6 +230,14 @@ function datacentral_group_prefix(): string {
   }
 }
 
+function cluster_admin_group_name(): string {
+  const name = process.env.CLUSTER_ADMIN_GROUP_NAME;
+  if (name === '' || name === undefined) {
+    return 'cluster-admin';
+  }
+  return name;
+}
+
 export const CONDUCTOR_USER_DB = conductor_user_db();
 export const DIRECTORY_PROTOCOL = directory_protocol();
 export const DIRECTORY_HOST = directory_host();
@@ -247,3 +255,4 @@ export const CONDUCTOR_PUBLIC_KEY_PATH = public_key_path();
 export const CONDUCTOR_INSTANCE_NAME = instance_name();
 export const COOKIE_SECRET = cookie_secret();
 export const DATACENTRAL_GROUP_PREFIX = datacentral_group_prefix();
+export const CLUSTER_ADMIN_GROUP_NAME = cluster_admin_group_name();
