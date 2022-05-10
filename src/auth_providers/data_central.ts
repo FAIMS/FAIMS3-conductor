@@ -22,7 +22,8 @@
 import type {OAuth2} from 'oauth';
 
 import {
-  DATACENTRAL_GROUP_PREFIX, CLUSTER_ADMIN_GROUP_NAME
+  DATACENTRAL_GROUP_PREFIX,
+  CLUSTER_ADMIN_GROUP_NAME,
 } from '../buildconfig';
 import {saveUserToDB} from '../couchdb/users';
 import {VerifyCallback, DoneFunction} from '../types';

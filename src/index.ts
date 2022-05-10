@@ -83,8 +83,10 @@ async function initialize() {
   app.set('faims3_token_signing_key', signing_key);
 }
 
-initialize().then(async () => {
-  app.listen(CONDUCTOR_PORT, '0.0.0.0', () => {
-    console.log(`The hello is listening on port ${CONDUCTOR_PORT}!`);
-  });
-});
+initialize()
+  .then(async (): void => {
+    app.listen(CONDUCTOR_PORT, '0.0.0.0', () => {
+      console.log(`The hello is listening on port ${CONDUCTOR_PORT}!`);
+    });
+  })
+  .catch(console.error);
