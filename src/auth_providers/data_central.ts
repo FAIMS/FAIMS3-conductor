@@ -21,11 +21,13 @@
 
 import type {OAuth2} from 'oauth';
 
-import {DATACENTRAL_GROUP_PREFIX} from '../buildconfig';
+import {
+  DATACENTRAL_GROUP_PREFIX, CLUSTER_ADMIN_GROUP_NAME
+} from '../buildconfig';
 import {saveUserToDB} from '../couchdb/users';
 import {VerifyCallback, DoneFunction} from '../types';
 
-const MAIN_GROUPS = ['editor', 'admin', 'public', 'moderator'];
+const MAIN_GROUPS = ['editor', 'public', 'moderator'];
 
 function ldap_group_to_group_name(group: string): string {
   const split_dn = group.split(',');
@@ -48,6 +50,10 @@ function dc_groups_to_couchdb_roles(groups: string[]): string[] {
       continue;
     }
     const project_name = split_group[1];
+    if (project_name === 'admin') {
+      roles.push(CLUSTER_ADMIN_GROUP_NAME);
+      continue;
+    }
     if (split_group.length === 2) {
       roles.push(project_name + '||team');
       continue;
