@@ -84,7 +84,7 @@ async function initialize() {
 }
 
 initialize()
-  .then(async (): void => {
+  .then(async (): Promise<void> => {
     app.listen(CONDUCTOR_PORT, '0.0.0.0', () => {
       console.log(`The hello is listening on port ${CONDUCTOR_PORT}!`);
     });
