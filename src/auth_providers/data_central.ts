@@ -29,6 +29,7 @@ import {saveUserToDB} from '../couchdb/users';
 import {VerifyCallback, DoneFunction} from '../types';
 
 const MAIN_GROUPS = ['editor', 'public', 'moderator'];
+export const LOGOUT_URL = 'https://auth.datacentral.org.au/cas/logout';
 
 function ldap_group_to_group_name(group: string): string {
   const split_dn = group.split(',');
