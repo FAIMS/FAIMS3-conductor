@@ -39,7 +39,7 @@
     "jose": "4.8.1",
     "jsonwebtoken": "8.5.1",
     "oauth": "0.9.15",
-    "passport": "0.5.3",
+    "passport": "0.6.0",
     "passport-oauth2": "1.6.1",
     "pouchdb": "7.3.0",
     "pouchdb-find": "7.3.0",
