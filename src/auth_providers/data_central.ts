@@ -89,7 +89,7 @@ export function oauth_verify(
   );
   const name = profile.attributes.displayName;
   const user: Express.User = {
-    user_id: profile.id,
+    user_id: profile.id.toLowerCase().trim(),
     name: name,
     roles: roles,
     other_props: profile,
