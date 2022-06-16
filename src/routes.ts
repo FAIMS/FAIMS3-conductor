@@ -19,8 +19,6 @@
  *   which server to use and whether to include test data
  */
 
-import handlebars from 'handlebars';
-
 import {app} from './core';
 import {get_user_auth_token} from './authkeys/user';
 import {NonUniqueProjectID} from './datamodel/core';

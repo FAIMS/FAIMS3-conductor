@@ -13,16 +13,31 @@
  * See, the License, for the specific language governing permissions and
  * limitations under the License.
  *
- * Filename: index.test.ts
+ * Filename: conductor.test.ts
  * Description:
- *   This module exports the configuration of the build, including things like
- *   which server to use and whether to include test data
+ *   Implement some basic tests for API functionality of conductor
  */
 
-import {app} from './routes';
 import request from 'supertest';
+import {app} from '../src/routes';
 
 test('check is up', async () => {
   const result = await request(app).get('/up');
   expect(result.statusCode).toEqual(200);
+});
+
+describe('Auth', () => {
+  it('redirect to auth', done => {
+    request(app)
+      .get('/')
+      .expect(302)
+      .expect('Location', /\/auth/, done);
+  });
+
+  it('auth returns HTML', done => {
+    request(app)
+      .get('/auth')
+      .expect(200)
+      .expect('Content-Type', /text\/html/, done);
+  });
 });

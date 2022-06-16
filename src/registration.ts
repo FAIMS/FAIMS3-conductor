@@ -19,14 +19,13 @@
  *   which server to use and whether to include test data
  */
 
-import {v4 as uuidv4} from 'uuid';
-
 import {NonUniqueProjectID} from './datamodel/core';
-import {PouchUser} from './datamodel/users';
-import {getUserByEmail, updateUser} from './couchdb/users';
+// import {PouchUser} from './datamodel/database';
+// import {getUserByEmail, updateUser} from './couchdb/users';
 
 export async function userCanInviteToProject(
   user: Express.User | undefined,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   project_id: NonUniqueProjectID
 ): Promise<boolean> {
   // TODO: Add actual lookups to check ACLs etc.

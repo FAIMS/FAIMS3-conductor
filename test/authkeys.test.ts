@@ -22,10 +22,13 @@
 import {testProp, fc} from 'jest-fast-check';
 import {importPKCS8, importSPKI} from 'jose';
 
-import {create_auth_key} from './create';
-import {read_auth_key} from './read';
-import type {CouchDBUsername, CouchDBUserRoles} from '../datamodel/users';
-import type {SigningKey} from './types';
+import {create_auth_key} from '../src/authkeys/create';
+import {read_auth_key} from '../src/authkeys/read';
+import type {
+  CouchDBUsername,
+  CouchDBUserRoles,
+  SigningKey,
+} from '../src/authkeys/types';
 
 const SIGNING_ALGORITHM = 'RS256';
 const INSTANCE_NAME = 'test';
@@ -109,7 +112,7 @@ describe('roundtrip creating and reading token', () => {
           return read_auth_key(token, signing_key);
         })
         .then(token_props => {
-          console.log(token_props);
+          //console.log(token_props);
           expect(username).toBe(token_props.username);
           expect(roles).toStrictEqual(token_props.roles);
           expect(name).toStrictEqual(token_props.name);
