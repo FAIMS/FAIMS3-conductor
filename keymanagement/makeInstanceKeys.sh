@@ -6,7 +6,7 @@ set -euo pipefail
 if [ $# -eq 1 ]; then
 	HOST_TARGET="$1"
 else
-	echo "./makeTestKeys.sh host";
+	echo "./makeInstanceKeys.sh host";
 	exit 0;
 fi
 
