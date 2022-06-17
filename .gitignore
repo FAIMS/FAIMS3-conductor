@@ -117,3 +117,5 @@ staging
 local_auth/
 local_state/
 projects_dummy_listing/
+keys
+couchdb/*.ini

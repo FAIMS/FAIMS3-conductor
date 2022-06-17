@@ -1,0 +1,38 @@
+version: "3.9"
+services:
+  couchdb:
+    image: couchdb      
+    ports:
+      - "0.0.0.0:5984:5984"     
+    volumes:
+      - ./couchdb/local.ini:/opt/couchdb/etc/local.d/local.ini
+
+
+  conductor:
+    build:
+      context: .
+      args:
+        REACT_APP_HOST_NAME: http://localhost:8080/
+        FAIMS_REQUIRED_GROUP: FAIMSFeb
+    ports:
+      - "0.0.0.0:8080:8080"
+    environment:      
+      # Note the - and =
+      # https://docs.docker.com/compose/environment-variables/#set-environment-variables-in-containers
+      - REACT_APP_HOST_NAME=http://localhost:8080
+      - REACT_APP_LOCAL_COUCHDB_USERNAME=admin
+      - REACT_APP_LOCAL_COUCHDB_PASSWORD=GlacialTrickleUnmovingTributeAwrySquishy
+      - DATACENTRAL_GROUP_PREFIX=FTest
+      - FAIMS_USERDB=http://couchdb:5984/people
+      - FAIMS_REQUIRED_GROUP=FAIMSFeb
+      - FAIMS_CONDUCTOR_KID=conductor
+      - FAIMS_CONDUCTOR_PRIVATE_KEY_PATH=/app/keys/conductor_private_key.pem
+      - FAIMS_CONDUCTOR_PUBLIC_KEY_PATH=/app/keys/conductor_public_key.pem
+      - FAIMS_CONDUCTOR_INSTANCE_NAME=dev
+      - FAIMS_COOKIE_SECRET=d6db6880-7f29-11ec-b4f5-b33115f71bb2
+    volumes:
+      - keys:/app/keys
+      
+         
+volumes:
+  keys:
