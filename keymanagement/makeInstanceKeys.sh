@@ -2,13 +2,8 @@
 
 set -euo pipefail
 
-
-if [ $# -eq 1 ]; then
-	HOST_TARGET="$1"
-else
-	echo "./makeInstanceKeys.sh host";
-	exit 0;
-fi
+## no need for this to vary as in this deployment there is only ever one conductor-couchdb pair
+export HOST_TARGET='conductor'
 
 mkdir -p keys
 openssl genpkey -algorithm RSA -out "keys/${HOST_TARGET}_private_key.pem" -pkeyopt rsa_keygen_bits:2048

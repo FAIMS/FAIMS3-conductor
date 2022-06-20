@@ -11,7 +11,9 @@
     "prestart": "npm run-script compile",
     "start": "node .",
     "watch": "nodemon --ignore build --ext ts --exec 'tsc --incremental && node .'",
-    "test": "jest"
+    "test": "jest",
+    "keys": "./keymanagement/makeInstanceKeys.sh",
+    "initdb": "node couchdb/initCouchDB.js"
   },
   "dependencies": {
     "@types/cookie-session": "^2.0.44",
@@ -50,6 +52,8 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
-    "nodemon": "^2.0.15"
+    "nodemon": "^2.0.15",
+    "nano": "^10.0.0",
+    "dotenv": "^16.0.1"
   }
 }
