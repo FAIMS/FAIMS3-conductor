@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Macquarie University
+ * Copyright 2021, 2022 Macquarie University
  *
  * Licensed under the Apache License Version 2.0 (the, "License");
  * you may not use, this file except in compliance with the License.
@@ -61,7 +61,7 @@ app.get('/auth/', (req, res) => {
 
 app.get('/', async (req, res) => {
   if (req.user) {
-    res.render('home', {user: req.user});
+    res.render('home', {user: req.user, roles: req.user.roles});
   } else {
     res.redirect('/auth/');
   }
@@ -99,10 +99,12 @@ app.get('/get-token/', async (req, res) => {
   } else {
     res.status(403).end();
   }
+  return;
 });
 
 app.get('/users/', async (req, res) => {
   res.send(await users_db.allDocs({include_docs: true, endkey: '_'}));
+  return;
 });
 
 app.get('/up/', (req, res) => {

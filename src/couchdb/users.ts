@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Macquarie University
+ * Copyright 2021, 2022 Macquarie University
  *
  * Licensed under the Apache License Version 2.0 (the, "License");
  * you may not use, this file except in compliance with the License.
@@ -103,9 +103,9 @@ function express_user_to_pouch_user(user: Express.User): PouchUser {
   return {
     type: 'user',
     _id: user.user_id,
-    name: user.user_id,
-    roles: user.user_props.attributes.groups,
-    other_props: user.user_props,
+    name: user.name ?? user.user_id,
+    roles: user.roles ?? [],
+    other_props: user.other_props,
   };
 }
 
@@ -114,7 +114,9 @@ function express_user_to_pouch_user(user: Express.User): PouchUser {
 function pouch_user_to_express_user(user: PouchUser): Express.User {
   return {
     user_id: user._id,
-    user_props: user.other_props,
+    name: user.name,
+    roles: user.roles,
+    other_props: user.other_props,
   };
 }
 

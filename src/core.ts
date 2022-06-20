@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Macquarie University
+ * Copyright 2021, 2022 Macquarie University
  *
  * Licensed under the Apache License Version 2.0 (the, "License");
  * you may not use, this file except in compliance with the License.
@@ -24,7 +24,7 @@ import bodyParser from 'body-parser';
 import cookieSession from 'cookie-session';
 import cors from 'cors';
 import passport from 'passport';
-import express_handlebars from 'express-handlebars';
+import {engine as express_handlebars} from 'express-handlebars';
 
 import {COOKIE_SECRET} from './buildconfig';
 import path from 'path/posix';

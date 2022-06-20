@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Macquarie University
+ * Copyright 2021, 2022 Macquarie University
  *
  * Licensed under the Apache License Version 2.0 (the, "License");
  * you may not use, this file except in compliance with the License.
@@ -30,9 +30,11 @@ passport.serializeUser((user: Express.User, done: DoneFunction) => {
 
 passport.deserializeUser((id: string, done: DoneFunction) => {
   console.log('id', id);
-  get_user_from_username(id).then(user_data => {
-    done(null, user_data);
-  });
+  get_user_from_username(id)
+    .then(user_data => {
+      done(null, user_data);
+    })
+    .catch(err => done(err, null));
 });
 
 export function add_auth_routes(app: any, handlers: any) {

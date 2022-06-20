@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Macquarie University
+ * Copyright 2021, 2022 Macquarie University
  *
  * Licensed under the Apache License Version 2.0 (the, "License");
  * you may not use, this file except in compliance with the License.
@@ -27,7 +27,9 @@ declare global {
   namespace Express {
     interface User {
       user_id: string;
-      user_props?: any;
+      roles?: string[];
+      name?: string;
+      other_props?: any;
     }
   }
 }
