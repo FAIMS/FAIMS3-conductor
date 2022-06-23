@@ -6,8 +6,9 @@ services:
       - "0.0.0.0:5984:5984"     
     volumes:
       - ./couchdb/local.ini:/opt/couchdb/etc/local.d/local.ini
-
-
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=GlacialTrickleUnmovingTributeAwrySquishy
   conductor:
     build:
       context: .

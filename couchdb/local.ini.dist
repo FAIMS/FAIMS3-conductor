@@ -98,7 +98,7 @@ enable_cors = true
 ; 'username = password' lines. Don't forget to restart CouchDB after
 ; changing this.
 [admins]
-admin = -pbkdf2-70037d43d18c38a8896e2f281b20fbc4dd6d24c0,dbb8d7c78dfe6620d483e566a6179600,10
+admin=
 
 ; https://docs.couchdb.org/en/latest/setup/single-node.html
 [couchdb]
