@@ -14,6 +14,9 @@ services:
       args:
         REACT_APP_HOST_NAME: http://localhost:8080/
         FAIMS_REQUIRED_GROUP: FAIMSFeb
+    command: "npm start"
+    volumes:
+      - .:/app
     ports:
       - "0.0.0.0:8080:8080"
     environment:      
@@ -30,8 +33,8 @@ services:
       - FAIMS_CONDUCTOR_PUBLIC_KEY_PATH=/app/keys/conductor_public_key.pem
       - FAIMS_CONDUCTOR_INSTANCE_NAME=dev
       - FAIMS_COOKIE_SECRET=d6db6880-7f29-11ec-b4f5-b33115f71bb2
-    volumes:
-      - keys:/app/keys
+    # volumes:
+    #   - keys:/app/keys
       
          
 volumes:

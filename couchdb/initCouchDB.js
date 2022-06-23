@@ -1,3 +1,24 @@
+/*
+ * Copyright 2021, 2022 Macquarie University
+ *
+ * Licensed under the Apache License Version 2.0 (the, "License");
+ * you may not use, this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing software
+ * distributed under the License is distributed on an "AS IS" BASIS
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND either express or implied.
+ * See, the License, for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Filename: initCouchDB.js
+ * Description:
+ *   Initialise the couchdb instance with required databases
+ */
+
+
 // read env from .env
 require("dotenv").config()
 
@@ -5,6 +26,7 @@ var fs = require('fs');
 const { env } = require('process');
 
 const url = `http://${env.USERNAME}:${env.PASSWORD}@${env.HOST}:${env.PORT}/`
+console.log("COUCHDB URL", url)
 var nano = require('nano')(url)
 
 const directoryDoc = {
@@ -24,7 +46,7 @@ const directoryDoc = {
         "name": "DataCentral"
       }
     }
-  }
+}
 
 // Permissions doc goes into _design/permissions in a project
 const projectPermissionsDoc = {
@@ -92,26 +114,22 @@ const securityDoc = {
   }
 }
 
-
-
-const createDirectory = async () => {
-
-    const dbname = 'directory'
-
-    await createDatabase(dbname)
-
-    const db = nano.use(dbname)
-    await db.insert(directoryDoc)
-}
-
-
-const createDatabase = async (dbname) => {
+// Create a database
+// if the recreate argument is true then destroy any existing
+// database and create a new one
+// Return true if a new database has been created, false otherwise
+const createDatabase = async (dbname, recreate) => {
 
     const info = await nano.db.list()
 
     if (info.indexOf(dbname) >= 0) {
-        console.log("Database", dbname, "exists, destroying")
-        await nano.db.destroy(dbname)
+        console.log("Database", dbname, "exists")
+        if (recreate) {
+          console.log("...destroying")
+          await nano.db.destroy(dbname)
+        } else {
+          return false
+        }
     }
 
     console.log("Creating database", dbname)
@@ -119,17 +137,36 @@ const createDatabase = async (dbname) => {
     if (response.ok) {
         const db = nano.use(dbname)
         await db.insert(securityDoc, '_security')
+        return true
     }
+    // 
+    return false
 }
 
 
-const createProjectsDb = async () => {
+const createProjectsDb = async (recreate) => {
 
-  await createDatabase('projects')
-  const db = nano.use('projects')
-  db.insert(projectPermissionsDoc)
-
+  const created = await createDatabase('projects', recreate)
+  if (created) {
+    const db = nano.use('projects')
+    db.insert(projectPermissionsDoc)
+  }
 }
+
+
+const createDirectory = async () => {
+
+  const dbname = 'directory'
+
+  const created = await createDatabase(dbname)
+
+  if (created) {
+    const db = nano.use(dbname)
+    await db.insert(directoryDoc)
+  }
+}
+
+
 
 // create a project in the database - incomplete port from shell script
 // needs to read projects from github instead
@@ -195,9 +232,13 @@ const createProject = async () => {
 
 
 const main = async () => {
-    await createDirectory()
-    await createProjectsDb()
-    await createDatabase('people') 
+
+    // do we destroy and recreate databases if present, no for now
+    const recreate = false
+
+    await createDirectory(recreate)
+    await createProjectsDb(recreate)
+    await createDatabase('people', recreate) 
 }
 
 main()
