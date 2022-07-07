@@ -12,8 +12,8 @@
     "start": "node .",
     "watch": "nodemon --ignore build --ext ts --exec 'tsc --incremental && node .'",
     "test": "ts-mocha test/*.ts",
-    "keys": "./keymanagement/makeInstanceKeys.sh",
-    "initdb": "node couchdb/initCouchDB.js"
+    "keys": "env-cmd ./keymanagement/makeInstanceKeys.sh",
+    "initdb": "env-cmd node couchdb/initCouchDB.js"
   },
   "dependencies": {
     "@types/cookie-session": "2.0.44",
@@ -53,6 +53,7 @@
     "@types/expect": "^24.3.0",
     "@types/mocha": "^9.1.1",
     "dotenv": "^16.0.1",
+    "env-cmd": "^10.1.0",
     "jest": "^27.5.1",
     "mocha": "^10.0.0",
     "nano": "^10.0.0",

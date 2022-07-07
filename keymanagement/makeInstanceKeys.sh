@@ -15,5 +15,7 @@ openssl rsa -pubout -in "keys/${HOST_TARGET}_private_key.pem" -out "keys/${HOST_
 cp ./couchdb/local.ini.dist ./couchdb/local.ini 
 echo "[jwt_keys]" >> ./couchdb/local.ini
 echo "rsa:conductor="`cat "keys/${HOST_TARGET}_public_key.pem" | tr '\n' '\\n'` >> ./couchdb/local.ini
+echo '[admin]' >> ./couchdb/local.ini
+echo "admin=${COUCHDB_PASSWORD}" >> ./couchdb/local.ini
 
 

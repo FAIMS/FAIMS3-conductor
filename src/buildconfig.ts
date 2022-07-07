@@ -83,12 +83,17 @@ function directory_protocol(): string {
   }
 }
 
-function local_hostname(): string {
-  const host = process.env.REACT_APP_HOST_NAME;
+/* 
+  conductor_url - returns the base URL of this Conductor server
+*/
+function conductor_url(): string {
+  const protocol = process.env.CONDUCTOR_PROTOCOL;
+  const host = process.env.CONDUCTOR_HOST;
+  const port = process.env.CONDUCTOR_PORT;
   if (host === '' || host === undefined) {
     return 'http://localhost:8080';
   }
-  return host;
+  return `${protocol}://${host}:${port}`;
 }
 
 function directory_host(): string {
@@ -154,8 +159,8 @@ function local_couchdb_auth():
   | undefined
   | {username: string; password: string} {
   // Used in the server, as opposed to COUCHDB_USER and PASSWORD for testing.
-  const username = process.env.REACT_APP_LOCAL_COUCHDB_USERNAME;
-  const password = process.env.REACT_APP_LOCAL_COUCHDB_PASSWORD;
+  const username = process.env.COUCHDB_USER;
+  const password = process.env.COUCHDB_PASSWORD;
 
   if (
     username === '' ||
@@ -238,6 +243,15 @@ function cluster_admin_group_name(): string {
   return name;
 }
 
+function conductor_port(): number {
+  const port = process.env.CONDUCTOR_PORT;
+  console.log('CONDUCTOR_PORT', port);
+  if (port === '' || port === undefined) {
+    return 8000;
+  }
+  return parseInt(port);
+}
+
 export const CONDUCTOR_USER_DB = conductor_user_db();
 export const DIRECTORY_PROTOCOL = directory_protocol();
 export const DIRECTORY_HOST = directory_host();
@@ -246,9 +260,9 @@ export const DIRECTORY_AUTH = directory_auth();
 export const LOCAL_COUCHDB_AUTH = local_couchdb_auth();
 export const RUNNING_UNDER_TEST = is_testing();
 export const COMMIT_VERSION = commit_version();
-export const HOST_NAME = local_hostname();
+export const CONDUCTOR_URL = conductor_url();
 export const AUTOACTIVATE_PROJECTS = true; // for alpha, beta will change this
-export const CONDUCTOR_PORT = 8080;
+export const CONDUCTOR_PORT = conductor_port();
 export const CONDUCTOR_KEY_ID = signing_key_id();
 export const CONDUCTOR_PRIVATE_KEY_PATH = private_key_path();
 export const CONDUCTOR_PUBLIC_KEY_PATH = public_key_path();

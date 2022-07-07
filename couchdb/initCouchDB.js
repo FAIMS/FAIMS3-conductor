@@ -18,21 +18,17 @@
  *   Initialise the couchdb instance with required databases
  */
 
-
-// read env from .env
-require("dotenv").config()
-
 var fs = require('fs');
 const { env } = require('process');
 
-const url = `http://${env.USERNAME}:${env.PASSWORD}@${env.HOST}:${env.PORT}/`
+const url = `http://admin:${env.COUCHDB_PASSWORD}@${env.COUCHDB_HOST}:${env.COUCHDB_PORT}/`
 console.log("COUCHDB URL", url)
 var nano = require('nano')(url)
 
 const directoryDoc = {
     "_id": "default",
     "name": "Default instance",
-    "description": `Default FAIMS instance on ${env.HOST}`,
+    "description": `Default FAIMS instance on ${env.CONDUCTOR_HOST}`,
     "people_db": {
       "db_name": "people"
     },
@@ -41,7 +37,7 @@ const directoryDoc = {
     },
     "auth_mechanisms": {
       "demo": {
-        "portal": `${env.CONDUCTOR_HOST}`,
+        "portal": `${env.CONDUCTOR_PROTOCOL}://${env.CONDUCTOR_HOST}:${env.CONDUCTOR_PORT}/`,
         "type": "oauth",
         "name": "DataCentral"
       }

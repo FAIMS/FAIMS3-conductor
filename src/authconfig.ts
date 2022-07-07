@@ -21,12 +21,12 @@
 
 import OAuth2Strategy from 'passport-oauth2';
 
-import {HOST_NAME} from './buildconfig';
+import {CONDUCTOR_URL} from './buildconfig';
 import {AuthInfo} from './datamodel/database';
 
 export const secret = 'Your secret phrase here.';
 
-console.error('Hostname is:', HOST_NAME);
+console.error('Conductor URL is:', CONDUCTOR_URL);
 
 export const auth_mechanisms: {
   [auth_id: string]: {
@@ -37,7 +37,7 @@ export const auth_mechanisms: {
   default: {
     // Should be in sync with clients
     public: {
-      portal: HOST_NAME,
+      portal: CONDUCTOR_URL,
       type: 'oauth',
       name: 'Data Central',
     },
@@ -49,7 +49,7 @@ export const auth_mechanisms: {
       clientID: '5c1dca8c5c10f7b96f50e5829816a260-datacentral.org.au',
       clientSecret:
         '3478721c4c92e9e6118aaa315712854087ebc4b01abb9e7977bd17dc66d0c67c',
-      callbackURL: `${HOST_NAME}/auth-return/default/`,
+      callbackURL: `${CONDUCTOR_URL}/auth-return/default/`,
       passReqToCallback: true,
     },
   },
