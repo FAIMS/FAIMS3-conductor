@@ -39,3 +39,12 @@ database:
 
 docker compose exec conductor npm run initdb
 ```
+
+## Tests
+
+Run tests inside the conductor instance:
+
+```bash
+
+docker compose exec conductor npm run test
+```
