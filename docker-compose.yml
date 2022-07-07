@@ -12,10 +12,7 @@ services:
   conductor:
     build:
       context: .
-      args:
-        REACT_APP_HOST_NAME: http://localhost:8080/
-        FAIMS_REQUIRED_GROUP: FAIMSFeb
-    command: "npm start"
+    command: "node ."
     volumes:
       - .:/app
     ports:
@@ -28,7 +25,6 @@ services:
       - REACT_APP_LOCAL_COUCHDB_PASSWORD=GlacialTrickleUnmovingTributeAwrySquishy
       - DATACENTRAL_GROUP_PREFIX=FTest
       - FAIMS_USERDB=http://couchdb:5984/people
-      - FAIMS_REQUIRED_GROUP=FAIMSFeb
       - FAIMS_CONDUCTOR_KID=conductor
       - FAIMS_CONDUCTOR_PRIVATE_KEY_PATH=/app/keys/conductor_private_key.pem
       - FAIMS_CONDUCTOR_PUBLIC_KEY_PATH=/app/keys/conductor_public_key.pem
