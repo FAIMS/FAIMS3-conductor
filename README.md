@@ -39,4 +39,3 @@ database:
 
 docker compose exec conductor npm run initdb
 ```
-
