@@ -18,33 +18,26 @@
  *   Implement some tests on the running couchdb server
  */
 
+import request from 'supertest';
 
-import assert from 'assert'
-import request from 'supertest' 
-
-
-const couchdbURL = 'http://couchdb:5984'
+const couchdbURL = 'http://couchdb:5984';
 
 describe('CouchDB Server', () => {
+  it('returns JSON from the root URL', done => {
+    request(couchdbURL)
+      .get('/')
+      .expect(200)
+      .expect('Content-Type', 'application/json', done);
+  });
 
-    it('returns JSON from the root URL', (done) => {
-        request(couchdbURL)
-        .get('/')
-        .expect(200)
-        .expect('Content-Type', 'application/json', done)
-    })
-
-
-
-    // an attempt at checking CORS
-    it('Has the right CORS settings', (done) => {
-        request(couchdbURL)
-        .get('/')
-        .set('Origin', 'https://testing.3.faims.edu.au')
-        .set('Access-Control-Request-Method', 'GET')
-        .set('Access-Control-Request-Headers', 'X-Requested-With')
-        .expect('Access-Control-Allow-Origin', 'https://testing.3.faims.edu.au')
-        .expect(200, done)
-    })
-
-})
+  // an attempt at checking CORS
+  it('Has the right CORS settings', done => {
+    request(couchdbURL)
+      .get('/')
+      .set('Origin', 'https://testing.3.faims.edu.au')
+      .set('Access-Control-Request-Method', 'GET')
+      .set('Access-Control-Request-Headers', 'X-Requested-With')
+      .expect('Access-Control-Allow-Origin', 'https://testing.3.faims.edu.au')
+      .expect(200, done);
+  });
+});

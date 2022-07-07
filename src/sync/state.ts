@@ -18,16 +18,14 @@
  *   TODO
  */
 
-import {NonUniqueProjectID, ProjectID} from '../datamodel/core';
+import {ProjectID} from '../datamodel/core';
 import {
   ProjectObject,
   ProjectMetaObject,
   ProjectDataObject,
   ActiveDoc,
-  isRecord,
 } from '../datamodel/database';
 import {ExistingActiveDoc, LocalDB} from './databases';
-import {add_initial_listener} from './event-handler-registration';
 import {DirectoryEmitter} from './events';
 
 export let listings_known = false;

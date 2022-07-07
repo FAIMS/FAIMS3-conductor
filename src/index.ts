@@ -41,7 +41,6 @@ import {
 import {load_signing_key} from './authkeys/signing_keys';
 import {app} from './routes';
 import {add_auth_routes} from './auth_routes';
-import {initialize as pouch_initialize} from './sync/initialize';
 import {add_initial_listener} from './sync/event-handler-registration';
 import {
   register_listings_known,

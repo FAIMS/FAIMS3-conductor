@@ -82,11 +82,11 @@ function directory_protocol(): string {
   }
 }
 
-/* 
+/*
   conductor_url - returns the base URL of this Conductor server
 */
 function conductor_url(): string {
-  const url = process.env.CONDUCTOR_PUBLIC_URL; 
+  const url = process.env.CONDUCTOR_PUBLIC_URL;
   if (url === '' || url === undefined) {
     return 'http://localhost:8080';
   }
@@ -241,7 +241,7 @@ function cluster_admin_group_name(): string {
 }
 
 function conductor_port(): number {
-  const port = process.env.CONDUCTOR_PORT; 
+  const port = process.env.CONDUCTOR_PORT;
   if (port === '' || port === undefined) {
     return 8000;
   }

@@ -291,6 +291,7 @@ async function activate_project(
   project_id: NonUniqueProjectID,
   username: string | null,
   password: string | null,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   is_sync = true
 ) {
   if (project_id.startsWith('_design/')) {

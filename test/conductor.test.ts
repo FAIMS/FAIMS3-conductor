@@ -18,24 +18,21 @@
  *   Implement some basic tests for API functionality of conductor
  */
 
-
-import assert from 'assert'
-import request from 'supertest'
+import request from 'supertest';
 import {app} from '../src/routes';
 
 describe('Auth', () => {
-    it('redirect to auth', function(done) {
-      request(app)
-        .get('/')
-        .expect(302)
-        .expect('Location', /\/auth/, done)
-    });
-
-    it('auth returns HTML', (done) => {
-      request(app)
-        .get('/auth')
-        .expect(200)
-        .expect('Content-Type', /text\/html/, done)
-    });
-
+  it('redirect to auth', done => {
+    request(app)
+      .get('/')
+      .expect(302)
+      .expect('Location', /\/auth/, done);
   });
+
+  it('auth returns HTML', done => {
+    request(app)
+      .get('/auth')
+      .expect(200)
+      .expect('Content-Type', /text\/html/, done);
+  });
+});
