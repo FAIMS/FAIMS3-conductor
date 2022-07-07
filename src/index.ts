@@ -41,7 +41,6 @@ import {
 import {load_signing_key} from './authkeys/signing_keys';
 import {app} from './routes';
 import {add_auth_routes} from './auth_routes';
-import {initialize as pouch_initialize} from './sync/initialize';
 import {add_initial_listener} from './sync/event-handler-registration';
 import {
   register_listings_known,
@@ -86,7 +85,9 @@ async function initialize() {
 initialize()
   .then(async (): Promise<void> => {
     app.listen(CONDUCTOR_PORT, '0.0.0.0', () => {
-      console.log(`The hello is listening on port ${CONDUCTOR_PORT}!`);
+      console.log(
+        `Conductor is listening on port http://0.0.0.0:${CONDUCTOR_PORT}/`
+      );
     });
   })
   .catch(console.error);

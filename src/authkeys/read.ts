@@ -21,7 +21,7 @@
 
 import {jwtVerify} from 'jose';
 
-import type {CouchDBUsername, CouchDBUserRoles, SigningKey} from './types';
+import type {SigningKey} from './types';
 
 export async function read_auth_key(token: string, signing_key: SigningKey) {
   const {payload, protectedHeader} = await jwtVerify(
