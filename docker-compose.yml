@@ -28,6 +28,10 @@ services:
       - DEPLOY_HOST
       - CONDUCTOR_PORT
 
+      # public URL for accessing Conductor & CouchDB
+      - CONDUCTOR_PUBLIC_URL
+      - COUCHDB_PUBLIC_URL
+
       - FAIMS_USERDB
       - FAIMS_CONDUCTOR_KID 
       - FAIMS_COOKIE_SECRET

@@ -30,8 +30,7 @@ const FALSEY_STRINGS = ['false', '0', 'off', 'no'];
  */
 
 function commit_version(): string {
-  const commitver = process.env.REACT_APP_COMMIT_VERSION;
-  console.log('commitver', commitver);
+  const commitver = process.env.COMMIT_VERSION;
   if (
     commitver === '' ||
     commitver === undefined ||
@@ -87,13 +86,11 @@ function directory_protocol(): string {
   conductor_url - returns the base URL of this Conductor server
 */
 function conductor_url(): string {
-  const protocol = process.env.CONDUCTOR_PROTOCOL;
-  const host = process.env.DEPLOY_HOST;
-  const port = process.env.CONDUCTOR_PORT;
-  if (host === '' || host === undefined) {
+  const url = process.env.CONDUCTOR_PUBLIC_URL; 
+  if (url === '' || url === undefined) {
     return 'http://localhost:8080';
   }
-  return `${protocol}://${host}:${port}`;
+  return url;
 }
 
 function directory_host(): string {
@@ -244,8 +241,7 @@ function cluster_admin_group_name(): string {
 }
 
 function conductor_port(): number {
-  const port = process.env.CONDUCTOR_PORT;
-  console.log('CONDUCTOR_PORT', port);
+  const port = process.env.CONDUCTOR_PORT; 
   if (port === '' || port === undefined) {
     return 8000;
   }
@@ -260,7 +256,7 @@ export const DIRECTORY_AUTH = directory_auth();
 export const LOCAL_COUCHDB_AUTH = local_couchdb_auth();
 export const RUNNING_UNDER_TEST = is_testing();
 export const COMMIT_VERSION = commit_version();
-export const CONDUCTOR_URL = conductor_url();
+export const CONDUCTOR_PUBLIC_URL = conductor_url();
 export const AUTOACTIVATE_PROJECTS = true; // for alpha, beta will change this
 export const CONDUCTOR_PORT = conductor_port();
 export const CONDUCTOR_KEY_ID = signing_key_id();
