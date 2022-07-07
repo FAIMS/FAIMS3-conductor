@@ -21,14 +21,17 @@
 var fs = require('fs');
 const { env } = require('process');
 
-const url = `http://admin:${env.COUCHDB_PASSWORD}@${env.COUCHDB_HOST}:${env.COUCHDB_PORT}/`
+// here we're configuring for running inside of the conductor container
+// where couchdb is running on the host `couchdb`  Other info comes from
+// the environment
+const url = `http://admin:${env.COUCHDB_PASSWORD}@couchdb:${env.COUCHDB_PORT}/`
 console.log("COUCHDB URL", url)
 var nano = require('nano')(url)
 
 const directoryDoc = {
     "_id": "default",
     "name": "Default instance",
-    "description": `Default FAIMS instance on ${env.CONDUCTOR_HOST}`,
+    "description": `Default FAIMS instance on ${env.DEPLOY_HOST}`,
     "people_db": {
       "db_name": "people"
     },
@@ -37,7 +40,7 @@ const directoryDoc = {
     },
     "auth_mechanisms": {
       "demo": {
-        "portal": `${env.CONDUCTOR_PROTOCOL}://${env.CONDUCTOR_HOST}:${env.CONDUCTOR_PORT}/`,
+        "portal": `${env.CONDUCTOR_PROTOCOL}://${env.DEPLOY_HOST}:${env.CONDUCTOR_PORT}/`,
         "type": "oauth",
         "name": "DataCentral"
       }

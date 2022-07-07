@@ -2,6 +2,13 @@
 
 set -euo pipefail
 
+# Local .env
+if [ -f .env ]; then
+    # Load Environment Variables
+    export $(cat .env | grep -v '#' | sed 's/\r$//' | awk '/=/ {print $1}' )
+fi
+
+
 ## no need for this to vary as in this deployment there is only ever one conductor-couchdb pair
 export HOST_TARGET='conductor'
 

@@ -88,7 +88,7 @@ function directory_protocol(): string {
 */
 function conductor_url(): string {
   const protocol = process.env.CONDUCTOR_PROTOCOL;
-  const host = process.env.CONDUCTOR_HOST;
+  const host = process.env.DEPLOY_HOST;
   const port = process.env.CONDUCTOR_PORT;
   if (host === '' || host === undefined) {
     return 'http://localhost:8080';
