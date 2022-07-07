@@ -31,3 +31,12 @@ docker compose up -d
 ```
 
 will start the couchdb and conductor servers to listen on the configured port.
+
+Once the services are up and running we need to initialise the CouchDB
+database:
+
+```bash
+
+docker compose exec conductor npm run initdb
+```
+
