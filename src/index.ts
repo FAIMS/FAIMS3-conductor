@@ -41,14 +41,6 @@ import {
 import {load_signing_key} from './authkeys/signing_keys';
 import {app} from './routes';
 import {add_auth_routes} from './auth_routes';
-import {initialize as pouch_initialize} from './sync/initialize';
-import {add_initial_listener} from './sync/event-handler-registration';
-import {
-  register_listings_known,
-  register_projects_known,
-  register_metas_complete,
-  register_projects_created,
-} from './sync/state';
 
 process.on('unhandledRejection', error => {
   console.error(error); // This prints error with stack included (as for normal errors)
@@ -56,11 +48,6 @@ process.on('unhandledRejection', error => {
 });
 
 PouchDB.plugin(PouchDBFind);
-
-add_initial_listener(register_listings_known, 'listings_known');
-add_initial_listener(register_projects_known, 'projects_known');
-add_initial_listener(register_metas_complete);
-add_initial_listener(register_projects_created);
 
 for (const auth_id in auth_mechanisms) {
   const st = new CleanOAuth2Strategy(

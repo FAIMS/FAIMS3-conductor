@@ -26,7 +26,6 @@ import {get_user_auth_token} from './authkeys/user';
 import {NonUniqueProjectID} from './datamodel/core';
 import {requireAuthentication} from './middleware';
 import {userCanInviteToProject, inviteEmailToProject} from './registration';
-import {users_db} from './sync/databases';
 
 export {app};
 
@@ -102,19 +101,6 @@ app.get('/get-token/', async (req, res) => {
   return;
 });
 
-app.get('/users/', async (req, res) => {
-  res.send(await users_db.allDocs({include_docs: true, endkey: '_'}));
-  return;
-});
-
 app.get('/up/', (req, res) => {
   res.status(200).json({up: 'true'});
-});
-
-app.get('/good', (req, res) => {
-  res.status(200).json({req: Object.keys(req), res: Object.keys(res)});
-});
-
-app.get('/bad', (req, res) => {
-  res.status(200).json({req: Object.keys(req), res: Object.keys(res)});
 });
