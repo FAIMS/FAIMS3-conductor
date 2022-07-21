@@ -25,7 +25,7 @@ The following variables relate to the runtime configuration of the application:
 ## Running
 
 ```bash
-sh ./keymanagement/makeInstanceKeys.sh
+./keymanagement/makeInstanceKeys.sh
 ```
 
 generates new key pair in the `keys` folder and generates the `local.ini` file for couchdb
