@@ -54,6 +54,26 @@ database:
 docker compose exec conductor npm run initdb
 ```
 
+## Development
+
+There is an alternate docker compose file for development that mounts the
+current working directory inside the container so that you can work on
+code in real time.  To use this you also need a local `node_modules` folder
+since the current directory will shadow the one inside the container. 
+
+To create `node_modules` run `npm install` inside the container:
+
+```bash
+docker compose -f docker-compose.dev.yml run conductor npm install
+```
+
+Then start the services:
+
+```bash
+docker compose -f docker-compose.dev.yml up
+```
+
+
 ## Tests
 
 Run tests inside the conductor instance:
