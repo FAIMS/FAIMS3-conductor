@@ -1,0 +1,53 @@
+# Bring up the docker images and run some integration tests
+name: Integration tests
+
+# https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
+on:
+  # Trigger the workflow on push or pull request,
+  # but only for the main branch
+  push:
+    branches:
+      - main
+      - staging
+      - trying
+  pull_request:
+    branches:
+      - main
+      - staging
+      - trying
+  # Also trigger on page_build, as well as release created events
+  page_build:
+  release:
+    types: # This configuration does not affect the page_build event above
+      - created
+
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    env:
+    COUCHDB_PASSWORD: ReallySecretPassword
+    COUCHDB_PROTOCOL: http 
+    COUCHDB_PORT: 5984 
+    DEPLOY_HOST: localhost
+
+    CONDUCTOR_PROTOCOL: http
+    CONDUCTOR_PORT: 8080
+    CONDUCTOR_PUBLIC_URL: http://localhost:8080/
+    DATACENTRAL_GROUP_PREFIX: FTest
+    FAIMS_COOKIE_SECRET: d6db6880-7f29-11ec-b4f5-b33115f71bb2
+    
+    steps:
+    - uses: actions/checkout@v2
+ 
+    - name: Build an startup containers
+      run: |
+        docker compose build
+        docker compose up -d
+        docker compose exec -T conductor npm run initdb
+
+    - name: Run tests
+      run: |
+        docker compose exec -T conductor npm run test
+
