@@ -38,7 +38,7 @@
     "jest-fast-check": "1.0.2",
     "jose": "4.8.3",
     "jsonwebtoken": "8.5.1",
-    "oauth": "0.9.15",
+    "oauth": "0.10.0",
     "passport": "0.5.3",
     "passport-oauth2": "1.6.1",
     "pouchdb": "7.3.0",
