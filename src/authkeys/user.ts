@@ -20,7 +20,8 @@
  */
 
 import {create_auth_key} from './create';
-import type {CouchDBUsername, CouchDBUserRoles, SigningKey} from './types';
+import type {CouchDBUsername, CouchDBUserRoles} from '../datamodel/users';
+import type {SigningKey} from './types';
 import {get_couchdb_user_from_username} from '../couchdb/users';
 
 export async function get_user_auth_token(

@@ -20,13 +20,24 @@
  */
 
 import type {OAuth2} from 'oauth';
+import OAuth2Strategy from 'passport-oauth2';
 
+import {CleanOAuth2Strategy} from '../authhelpers';
 import {
+  DATACENTRAL_CLIENT_ID,
+  DATACENTRAL_CLIENT_SECRET,
   DATACENTRAL_GROUP_PREFIX,
   CLUSTER_ADMIN_GROUP_NAME,
+  HAVE_DATACENTRAL_MANAGE_ROLES,
 } from '../buildconfig';
-import {saveUserToDB} from '../couchdb/users';
+import {
+  addEmailToUser,
+  updateUser,
+  getOrCreatePouchUser,
+  pouch_user_to_express_user,
+} from '../couchdb/users';
 import {VerifyCallback, DoneFunction} from '../types';
+import {PouchUser, UserServiceProfileUnlocked} from '../datamodel/users';
 
 const MAIN_GROUPS = ['editor', 'public', 'moderator'];
 export const LOGOUT_URL = 'https://auth.datacentral.org.au/cas/logout';
@@ -75,7 +86,17 @@ function ensure_string_array(groups: any): string[] {
   return groups;
 }
 
-export function oauth_verify(
+function get_user_id(profile: UserServiceProfileUnlocked): string {
+  return profile.id.toLowerCase().trim();
+}
+
+function addDCRoles(user: PouchUser, roles: string[]) {
+  // TODO: This should be modified work with roles being managed by conductor
+  // itself
+  user.roles = roles;
+}
+
+function oauth_verify(
   req: Request,
   accessToken: string,
   refreshToken: string,
@@ -84,29 +105,37 @@ export function oauth_verify(
   cb: VerifyCallback
 ) {
   console.debug('DC oauth', accessToken, refreshToken, results, profile);
-  const roles = dc_groups_to_couchdb_roles(
-    ensure_string_array(profile.attributes.groups)
-  );
-  const name = profile.attributes.displayName;
-  const user: Express.User = {
-    user_id: profile.id.toLowerCase().trim(),
-    name: name,
-    roles: roles,
-    other_props: profile,
-  };
-  saveUserToDB(user)
-    .then(() => cb(null, user, profile))
+  const user_id = get_user_id(profile);
+  getOrCreatePouchUser(user_id)
+    .then((user: PouchUser) => {
+      if (HAVE_DATACENTRAL_MANAGE_ROLES) {
+        addDCRoles(
+          user,
+          dc_groups_to_couchdb_roles(
+            ensure_string_array(profile.attributes.groups)
+          )
+        );
+      }
+      if (user.name === '') {
+        user.name = profile.attributes.displayName;
+      }
+      addEmailToUser(user, profile.mail);
+      user.profiles['datacentral'] = profile;
+
+      return user;
+    })
+    .then(async (user: PouchUser) => {
+      await updateUser(user);
+      return pouch_user_to_express_user(user);
+    })
+    .then((user: Express.User) => cb(null, user, profile))
     .catch(err => {
       console.error('User saving error', err);
       cb(new Error('Failed to save user'), undefined);
     });
 }
 
-export function auth_profile(
-  oauth2: OAuth2,
-  accessToken: string,
-  done: DoneFunction
-) {
+function auth_profile(oauth2: OAuth2, accessToken: string, done: DoneFunction) {
   oauth2.get(
     'https://auth.datacentral.org.au/cas/oauth2.0/profile',
     accessToken,
@@ -124,4 +153,27 @@ export function auth_profile(
       }
     }
   );
+}
+
+export function get_strategy(callback_url: string): CleanOAuth2Strategy {
+  if (DATACENTRAL_CLIENT_ID === '') {
+    throw Error('DATACENTRAL_CLIENT_ID must be set to use Data Central');
+  }
+  if (DATACENTRAL_CLIENT_SECRET === '') {
+    throw Error('DATACENTRAL_CLIENT_SECRET must be set to use Data Central');
+  }
+  const st = new CleanOAuth2Strategy(
+    {
+      authorizationURL:
+        'https://auth.datacentral.org.au/cas/oauth2.0/authorize',
+      tokenURL: 'https://auth.datacentral.org.au/cas/oauth2.0/accessToken',
+      clientID: DATACENTRAL_CLIENT_ID,
+      clientSecret: DATACENTRAL_CLIENT_SECRET,
+      callbackURL: callback_url,
+      passReqToCallback: true,
+    },
+    oauth_verify as unknown as OAuth2Strategy.VerifyFunctionWithRequest
+  );
+  st.setUserProfileHook(auth_profile);
+  return st;
 }

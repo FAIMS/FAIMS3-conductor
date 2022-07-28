@@ -19,24 +19,17 @@
  *   which server to use and whether to include test data
  */
 
-import passport from 'passport';
-import OAuth2Strategy from 'passport-oauth2';
-
 import PouchDB from 'pouchdb';
 import PouchDBFind from 'pouchdb-find';
 
-import {auth_mechanisms} from './authconfig';
-import {CleanOAuth2Strategy} from './authhelpers';
-import {
-  oauth_verify as dc_oauth_verify,
-  auth_profile as dc_auth_profile,
-} from './auth_providers/data_central';
+import {add_auth_providers} from './auth_providers';
 import {
   CONDUCTOR_KEY_ID,
   CONDUCTOR_PORT,
   CONDUCTOR_PUBLIC_KEY_PATH,
   CONDUCTOR_PRIVATE_KEY_PATH,
   CONDUCTOR_INSTANCE_NAME,
+  CONDUCTOR_AUTH_PROVIDERS,
 } from './buildconfig';
 import {load_signing_key} from './authkeys/signing_keys';
 import {app} from './routes';
@@ -49,15 +42,8 @@ process.on('unhandledRejection', error => {
 
 PouchDB.plugin(PouchDBFind);
 
-for (const auth_id in auth_mechanisms) {
-  const st = new CleanOAuth2Strategy(
-    auth_mechanisms[auth_id].strategy,
-    dc_oauth_verify as unknown as OAuth2Strategy.VerifyFunctionWithRequest
-  );
-  st.setUserProfileHook(dc_auth_profile);
-  passport.use('default', st);
-}
-add_auth_routes(app, ['default']);
+add_auth_providers(CONDUCTOR_AUTH_PROVIDERS);
+add_auth_routes(app, CONDUCTOR_AUTH_PROVIDERS);
 
 async function initialize() {
   const signing_key = await load_signing_key({

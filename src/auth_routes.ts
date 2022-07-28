@@ -20,8 +20,16 @@
  */
 
 import passport from 'passport';
+
+import {HOST_NAME} from './buildconfig';
 import {DoneFunction} from './types';
 import {get_user_from_username} from './couchdb/users';
+
+const AVAILABLE_AUTH_PROVIDER_DISPLAY_INFO: {[name: string]: any} = {
+  datacentral: {
+    name: 'Data Central',
+  },
+};
 
 passport.serializeUser((user: Express.User, done: DoneFunction) => {
   console.log('user', user);
@@ -37,7 +45,24 @@ passport.deserializeUser((id: string, done: DoneFunction) => {
     .catch(err => done(err, null));
 });
 
+export function determine_callback_url(provider_name: string): string {
+  return `${HOST_NAME}/auth-return/${provider_name}`;
+}
+
 export function add_auth_routes(app: any, handlers: any) {
+  app.get('/auth/', (req: any, res: any) => {
+    // Allow the user to decide what auth mechanism to use
+    const available_provider_info = [];
+    for (const handler of handlers) {
+      console.debug("handlers", handlers);
+      available_provider_info.push({
+        label: handler,
+        name: AVAILABLE_AUTH_PROVIDER_DISPLAY_INFO[handler].name,
+      });
+    }
+    res.render('auth', {providers: available_provider_info});
+  });
+
   for (const handler of handlers) {
     app.get(`/auth/${handler}/`, (req: any, res: any) => {
       if (
@@ -59,6 +84,7 @@ export function add_auth_routes(app: any, handlers: any) {
     });
 
     app.get(
+      // This should line up with determine_callback_url above
       `/auth-return/${handler}/`,
       passport.authenticate(handler, {
         successRedirect: '/send-token/',

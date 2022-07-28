@@ -22,7 +22,7 @@
 import {v4 as uuidv4} from 'uuid';
 
 import {NonUniqueProjectID} from './datamodel/core';
-import {PouchUser} from './datamodel/database';
+import {PouchUser} from './datamodel/users';
 import {getUserByEmail, updateUser} from './couchdb/users';
 
 export async function userCanInviteToProject(

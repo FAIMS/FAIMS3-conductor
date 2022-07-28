@@ -1,7 +1,8 @@
-<h6>Hello {{ user.user_id }}<h6>
-<p>Your roles on this conductor are:</p>
+<p>Hello {{ user.user_id }}<p>
+{{{ project_roles }}}
+<h6>Your other roles on this conductor are:</h6>
 <ul>
-{{#each roles}}
+{{#each other_roles}}
 <li>{{ this }}</li>
 {{/each}}
 </ul>

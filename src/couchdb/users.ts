@@ -22,8 +22,13 @@
 import PouchDB from 'pouchdb';
 
 import {CONDUCTOR_USER_DB, LOCAL_COUCHDB_AUTH} from '../buildconfig';
-import {PouchUser} from '../datamodel/database';
-import type {CouchDBUsername} from '../authkeys/types';
+import {
+  PouchUser,
+  AllProjectRoles,
+  OtherRoles,
+  CouchDBUsername,
+  CouchDBUserRoles,
+} from '../datamodel/users';
 
 function createUsersDB(): PouchDB.Database<PouchUser> {
   const pouch_options: PouchDB.Configuration.RemoteDatabaseConfiguration = {};
@@ -35,6 +40,36 @@ function createUsersDB(): PouchDB.Database<PouchUser> {
 }
 
 const users_db = createUsersDB();
+
+export async function getOrCreatePouchUser(
+  user_id: string
+): Promise<PouchUser> {
+  try {
+    const user = await users_db.get(user_id);
+    return user;
+  } catch (err: any) {
+    if (err.status === 404) {
+      return {
+        _id: user_id,
+        name: '',
+        emails: [],
+        type: 'user',
+        roles: [],
+        profiles: {},
+        owned: [],
+      };
+    } else {
+      console.error('Failed to get user', err);
+      throw Error('Failed to get user');
+    }
+  }
+}
+
+export async function getOrCreateExpressUser(
+  user_id: string
+): Promise<Express.User> {
+  return pouch_user_to_express_user(await getOrCreatePouchUser(user_id));
+}
 
 export async function getUserByEmail(email: string): Promise<null | PouchUser> {
   const result = await users_db.find({
@@ -97,29 +132,77 @@ export async function get_user_from_username(
   }
 }
 
-// TODO: This will need some work to work out how to handle many different auth
-// providers
-function express_user_to_pouch_user(user: Express.User): PouchUser {
+function conductorRolesToCouchDBRoles(
+  project_roles: AllProjectRoles,
+  other_roles: OtherRoles
+): CouchDBUserRoles {
+  const couch_roles: CouchDBUserRoles = [];
+  for (const project in project_roles) {
+    for (const role in project_roles[project]) {
+      couch_roles.push(project + '||' + role);
+    }
+  }
+  return couch_roles.concat(other_roles);
+}
+
+function couchDBRolesToConductorRoles(
+  couch_roles: CouchDBUserRoles
+): [AllProjectRoles, OtherRoles] {
+  const project_roles: AllProjectRoles = {};
+  const other_roles: OtherRoles = [];
+
+  for (const role of couch_roles) {
+    const split_role = role.split('||', 2);
+    if (split_role.length === 1) {
+      other_roles.push(split_role[0]);
+    } else {
+      const project_name = split_role[0];
+      const proj_roles = project_roles[project_name] ?? [];
+      proj_roles.push(split_role[1]);
+      project_roles[project_name] = proj_roles;
+    }
+  }
+
+  return [project_roles, other_roles];
+}
+
+export function express_user_to_pouch_user(user: Express.User): PouchUser {
   return {
     type: 'user',
     _id: user.user_id,
-    name: user.name ?? user.user_id,
-    roles: user.roles ?? [],
-    other_props: user.other_props,
+    name: user.name,
+    emails: user.emails,
+    roles: conductorRolesToCouchDBRoles(user.project_roles, user.other_roles),
+    owned: user.owned,
+    profiles: user.profiles,
   };
 }
 
-// TODO: This will need some work to work out how to handle many different auth
-// providers
-function pouch_user_to_express_user(user: PouchUser): Express.User {
+export function pouch_user_to_express_user(user: PouchUser): Express.User {
+  const [project_roles, other_roles] = couchDBRolesToConductorRoles(user.roles);
   return {
     user_id: user._id,
     name: user.name,
-    roles: user.roles,
-    other_props: user.other_props,
+    emails: user.emails,
+    project_roles: project_roles,
+    other_roles: other_roles,
+    owned: user.owned,
+    profiles: user.profiles,
   };
 }
 
 export async function saveUserToDB(user: Express.User) {
   await updateUser(express_user_to_pouch_user(user));
+}
+
+export function addEmailToUser(user: PouchUser | Express.User, email: string) {
+  addEmailsToUser(user, [email]);
+}
+
+export function addEmailsToUser(
+  user: PouchUser | Express.User,
+  emails: string[]
+) {
+  const all_emails = new Set(user.emails.concat(emails));
+  user.emails = Array.from(all_emails);
 }

@@ -19,11 +19,12 @@
  *   which server to use and whether to include test data
  */
 
-import passport from 'passport';
+import handlebars from 'handlebars';
 
 import {app} from './core';
 import {get_user_auth_token} from './authkeys/user';
 import {NonUniqueProjectID} from './datamodel/core';
+import {AllProjectRoles} from './datamodel/users';
 import {requireAuthentication} from './middleware';
 import {userCanInviteToProject, inviteEmailToProject} from './registration';
 
@@ -53,14 +54,39 @@ app.post(
   }
 );
 
-app.get('/auth/', (req, res) => {
-  // Allow the user to decide what auth mechanism to use
-  res.render('auth');
-});
+function make_html_safe(s: string): string {
+  return handlebars.escapeExpression(s);
+}
+
+function render_project_roles(roles: AllProjectRoles): handlebars.SafeString {
+  const all_project_sections = [];
+  for (const project in roles) {
+    const project_sections = [];
+    for (const role of roles[project]) {
+      project_sections.push('<li>' + make_html_safe(role) + '</li>');
+    }
+    all_project_sections.push(
+      '<h6>Roles for project "' +
+        make_html_safe(project) +
+        '"</h6>' +
+        '<ul>' +
+        project_sections.join('') +
+        '</ul>'
+    );
+  }
+  return new handlebars.SafeString(all_project_sections.join(''));
+}
 
 app.get('/', async (req, res) => {
   if (req.user) {
-    res.render('home', {user: req.user, roles: req.user.roles});
+    // Handlebars is pretty useless at including render logic in templates, just
+    // parse the raw, pre-processed string in...
+    const rendered_project_roles = render_project_roles(req.user.project_roles);
+    res.render('home', {
+      user: req.user,
+      project_roles: rendered_project_roles,
+      other_roles: req.user.other_roles,
+    });
   } else {
     res.redirect('/auth/');
   }
