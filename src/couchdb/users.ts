@@ -84,6 +84,16 @@ export async function getUserByEmail(email: string): Promise<null | PouchUser> {
   }
 }
 
+export async function getExpressUserByEmail(
+  email: string
+): Promise<null | Express.User> {
+  const user = await getUserByEmail(email);
+  if (user === null) {
+    return null;
+  }
+  return pouch_user_to_express_user(user);
+}
+
 export async function updateUser(user: PouchUser): Promise<void> {
   try {
     await users_db.put(user);
@@ -138,7 +148,7 @@ function conductorRolesToCouchDBRoles(
 ): CouchDBUserRoles {
   const couch_roles: CouchDBUserRoles = [];
   for (const project in project_roles) {
-    for (const role in project_roles[project]) {
+    for (const role of project_roles[project]) {
       couch_roles.push(project + '||' + role);
     }
   }

@@ -19,6 +19,8 @@
  *   which server to use and whether to include test data
  */
 
+import nodemailer from 'nodemailer';
+
 const TRUTHY_STRINGS = ['true', '1', 'on', 'yes'];
 const FALSEY_STRINGS = ['false', '0', 'off', 'no'];
 
@@ -147,6 +149,17 @@ function conductor_user_db(): string {
     return userdb_default;
   } else {
     return userdb;
+  }
+}
+
+function conductor_invite_db(): string {
+  const invite_db = process.env.CONDUCTOR_INVITE_DB;
+  const invite_db_default = 'http://localhost:5984/invites';
+  if (invite_db === '' || invite_db === undefined) {
+    console.log('FAIMS_invite_db not set, using default');
+    return invite_db_default;
+  } else {
+    return invite_db;
   }
 }
 
@@ -286,7 +299,26 @@ function get_providers_to_use(): string[] {
   return providers.split(';');
 }
 
+function email_host_name(): string {
+  const hostname = process.env.CONDUCTOR_EMAIL_HOST_NAME;
+  if (hostname === '' || hostname === undefined) {
+    throw Error('CONDUCTOR_EMAIL_HOST_NAME must be set to send email invites');
+  }
+  return hostname;
+}
+
+function email_transporter(): any {
+  const config = process.env.CONDUCTOR_EMAIL_HOST_CONFIG;
+  if (config === '' || config === undefined) {
+    throw Error(
+      'CONDUCTOR_EMAIL_HOST_CONFIG must be set to send email invites'
+    );
+  }
+  return nodemailer.createTransport(config);
+}
+
 export const CONDUCTOR_USER_DB = conductor_user_db();
+export const CONDUCTOR_INVITE_DB = conductor_invite_db();
 export const DIRECTORY_PROTOCOL = directory_protocol();
 export const DIRECTORY_HOST = directory_host();
 export const DIRECTORY_PORT = directory_port();
@@ -308,3 +340,5 @@ export const DATACENTRAL_CLIENT_ID = datacentral_client_id();
 export const DATACENTRAL_CLIENT_SECRET = datacentral_client_secret();
 export const CLUSTER_ADMIN_GROUP_NAME = cluster_admin_group_name();
 export const CONDUCTOR_AUTH_PROVIDERS = get_providers_to_use();
+export const EMAIL_HOST_NAME = email_host_name();
+export const EMAIL_TRANSPORTER = email_transporter();
