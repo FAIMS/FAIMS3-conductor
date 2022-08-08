@@ -4,17 +4,23 @@
 
 <div class="container">
     <div class="row">
-         <div class="col-12"><br/><h6 >Not logged in, Please select Service Provider</h5><br/></div>
+         <div class="col-12">
+            <h6>Not logged in.</h6>
+            <p>Please select a Authentication Provider below by clicking the
+            appropriate button.</p>
+        </div>
     </div>
     <div class="row">
     <div class="col-6">
+        {{#each providers}}
         <div class="card" style="width: 18rem;">
         <div class="card-body">
             <h5 class="card-title">Click to Login</h5>
-            {{!-- <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p> --}}
-            <a href="/auth/default/" class="btn btn-primary" style="background-color:#1B3E93;">Data Central</a>
+            <a href="/auth/{{ this.label }}/" class="btn btn-primary"
+            style="background-color:#1B3E93;">{{ this.name }}</a>
         </div>
         </div>
+        {{/each}}
     </div>
   </div>
 </div>

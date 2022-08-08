@@ -19,6 +19,10 @@ while !  $curl_cmd "$base_url/directory"; do
     echo "Trying again..."
 done
 
+$curl_cmd $base_url/_users
+$curl_cmd $base_url/_replicator
+$curl_cmd $base_url/_global_changes
+
 # setup cors
 $curl_cmd $base_url/_node/_local/_config/httpd/enable_cors -d '"true"'
 $curl_cmd $base_url/_node/_local/_config/cors/origins -d '"*"'

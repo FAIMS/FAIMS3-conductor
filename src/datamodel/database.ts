@@ -196,19 +196,6 @@ export type ProjectMetaObject =
   // | EncodedProjectUIModel
   EncodedProjectMetadata;
 
-// https://docs.couchdb.org/en/stable/intro/security.html#users-documents
-export type PouchUser = {
-  _id: string;
-  _rev?: string;
-  name: string;
-  emails?: string[];
-  type: 'user';
-  owned?: NonUniqueProjectID[];
-  roles: string[];
-  project_roles?: {[NonUniqueProjectID: string]: string[]};
-  other_props?: any;
-};
-
 /*
  * Elements of a Project's dataDB can be any one of these,
  * discriminated by the prefix of the object's id

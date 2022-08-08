@@ -15,24 +15,18 @@
  *
  * Filename: src/types.ts
  * Description:
- *   This module exports the configuration of the build, including things like
- *   which server to use and whether to include test data
+ *   This module contains the type overrides/definitions which the conductor
+ *   uses in relation to third-party code.
  */
-
-/* eslint-disable node/no-extraneous-import */
 import type {OAuth2} from 'oauth';
+import type {
+  Email,
+  AllProjectRoles,
+  OtherRoles,
+  UserServiceProfiles,
+} from './datamodel/users';
+import type {NonUniqueProjectID} from './datamodel/core';
 
-// See https://stackoverflow.com/questions/65772869/how-do-i-type-hint-the-user-argument-when-calling-passport-serializeuser-in-type
-declare global {
-  namespace Express {
-    interface User {
-      user_id: string;
-      roles?: string[];
-      name?: string;
-      other_props?: any;
-    }
-  }
-}
 export type DoneFunction = (err?: Error | null, profile?: any) => void;
 export type UserProfileCallback = (
   oauth: OAuth2,
@@ -44,4 +38,18 @@ export type VerifyCallback = (
   user?: Express.User,
   info?: object
 ) => void;
-export type {OAuth2};
+
+// See https://stackoverflow.com/questions/65772869/how-do-i-type-hint-the-user-argument-when-calling-passport-serializeuser-in-type
+declare global {
+  namespace Express {
+    interface User {
+      user_id: string;
+      name: string;
+      emails: Email[];
+      project_roles: AllProjectRoles;
+      other_roles: OtherRoles;
+      profiles: UserServiceProfiles;
+      owned: NonUniqueProjectID[];
+    }
+  }
+}

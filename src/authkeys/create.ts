@@ -21,7 +21,8 @@
 
 import {SignJWT} from 'jose';
 
-import type {CouchDBUsername, CouchDBUserRoles, SigningKey} from './types';
+import type {CouchDBUsername, CouchDBUserRoles} from '../datamodel/users';
+import type {SigningKey} from './types';
 
 export async function create_auth_key(
   username: CouchDBUsername,

@@ -21,9 +21,6 @@
 
 import type {KeyLike} from 'jose';
 
-export type CouchDBUsername = string;
-export type CouchDBUserRole = string;
-export type CouchDBUserRoles = CouchDBUserRole[];
 export interface SigningKey {
   alg: string; // JWS alg
   kid: string; // JWS kid
