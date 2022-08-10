@@ -24,11 +24,8 @@ import {importPKCS8, importSPKI} from 'jose';
 
 import {create_auth_key} from '../src/authkeys/create';
 import {read_auth_key} from '../src/authkeys/read';
-import type {
-  CouchDBUsername,
-  CouchDBUserRoles,
-  SigningKey,
-} from '../src/authkeys/types';
+import type {CouchDBUsername, CouchDBUserRoles} from '../src/datamodel/users';
+import type {SigningKey} from '../src/authkeys/types';
 
 const SIGNING_ALGORITHM = 'RS256';
 const INSTANCE_NAME = 'test';

@@ -35,21 +35,12 @@ import {load_signing_key} from './authkeys/signing_keys';
 import {app} from './routes';
 import {add_auth_routes} from './auth_routes';
 
-import {add_initial_listener} from './sync/event-handler-registration';
-import {
-  register_listings_known,
-  register_projects_known,
-  register_metas_complete,
-  register_projects_created,
-} from './sync/state';
-
 process.on('unhandledRejection', error => {
   console.error(error); // This prints error with stack included (as for normal errors)
   throw error; // Following best practices re-throw error and let the process exit with error code
 });
 
-PouchDB.plugin(PouchDBFind);
-
+PouchDB.plugin(PouchDBFind); 
 add_auth_providers(CONDUCTOR_AUTH_PROVIDERS);
 add_auth_routes(app, CONDUCTOR_AUTH_PROVIDERS);
 
