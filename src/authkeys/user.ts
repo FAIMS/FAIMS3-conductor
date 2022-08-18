@@ -20,7 +20,7 @@
  */
 
 import {create_auth_key} from './create';
-import type {CouchDBUsername, CouchDBUserRoles} from '../datamodel/users';
+import type {CouchDBUsername} from '../datamodel/users';
 import type {SigningKey} from './types';
 import {get_couchdb_user_from_username} from '../couchdb/users';
 
@@ -29,20 +29,14 @@ export async function get_user_auth_token(
   signing_key: SigningKey
 ) {
   console.debug('Getting user roles for', username);
-  const roles = await get_couchdb_user_roles(username);
-  console.debug('Getting user token for', username, roles);
-  const token = await create_auth_key(username, roles, signing_key);
-  console.debug('Returning user token for', username, token);
-  return token;
-}
-
-async function get_couchdb_user_roles(
-  username: CouchDBUsername
-): Promise<CouchDBUserRoles> {
   const user = await get_couchdb_user_from_username(username);
   if (user === null) {
-    console.log('No roles found for', username);
-    return [];
+    throw Error(`No such user ${username}`);
   }
-  return user.roles;
+  const roles = user.roles ?? [];
+  const name = user.name ?? username;
+  console.debug('Getting user token for', username, roles, name);
+  const token = await create_auth_key(username, roles, signing_key, name);
+  console.debug('Returning user token for', username, token);
+  return token;
 }

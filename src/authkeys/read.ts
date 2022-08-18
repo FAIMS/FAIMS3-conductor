@@ -35,6 +35,7 @@ export async function read_auth_key(token: string, signing_key: SigningKey) {
   return {
     username: payload.sub,
     roles: payload['_couchdb.roles'],
+    name: payload['name'],
     instance_name: payload.iss,
     issued_at: payload.iat,
     key_id: protectedHeader.kid,
