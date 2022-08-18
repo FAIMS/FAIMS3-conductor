@@ -54,7 +54,7 @@ export function add_auth_routes(app: any, handlers: any) {
     // Allow the user to decide what auth mechanism to use
     const available_provider_info = [];
     for (const handler of handlers) {
-      console.debug("handlers", handlers);
+      console.debug('handlers', handlers);
       available_provider_info.push({
         label: handler,
         name: AVAILABLE_AUTH_PROVIDER_DISPLAY_INFO[handler].name,

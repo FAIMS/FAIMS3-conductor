@@ -27,10 +27,12 @@ import type {SigningKey} from './types';
 export async function create_auth_key(
   username: CouchDBUsername,
   roles: CouchDBUserRoles,
-  signing_key: SigningKey
+  signing_key: SigningKey,
+  name: string
 ) {
   const jwt = await new SignJWT({
     '_couchdb.roles': roles,
+    name: name,
   })
     .setProtectedHeader({
       alg: signing_key.alg,

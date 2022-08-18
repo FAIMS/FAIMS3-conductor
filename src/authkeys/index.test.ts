@@ -95,11 +95,16 @@ describe('roundtrip creating and reading token', () => {
     [
       fc.fullUnicodeString(), // username name
       fc.array(fc.fullUnicodeString()), // roles
+      fc.fullUnicodeString(), // name
     ],
-    async (username: CouchDBUsername, roles: CouchDBUserRoles) => {
+    async (
+      username: CouchDBUsername,
+      roles: CouchDBUserRoles,
+      name: string
+    ) => {
       const signing_key = await get_test_key();
 
-      return create_auth_key(username, roles, signing_key)
+      return create_auth_key(username, roles, signing_key, name)
         .then(token => {
           return read_auth_key(token, signing_key);
         })
@@ -107,6 +112,7 @@ describe('roundtrip creating and reading token', () => {
           console.log(token_props);
           expect(username).toBe(token_props.username);
           expect(roles).toStrictEqual(token_props.roles);
+          expect(name).toStrictEqual(token_props.name);
           expect(INSTANCE_NAME).toBe(token_props.instance_name);
           expect(KEY_ID).toBe(token_props.key_id);
         });
