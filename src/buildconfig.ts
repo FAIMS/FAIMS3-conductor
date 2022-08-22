@@ -301,13 +301,13 @@ function get_providers_to_use(): string[] {
   return providers.split(';');
 }
 
-
 function conductor_port(): number {
   const port = process.env.CONDUCTOR_PORT;
   if (port === '' || port === undefined) {
     return 8000;
   }
   return parseInt(port);
+}
 
 function email_host_name(): string {
   const hostname = process.env.CONDUCTOR_EMAIL_HOST_NAME;

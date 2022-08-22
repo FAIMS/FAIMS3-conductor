@@ -113,7 +113,7 @@ app.get(
 app.get('/my-invites/', requireAuthentication, async (req, res) => {
   const user = req.user as Express.User; // requireAuthentication ensures user
   const invites = await getInvitesForEmails(user.emails);
-  console.log("my invites", invites);
+  console.log('my invites', invites);
   res.render('my-invites', {invites: invites});
 });
 

@@ -40,7 +40,7 @@ process.on('unhandledRejection', error => {
   throw error; // Following best practices re-throw error and let the process exit with error code
 });
 
-PouchDB.plugin(PouchDBFind); 
+PouchDB.plugin(PouchDBFind);
 add_auth_providers(CONDUCTOR_AUTH_PROVIDERS);
 add_auth_routes(app, CONDUCTOR_AUTH_PROVIDERS);
 
