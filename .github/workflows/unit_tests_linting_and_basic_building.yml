@@ -46,6 +46,8 @@ jobs:
       HAVE_DATACENTRAL_MANAGE_ROLES: true
       DATACENTRAL_CLIENT_ID: ${{ secrets.DATACENTRAL_CLIENT_ID }}
       DATACENTRAL_CLIENT_SECRET: ${{ secrets.DATACENTRAL_CLIENT_SECRET }}
+      CONDUCTOR_EMAIL_HOST_NAME: localhost
+      CONDUCTOR_EMAIL_HOST_CONFIG: ${{ secrets.CONDUCTOR_EMAIL_HOST_CONFIG }}
     continue-on-error: ${{ matrix.experimental }}
     strategy:
       matrix:

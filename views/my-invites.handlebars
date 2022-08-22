@@ -1,0 +1,23 @@
+<h6>Here are your invites:</h6>
+<table>
+<thead>
+<tr>
+<th>Inviter</th>
+<th>Project</th>
+<th>Role</th>
+<th>Accept</th>
+<th>Reject</th>
+</tr>
+</thead>
+<tbody>
+{{#each invites}}
+<tr>
+<td>{{ this.requesting_user }}</td>
+<td>{{ this.project_id }}</td>
+<td>{{ this.role }}</td>
+<td><a href="/accept-invite/{{ this._id }}" class="btn">Accept invite</a></td>
+<td><a href="/reject-invite/{{ this._id }}" class="btn">Reject invite</a></td>
+</tr>
+{{/each}}
+</tbody>
+</table
