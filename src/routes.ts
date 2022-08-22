@@ -19,39 +19,103 @@
  *   which server to use and whether to include test data
  */
 import handlebars from 'handlebars';
+import {body, validationResult} from 'express-validator';
 
 import {app} from './core';
 import {get_user_auth_token} from './authkeys/user';
 import {NonUniqueProjectID} from './datamodel/core';
 import {AllProjectRoles} from './datamodel/users';
 import {requireAuthentication} from './middleware';
-import {userCanInviteToProject, inviteEmailToProject} from './registration';
+import {
+  userCanInviteToProject,
+  inviteEmailToProject,
+  acceptInvite,
+  rejectInvite,
+} from './registration';
+import {getInvite, getInvitesForEmails} from './couchdb/invites';
 
 export {app};
 
+app.get('/invite/', requireAuthentication, async (req, res) => {
+  res.render('invite');
+});
+
 app.post(
-  '/project/:project_id/invite',
+  '/invite/',
   requireAuthentication,
+  body('email').isEmail(),
+  body('role').trim(),
+  body('project_id').trim(),
   async (req, res) => {
-    if (typeof req.body['email'] !== 'string') {
-      throw Error('Expected 1 string parameter email');
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.render('invite-error', {errors: errors.array()});
     }
-    if (typeof req.body['role'] !== 'string') {
-      throw Error('Expected 1 string parameter role');
-    }
-    const email: string = req.body['email'];
-    const project_id: NonUniqueProjectID = req.params.project_id;
-    const role: string = req.body['role'];
+    const email: string = req.body.email;
+    const project_id: NonUniqueProjectID = req.body.project_id;
+    const role: string = req.body.role;
 
     const can_invite = await userCanInviteToProject(req.user, project_id);
     if (!can_invite) {
-      res.send('You cannot invite user to project');
+      res.render('invite-error', {
+        errors: [
+          {
+            msg: `You cannot invite email ${email} to project ${project_id}`,
+            location: 'header',
+            param: 'user',
+          },
+        ],
+      });
     } else {
-      await inviteEmailToProject(email, project_id, role);
-      res.send('Email invited to project');
+      await inviteEmailToProject(
+        req.user as Express.User,
+        email,
+        project_id,
+        role
+      );
+      res.render('invite-success', {
+        email,
+        project_id,
+        role,
+      });
     }
   }
 );
+
+app.get(
+  '/accept-invite/:invite_id/',
+  requireAuthentication,
+  async (req, res) => {
+    const user = req.user as Express.User; // requireAuthentication ensures user
+    const invite_id = req.params.invite_id;
+    const invite = await getInvite(invite_id);
+    if (user.emails.includes(invite.email)) {
+      await acceptInvite(user, invite);
+    }
+    res.redirect('/my-invites/');
+  }
+);
+
+app.get(
+  '/reject-invite/:invite_id/',
+  requireAuthentication,
+  async (req, res) => {
+    const user = req.user as Express.User; // requireAuthentication ensures user
+    const invite_id = req.params.invite_id;
+    const invite = await getInvite(invite_id);
+    if (user.emails.includes(invite.email)) {
+      await rejectInvite(invite);
+    }
+    res.redirect('/my-invites/');
+  }
+);
+
+app.get('/my-invites/', requireAuthentication, async (req, res) => {
+  const user = req.user as Express.User; // requireAuthentication ensures user
+  const invites = await getInvitesForEmails(user.emails);
+  console.log("my invites", invites);
+  res.render('my-invites', {invites: invites});
+});
 
 function make_html_safe(s: string): string {
   return handlebars.escapeExpression(s);

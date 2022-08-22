@@ -20,46 +20,82 @@
  */
 
 import {NonUniqueProjectID} from './datamodel/core';
-// import {PouchUser} from './datamodel/database';
-// import {getUserByEmail, updateUser} from './couchdb/users';
+import {RoleInvite, Email, ConductorRole} from './datamodel/users';
+import {saveUserToDB} from './couchdb/users';
+import {express_user_to_pouch_user} from './couchdb/users';
+import {saveInvite, deleteInvite} from './couchdb/invites';
+import {HOST_NAME, CLUSTER_ADMIN_GROUP_NAME} from './buildconfig';
+import {sendEmail} from './email';
 
-export async function userCanInviteToProject(
+const ADMIN_ROLE = 'admin';
+
+export function userCanInviteToProject(
   user: Express.User | undefined,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   project_id: NonUniqueProjectID
-): Promise<boolean> {
-  // TODO: Add actual lookups to check ACLs etc.
+): boolean {
   if (user === undefined) {
     return false;
   }
-  return true;
+  const project_roles = user.project_roles[project_id] ?? [];
+  if (project_roles.includes(ADMIN_ROLE)) {
+    return true;
+  }
+  if (user.other_roles.includes(CLUSTER_ADMIN_GROUP_NAME)) {
+    return true;
+  }
+  return false;
 }
 
 export async function inviteEmailToProject(
-  email: string,
+  user: Express.User,
+  email: Email,
   project_id: NonUniqueProjectID,
-  role: string
+  role: ConductorRole
 ) {
-  // TODO: send emails, do the rest of the process
-  console.log('TBD: Sending email to user:', email, project_id, role);
-
-  /* TODO: move this to invite function
-  // Create a user with the email if it doesn't exist yet
-  const user_id = uuidv4();
-  const existing_user: PouchUser = (await getUserByEmail(email)) ?? {
-    _id: 'org.couchdb.user:' + user_id,
-    name: user_id,
-    type: 'user',
-    roles: [],
-    emails: [email],
+  const invite: RoleInvite = {
+    _id: uuidv4(),
+    requesting_user: express_user_to_pouch_user(user)._id,
+    email: email,
+    project_id: project_id,
+    role: role,
   };
+  await saveInvite(invite);
+  await emailInvite(invite);
+}
 
-  // Append to the role list for the given project:
-  existing_user.project_roles = {
-    ...(existing_user.project_roles ?? {}),
-    [project_id]: [...(existing_user.project_roles?.[project_id] ?? []), role],
-  };
+function renderInviteText(invite: RoleInvite) {
+  return `Hi,
+  You have been invited with the role ${invite.role} to the project
+  ${invite.project_id} on ${HOST_NAME}. Head to ${HOST_NAME}, login with one
+  of the authentication providers, and accept this invite to join this project.
 
-  updateUser(existing_user);
-  */
+  If you do not wish to join this project, feel free to ignore this email.
+  `;
+}
+
+function renderInviteHtml(invite: RoleInvite): string {
+  // TODO: Write actual HTML invite, rather than just sending a text-based one
+  return renderInviteText(invite);
+}
+
+async function emailInvite(invite: RoleInvite) {
+  await sendEmail({
+    to: invite.email,
+    subject: `You have been added to ${invite.project_id} with role ${invite.role}`,
+    text: renderInviteText(invite),
+    html: renderInviteHtml(invite),
+  });
+}
+
+export async function acceptInvite(user: Express.User, invite: RoleInvite) {
+  const project_roles = user.project_roles[invite.project_id] ?? [];
+  project_roles.push(invite.role);
+  user.project_roles[invite.project_id] = project_roles;
+  await saveUserToDB(user);
+  await deleteInvite(invite);
+}
+
+export async function rejectInvite(invite: RoleInvite) {
+  await deleteInvite(invite);
 }

@@ -119,7 +119,7 @@ function oauth_verify(
       if (user.name === '') {
         user.name = profile.attributes.displayName;
       }
-      addEmailToUser(user, profile.mail);
+      addEmailToUser(user, profile.attributes.mail);
       user.profiles['datacentral'] = profile;
 
       return user;
