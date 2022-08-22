@@ -32,8 +32,7 @@ const FALSEY_STRINGS = ['false', '0', 'off', 'no'];
  */
 
 function commit_version(): string {
-  const commitver = process.env.REACT_APP_COMMIT_VERSION;
-  console.log('commitver', commitver);
+  const commitver = process.env.COMMIT_VERSION;
   if (
     commitver === '' ||
     commitver === undefined ||
@@ -85,12 +84,15 @@ function directory_protocol(): string {
   }
 }
 
-function local_hostname(): string {
-  const host = process.env.REACT_APP_HOST_NAME;
-  if (host === '' || host === undefined) {
+/*
+  conductor_url - returns the base URL of this Conductor server
+*/
+function conductor_url(): string {
+  const url = process.env.CONDUCTOR_PUBLIC_URL;
+  if (url === '' || url === undefined) {
     return 'http://localhost:8080';
   }
-  return host;
+  return url;
 }
 
 function directory_host(): string {
@@ -167,8 +169,8 @@ function local_couchdb_auth():
   | undefined
   | {username: string; password: string} {
   // Used in the server, as opposed to COUCHDB_USER and PASSWORD for testing.
-  const username = process.env.REACT_APP_LOCAL_COUCHDB_USERNAME;
-  const password = process.env.REACT_APP_LOCAL_COUCHDB_PASSWORD;
+  const username = process.env.COUCHDB_USER;
+  const password = process.env.COUCHDB_PASSWORD;
 
   if (
     username === '' ||
@@ -299,6 +301,14 @@ function get_providers_to_use(): string[] {
   return providers.split(';');
 }
 
+function conductor_port(): number {
+  const port = process.env.CONDUCTOR_PORT;
+  if (port === '' || port === undefined) {
+    return 8000;
+  }
+  return parseInt(port);
+}
+
 function email_host_name(): string {
   const hostname = process.env.CONDUCTOR_EMAIL_HOST_NAME;
   if (hostname === '' || hostname === undefined) {
@@ -326,9 +336,9 @@ export const DIRECTORY_AUTH = directory_auth();
 export const LOCAL_COUCHDB_AUTH = local_couchdb_auth();
 export const RUNNING_UNDER_TEST = is_testing();
 export const COMMIT_VERSION = commit_version();
-export const HOST_NAME = local_hostname();
+export const CONDUCTOR_PUBLIC_URL = conductor_url();
 export const AUTOACTIVATE_PROJECTS = true; // for alpha, beta will change this
-export const CONDUCTOR_PORT = 8080;
+export const CONDUCTOR_PORT = conductor_port();
 export const CONDUCTOR_KEY_ID = signing_key_id();
 export const CONDUCTOR_PRIVATE_KEY_PATH = private_key_path();
 export const CONDUCTOR_PUBLIC_KEY_PATH = public_key_path();

@@ -41,7 +41,6 @@ process.on('unhandledRejection', error => {
 });
 
 PouchDB.plugin(PouchDBFind);
-
 add_auth_providers(CONDUCTOR_AUTH_PROVIDERS);
 add_auth_routes(app, CONDUCTOR_AUTH_PROVIDERS);
 
@@ -59,7 +58,9 @@ async function initialize() {
 initialize()
   .then(async (): Promise<void> => {
     app.listen(CONDUCTOR_PORT, '0.0.0.0', () => {
-      console.log(`The hello is listening on port ${CONDUCTOR_PORT}!`);
+      console.log(
+        `Conductor is listening on port http://0.0.0.0:${CONDUCTOR_PORT}/`
+      );
     });
   })
   .catch(console.error);

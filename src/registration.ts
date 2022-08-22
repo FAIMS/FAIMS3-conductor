@@ -18,7 +18,6 @@
  *   This module exports the configuration of the build, including things like
  *   which server to use and whether to include test data
  */
-
 import {v4 as uuidv4} from 'uuid';
 
 import {NonUniqueProjectID} from './datamodel/core';
@@ -26,13 +25,14 @@ import {RoleInvite, Email, ConductorRole} from './datamodel/users';
 import {saveUserToDB} from './couchdb/users';
 import {express_user_to_pouch_user} from './couchdb/users';
 import {saveInvite, deleteInvite} from './couchdb/invites';
-import {HOST_NAME, CLUSTER_ADMIN_GROUP_NAME} from './buildconfig';
+import {CONDUCTOR_PUBLIC_URL, CLUSTER_ADMIN_GROUP_NAME} from './buildconfig';
 import {sendEmail} from './email';
 
 const ADMIN_ROLE = 'admin';
 
 export function userCanInviteToProject(
   user: Express.User | undefined,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   project_id: NonUniqueProjectID
 ): boolean {
   if (user === undefined) {
@@ -68,8 +68,9 @@ export async function inviteEmailToProject(
 function renderInviteText(invite: RoleInvite) {
   return `Hi,
   You have been invited with the role ${invite.role} to the project
-  ${invite.project_id} on ${HOST_NAME}. Head to ${HOST_NAME}, login with one
-  of the authentication providers, and accept this invite to join this project.
+  ${invite.project_id} on ${CONDUCTOR_PUBLIC_URL}. Head to
+  ${CONDUCTOR_PUBLIC_URL}, login with one of the authentication providers, and
+  accept this invite to join this project.
 
   If you do not wish to join this project, feel free to ignore this email.
   `;

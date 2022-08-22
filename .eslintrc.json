@@ -16,11 +16,9 @@
     "no-trailing-spaces": "warn",
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-namespace": "off",
-    "no-constant-condition": "off",
-    "@typescript-eslint/no-misused-promises": "warn",
-    "@typescript-eslint/no-floating-promises": "warn"
+    "no-constant-condition": "off"
   },
   "parserOptions": {
-    "project": ["tsconfig.json"]
+    "project": ["./tsconfig.json"]
   }
 }

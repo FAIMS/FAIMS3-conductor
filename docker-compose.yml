@@ -1,0 +1,44 @@
+version: "3.9"
+services:
+  couchdb:
+    image: couchdb      
+    ports:
+      - "0.0.0.0:${COUCHDB_PORT}:5984"     
+    volumes:
+      - ./couchdb/local.ini:/opt/couchdb/etc/local.d/local.ini
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD
+  conductor:
+    build:
+      context: .
+    command: "npm start" 
+    ports:
+      - "0.0.0.0:${CONDUCTOR_PORT}:${CONDUCTOR_PORT}"
+    environment:
+      #  note that some of these are pulled from the environment (.env) 
+      #  while others get values here if the value is known for 
+      #  docker-compose setup
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD
+      # Where is this server running
+      - CONDUCTOR_PROTOCOL
+      - DEPLOY_HOST
+      - CONDUCTOR_PORT
+
+      # public URL for accessing Conductor & CouchDB
+      - CONDUCTOR_PUBLIC_URL
+      - COUCHDB_PUBLIC_URL
+
+      - FAIMS_USERDB
+      - FAIMS_CONDUCTOR_KID 
+      - FAIMS_COOKIE_SECRET
+      - DATACENTRAL_GROUP_PREFIX
+      - REACT_APP_COMMIT_VERSION
+      - FAIMS_USERDB=${COUCHDB_PROTOCOL}://couchdb:${COUCHDB_PORT}/people
+      - FAIMS_CONDUCTOR_KID=conductor
+      - FAIMS_CONDUCTOR_PRIVATE_KEY_PATH=/app/keys/conductor_private_key.pem
+      - FAIMS_CONDUCTOR_PUBLIC_KEY_PATH=/app/keys/conductor_public_key.pem
+      - FAIMS_CONDUCTOR_INSTANCE_NAME=dev
+
+ 

@@ -2,35 +2,11 @@
 
 #https://stackoverflow.com/a/10544510
 #https://github.com/apache/couchdb-docker
-FROM node:lts-buster@sha256:bf1609ac718dda03940e2be4deae1704fb77cd6de2bed8bf91d4bbbc9e88b497
-ARG REACT_APP_HOST_NAME
-ARG REACT_APP_LOCAL_COUCHDB_HOST
-ARG REACT_APP_LOCAL_COUCHDB_USERNAME
-ARG REACT_APP_LOCAL_COUCHDB_PASSWORD
-ARG REACT_APP_LOCAL_COUCHDB_PORT
-ARG REACT_APP_FAIMS_REQUIRED_GROUP
-ARG REACT_APP_FAIMS_USERDB
-# These are runtime vars, I don't think we need them here
-ARG FAIMS_CONDUCTOR_KID
-ARG FAIMS_CONDUCTOR_PRIVATE_KEY_PATH
-ARG FAIMS_CONDUCTOR_PUBLIC_KEY_PATH
-ARG FAIMS_CONDUCTOR_INSTANCE_NAME
-ARG FAIMS_REQUIRED_GROUP
-ARG FAIMS_USERDB
-ENV NODE_ENV=production
+
+FROM node:lts-buster@sha256:6155ff062c403e99c1da7c317710c5c838c1e060f526d98baea6ee921ca61729
+
 WORKDIR /app
-EXPOSE 8080
-VOLUME ["/app/keys"]
+EXPOSE 8080 
 COPY . .
-RUN npm ci
-RUN npm run compile
-#RUN keymanagement/makeTestKeys.sh 
-#VOLUME exposes the dir to the outside, but is static... 
-CMD ["node", "."]
-#RUN npm run start DOES NOT WORK
-#RUN curl -X PUT http://127.0.0.1:5984/_users
-#RUN curl -X PUT http://127.0.0.1:5984/_replicator
-#RUN curl -X PUT http://127.0.0.1:5984/_global_changes
-#RUN echo $REACT_APP_DIRECTORY_HOST
-#RUN sleep 1
-#RUN bash initDockerDb.sh https $REACT_APP_DIRECTORY_HOST 443 admin GlacialTrickleUnmovingTributeAwrySquishy
+RUN npm ci 
+CMD ["npm", "start"] 

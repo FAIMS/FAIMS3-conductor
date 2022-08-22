@@ -21,7 +21,7 @@
 
 import passport from 'passport';
 
-import {HOST_NAME} from './buildconfig';
+import {CONDUCTOR_PUBLIC_URL} from './buildconfig';
 import {DoneFunction} from './types';
 import {get_user_from_username} from './couchdb/users';
 
@@ -46,12 +46,14 @@ passport.deserializeUser((id: string, done: DoneFunction) => {
 });
 
 export function determine_callback_url(provider_name: string): string {
-  return `${HOST_NAME}/auth-return/${provider_name}`;
+  return `${CONDUCTOR_PUBLIC_URL}/auth-return/${provider_name}`;
 }
 
 export function add_auth_routes(app: any, handlers: any) {
+  console.log('Adding auth routes', handlers);
   app.get('/auth/', (req: any, res: any) => {
     // Allow the user to decide what auth mechanism to use
+    console.log('XXXXXX', handlers);
     const available_provider_info = [];
     for (const handler of handlers) {
       console.debug('handlers', handlers);
