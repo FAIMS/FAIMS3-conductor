@@ -12,7 +12,7 @@ services:
   conductor:
     build:
       context: .
-    command: "npm start"
+    command: "npm run watch"
     volumes:
       - .:/app
     ports:
