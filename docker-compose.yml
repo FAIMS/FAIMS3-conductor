@@ -14,7 +14,7 @@ services:
       context: .
     command: "npm start" 
     ports:
-      - "0.0.0.0:${CONDUCTOR_PORT}:${CONDUCTOR_PORT}"
+      - "0.0.0.0:${CONDUCTOR_PORT}:8080"
     environment:
             #  note that some of these are pulled from the environment (.env) 
       #  while others get values here if the value is known for 
