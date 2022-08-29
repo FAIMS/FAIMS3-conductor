@@ -22,7 +22,8 @@ services:
       - COUCHDB_USER=admin
       - COUCHDB_PASSWORD
       - COUCHDB_PORT
-      - COUCHDB_CONTAINER_NAME=couchdb
+      - COUCHDB_CONTAINER_NAME
+      
       # Where is this server running
       - CONDUCTOR_PROTOCOL
       - DEPLOY_HOST
