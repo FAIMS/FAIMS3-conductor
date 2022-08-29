@@ -26,8 +26,8 @@ const {env} = require('process');
 // where couchdb is running on the host `couchdb`  Other info comes from
 // the environment
 
-// BBS 20220829 added env.COUCHDB_CONTAINER_NAME:-couchdb to allow for multiple container names, but the :- should default to couchdb without issue.
-const url = `http://admin:${env.COUCHDB_PASSWORD}@${env.COUCHDB_CONTAINER_NAME:-couchdb}:${env.COUCHDB_PORT}/`;
+// BBS 20220829 added env.COUCHDB_CONTAINER_NAME to allow for multiple container names
+const url = `http://admin:${env.COUCHDB_PASSWORD}@${env.COUCHDB_CONTAINER_NAME}:${env.COUCHDB_PORT}/`;
 console.log('COUCHDB URL', url);
 const nano = require('nano')(url);
 
