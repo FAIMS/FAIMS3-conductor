@@ -20,6 +20,8 @@
  */
 
 import Express from 'express';
+import {CLUSTER_ADMIN_GROUP_NAME} from './buildconfig';
+
 /*
  * Middleware to ensure that the route is only accessible to logged in users
  */
@@ -30,6 +32,26 @@ export function requireAuthentication(
 ) {
   if (req.user) {
     next();
+  } else {
+    res.redirect('/auth/');
+  }
+}
+
+export function requireNotebookMembership(
+  req: Express.Request,
+  res: Express.Response,
+  next: Express.NextFunction
+) {
+  if (req.user) {
+    const project_id = req.params.notebook_id;
+    if (
+      (req.user.project_roles[project_id] ?? []).length !== 0 ||
+      req.user.other_roles.includes(CLUSTER_ADMIN_GROUP_NAME)
+    ) {
+      next();
+    } else {
+      res.status(404);
+    }
   } else {
     res.redirect('/auth/');
   }

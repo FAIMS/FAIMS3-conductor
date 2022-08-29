@@ -30,9 +30,8 @@ import {sendEmail} from './email';
 
 const ADMIN_ROLE = 'admin';
 
-export function userCanInviteToProject(
+export function userEquivalentToProjectAdmin(
   user: Express.User | undefined,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   project_id: NonUniqueProjectID
 ): boolean {
   if (user === undefined) {
@@ -43,6 +42,67 @@ export function userCanInviteToProject(
     return true;
   }
   if (user.other_roles.includes(CLUSTER_ADMIN_GROUP_NAME)) {
+    return true;
+  }
+  return false;
+}
+
+export function userCanInviteToProject(
+  user: Express.User | undefined,
+  project_id: NonUniqueProjectID
+): boolean {
+  if (user === undefined) {
+    return false;
+  }
+  const project_roles = user.project_roles[project_id] ?? [];
+  if (project_roles.includes(ADMIN_ROLE)) {
+    return true;
+  }
+  if (user.other_roles.includes(CLUSTER_ADMIN_GROUP_NAME)) {
+    return true;
+  }
+  return false;
+}
+
+export function userCanRemoveProjectRole(
+  user: Express.User | undefined,
+  project_id: NonUniqueProjectID,
+  role: ConductorRole
+): boolean {
+  if (user === undefined) {
+    return false;
+  }
+  const project_roles = user.project_roles[project_id] ?? [];
+  if (project_roles.includes(ADMIN_ROLE) && role !== ADMIN_ROLE) {
+    return true;
+  }
+  if (user.other_roles.includes(CLUSTER_ADMIN_GROUP_NAME)) {
+    return true;
+  }
+  return false;
+}
+
+export function userCanAddOtherRole(user: Express.User | undefined): boolean {
+  if (user === undefined) {
+    return false;
+  }
+  if (user.other_roles.includes(CLUSTER_ADMIN_GROUP_NAME)) {
+    return true;
+  }
+  return false;
+}
+
+export function userCanRemoveOtherRole(
+  user: Express.User | undefined,
+  role: ConductorRole
+): boolean {
+  if (user === undefined) {
+    return false;
+  }
+  if (
+    user.other_roles.includes(CLUSTER_ADMIN_GROUP_NAME) &&
+    role !== CLUSTER_ADMIN_GROUP_NAME
+  ) {
     return true;
   }
   return false;
