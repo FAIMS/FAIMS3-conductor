@@ -32,6 +32,9 @@ services:
       # public URL for accessing Conductor & CouchDB
       - CONDUCTOR_PUBLIC_URL
       - COUCHDB_PUBLIC_URL
+      - CONDUCTOR_AUTH_PROVIDERS
+      - CONDUCTOR_EMAIL_HOST_NAME
+      - CONDUCTOR_EMAIL_HOST_CONFIG
 
       - FAIMS_USERDB
       - FAIMS_CONDUCTOR_KID 
@@ -43,5 +46,7 @@ services:
       - FAIMS_CONDUCTOR_PRIVATE_KEY_PATH=/app/keys/conductor_private_key.pem
       - FAIMS_CONDUCTOR_PUBLIC_KEY_PATH=/app/keys/conductor_public_key.pem
       - FAIMS_CONDUCTOR_INSTANCE_NAME=dev
+      - DATACENTRAL_CLIENT_ID
+      - DATACENTRAL_CLIENT_SECRET
 
  
