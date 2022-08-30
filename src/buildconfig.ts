@@ -241,6 +241,7 @@ function datacentral_group_prefix(): string {
     console.log('DATACENTRAL_GROUP_PREFIX not set, using default');
     return 'FAIMS';
   } else {
+    console.log(`DATACENTRAL_GROUP_PREFIX set, using ${name}`);
     return name;
   }
 }
