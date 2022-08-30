@@ -24,11 +24,13 @@ services:
       - COUCHDB_PORT
       - COUCHDB_CONTAINER_NAME
       - COUCHDB_INTERNAL_PORT=5984
+      - COUCHDB_EXTERNAL_PORT
 
       # Where is this server running
       - CONDUCTOR_PROTOCOL
-      - DEPLOY_HOST
-      - CONDUCTOR_PORT
+      - CONDUCTOR_SERVER_DESCRIPTION
+      - CONDUCTOR_LOCAL_PORT
+      - CONDUCTOR_EXTERNAL_PORT
 
       # public URL for accessing Conductor & CouchDB
       - CONDUCTOR_PUBLIC_URL
