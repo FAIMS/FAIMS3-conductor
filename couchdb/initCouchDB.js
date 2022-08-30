@@ -39,6 +39,7 @@ const directoryDoc = {
   projects_db: {
     db_name: 'projects',
   },
+  conductor_url: `${env.CONDUCTOR_PROTOCOL}://${env.DEPLOY_HOST}:${env.CONDUCTOR_PORT}/`,
   auth_mechanisms: {
     demo: {
       portal: `${env.CONDUCTOR_PROTOCOL}://${env.DEPLOY_HOST}:${env.CONDUCTOR_PORT}/`,
