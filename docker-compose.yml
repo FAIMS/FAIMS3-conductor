@@ -4,7 +4,8 @@ services:
     image: couchdb
     build:
       context: couchdb
-      dockerfile: couchdb/Dockerfile
+      dockerfile: Dockerfile
+      # dockerfile relative path is from build context
     ports:
       - "0.0.0.0:${COUCHDB_PORT}:5984"     
     # volumes:
