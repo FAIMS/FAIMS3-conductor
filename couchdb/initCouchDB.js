@@ -25,7 +25,9 @@ const {env} = require('process');
 // here we're configuring for running inside of the conductor container
 // where couchdb is running on the host `couchdb`  Other info comes from
 // the environment
-const url = `http://admin:${env.COUCHDB_PASSWORD}@couchdb:${env.COUCHDB_PORT}/`;
+
+// BBS 20220829 added env.COUCHDB_CONTAINER_NAME to allow for multiple container names
+const url = `http://admin:${env.COUCHDB_PASSWORD}@${env.COUCHDB_CONTAINER_NAME}:${env.COUCHDB_INTERNAL_PORT}/`;
 console.log('COUCHDB URL', url);
 const nano = require('nano')(url);
 
