@@ -1,11 +1,15 @@
 version: "3.9"
 services:
   couchdb:
-    image: couchdb      
+    image: couchdb
+    build:
+      context: couchdb
+      dockerfile: Dockerfile
+      # dockerfile relative path is from build context
     ports:
       - "0.0.0.0:${COUCHDB_PORT}:5984"     
-    volumes:
-      - ./couchdb/local.ini:/opt/couchdb/etc/local.d/local.ini
+    # volumes:
+    #   - ./couchdb/local.ini:/opt/couchdb/etc/local.d/local.ini
     environment:
       - COUCHDB_USER=admin
       - COUCHDB_PASSWORD
@@ -14,7 +18,7 @@ services:
       context: .
     command: "npm start" 
     ports:
-      - "0.0.0.0:${CONDUCTOR_PORT}:8080"
+      - "0.0.0.0:${CONDUCTOR_LOCAL_PORT}:8000"
     environment:
             #  note that some of these are pulled from the environment (.env) 
       #  while others get values here if the value is known for 
@@ -24,11 +28,13 @@ services:
       - COUCHDB_PORT
       - COUCHDB_CONTAINER_NAME
       - COUCHDB_INTERNAL_PORT=5984
+      - COUCHDB_EXTERNAL_PORT
 
       # Where is this server running
       - CONDUCTOR_PROTOCOL
-      - DEPLOY_HOST
-      - CONDUCTOR_PORT
+      - CONDUCTOR_SERVER_DESCRIPTION
+      - CONDUCTOR_LOCAL_PORT
+      - CONDUCTOR_EXTERNAL_PORT
 
       # public URL for accessing Conductor & CouchDB
       - CONDUCTOR_PUBLIC_URL

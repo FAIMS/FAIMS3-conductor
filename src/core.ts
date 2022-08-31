@@ -36,7 +36,7 @@ app.use(
   cookieSession({
     name: 'session',
     secret: COOKIE_SECRET,
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    maxAge: 24 * 60 * 60 * 1000 * 365, // BBS 20220831 changed to 1 year
   })
 );
 app.use(bodyParser.urlencoded({extended: true}));

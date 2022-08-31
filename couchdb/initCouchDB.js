@@ -34,17 +34,17 @@ const nano = require('nano')(url);
 const directoryDoc = {
   _id: 'default',
   name: 'Default instance',
-  description: `Default FAIMS instance on ${env.DEPLOY_HOST}`,
+  description: `FAIMS instance on ${env.CONDUCTOR_SERVER_DESCRIPTION}`,
   people_db: {
     db_name: 'people',
   },
   projects_db: {
     db_name: 'projects',
   },
-  conductor_url: `${env.CONDUCTOR_PROTOCOL}://${env.DEPLOY_HOST}:${env.CONDUCTOR_PORT}/`,
+  conductor_url: `${env.CONDUCTOR_PUBLIC_URL}/`,
   auth_mechanisms: {
     demo: {
-      portal: `${env.CONDUCTOR_PROTOCOL}://${env.DEPLOY_HOST}:${env.CONDUCTOR_PORT}/`,
+      portal: `${env.CONDUCTOR_PUBLIC_URL}/`,
       type: 'oauth',
       name: 'DataCentral',
     },
