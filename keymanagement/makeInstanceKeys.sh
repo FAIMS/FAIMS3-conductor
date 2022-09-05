@@ -6,14 +6,15 @@ set -euo pipefail
 ## Putting this before the local .env to allow for multi-instance deploys.
 
 # Local .env
-if [ -f .env ]; then
+ENV_FILE=${1:-.env}
+if [ -f $ENV_FILE ]; then
     # Load Environment Variables
-    export $(cat .env | grep -v '#' | sed 's/\r$//' | awk '/=/ {print $1}' )
+    export $(cat $ENV_FILE | grep -v '#' | sed 's/\r$//' | awk '/=/ {print $1}' )
 fi
 
 export HOST_TARGET="${COMPOSE_PROFILE:-conductor}"
 
-echo "Keys for ${HOST_TARGET}"
+echo "Keys for ${HOST_TARGET} from ${ENV_FILE}"
 mkdir -p keys
 openssl genpkey -algorithm RSA -out "keys/${HOST_TARGET}_private_key.pem" -pkeyopt rsa_keygen_bits:2048
 openssl rsa -pubout -in "keys/${HOST_TARGET}_private_key.pem" -out "keys/${HOST_TARGET}_public_key.pem"
