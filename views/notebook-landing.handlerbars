@@ -1,0 +1,8 @@
+<h1>Notebook "{{ notebook_name }}" ({{ notebook_id }})</h1>
+<p>{{ notebook_description }}</p>
+{{#if isAdmin}}
+<p>
+Roles can be removed <a href="./remove_role">here</a>. Users can be invited to
+roles <a href="/invite">here</a>.
+</p>
+{{/if}}

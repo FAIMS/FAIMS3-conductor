@@ -25,14 +25,17 @@ import {app} from './core';
 import {get_user_auth_token} from './authkeys/user';
 import {NonUniqueProjectID} from './datamodel/core';
 import {AllProjectRoles} from './datamodel/users';
-import {requireAuthentication} from './middleware';
+import {requireAuthentication, requireNotebookMembership} from './middleware';
 import {
   userCanInviteToProject,
+  userCanRemoveProjectRole,
+  userEquivalentToProjectAdmin,
   inviteEmailToProject,
   acceptInvite,
   rejectInvite,
 } from './registration';
 import {getInvite, getInvitesForEmails} from './couchdb/invites';
+import {removeRoleFromEmail} from './couchdb/users';
 
 export {app};
 
@@ -117,6 +120,70 @@ app.get('/my-invites/', requireAuthentication, async (req, res) => {
   res.render('my-invites', {invites: invites});
 });
 
+app.get(
+  '/notebooks/:notebook_id/',
+  requireNotebookMembership,
+  async (req, res) => {
+    const user = req.user as Express.User; // requireAuthentication ensures user
+    const project_id = req.params.notebook_id;
+    const isAdmin = userEquivalentToProjectAdmin(user, project_id);
+    res.render('notebook-landing', {
+      isAdmin: isAdmin,
+      notebook_id: project_id,
+      notebook_name: 'TODO',
+      notebook_description: 'TODO',
+    });
+  }
+);
+
+app.get(
+  '/notebooks/:notebook_id/remove_role/',
+  requireNotebookMembership,
+  async (req, res) => {
+    res.render('remove-role');
+  }
+);
+
+app.post(
+  '/notebooks/:notebook_id/remove_role/',
+  requireNotebookMembership,
+  body('email').isEmail(),
+  body('role').trim(),
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.render('remove-role-error', {errors: errors.array()});
+    }
+    const email: string = req.body.email;
+    const project_id: NonUniqueProjectID = req.body.notebook_id;
+    const role: string = req.body.role;
+
+    const can_remove = await userCanRemoveProjectRole(
+      req.user,
+      project_id,
+      role
+    );
+    if (!can_remove) {
+      res.render('remove-role-error', {
+        errors: [
+          {
+            msg: `You cannot remove email ${email} from role ${role} in project ${project_id}`,
+            location: 'header',
+            param: 'user',
+          },
+        ],
+      });
+    } else {
+      await removeRoleFromEmail(email, project_id, role);
+      res.render('role-remove-success', {
+        email,
+        project_id,
+        role,
+      });
+    }
+  }
+);
+
 function make_html_safe(s: string): string {
   return handlebars.escapeExpression(s);
 }
@@ -128,9 +195,12 @@ function render_project_roles(roles: AllProjectRoles): handlebars.SafeString {
     for (const role of roles[project]) {
       project_sections.push('<li>' + make_html_safe(role) + '</li>');
     }
+    const safe_name = make_html_safe(project);
     all_project_sections.push(
       '<h6>Roles for project "' +
-        make_html_safe(project) +
+        `<a href="./notebooks/${safe_name}/">` +
+        safe_name +
+        '</a>' +
         '"</h6>' +
         '<ul>' +
         project_sections.join('') +

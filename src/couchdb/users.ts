@@ -22,9 +22,11 @@
 import PouchDB from 'pouchdb';
 
 import {CONDUCTOR_USER_DB, LOCAL_COUCHDB_AUTH} from '../buildconfig';
+import {NonUniqueProjectID} from '../datamodel/core';
 import {
   PouchUser,
   AllProjectRoles,
+  ConductorRole,
   OtherRoles,
   CouchDBUsername,
   CouchDBUserRoles,
@@ -142,6 +144,13 @@ export async function get_user_from_username(
   }
 }
 
+function projectRoleToCouchRole(
+  project_id: NonUniqueProjectID,
+  role: ConductorRole
+): string {
+  return project_id + '||' + role;
+}
+
 function conductorRolesToCouchDBRoles(
   project_roles: AllProjectRoles,
   other_roles: OtherRoles
@@ -149,7 +158,7 @@ function conductorRolesToCouchDBRoles(
   const couch_roles: CouchDBUserRoles = [];
   for (const project in project_roles) {
     for (const role of project_roles[project]) {
-      couch_roles.push(project + '||' + role);
+      couch_roles.push(projectRoleToCouchRole(project, role));
     }
   }
   return couch_roles.concat(other_roles);
@@ -215,4 +224,48 @@ export function addEmailsToUser(
 ) {
   const all_emails = new Set(user.emails.concat(emails));
   user.emails = Array.from(all_emails);
+}
+
+export function removeProjectRoleFromUser(
+  user: Express.User,
+  project_id: NonUniqueProjectID,
+  role: ConductorRole
+) {
+  const project_roles = user.project_roles[project_id] ?? [];
+  if (project_roles.length === 0) {
+    console.debug('User has no roles in project', user, project_id, role);
+  } else {
+    user.project_roles[project_id] = project_roles.filter(r => r !== role);
+  }
+}
+
+export function removeOtherRoleFromUser(
+  user: Express.User,
+  role: ConductorRole
+) {
+  const other_roles = user.other_roles ?? [];
+  if (other_roles.length === 0) {
+    console.debug('User has other roles', user, role);
+  } else {
+    user.other_roles = other_roles.filter(r => r !== role);
+  }
+}
+
+export async function removeRoleFromEmail(
+  email: string,
+  project_id: NonUniqueProjectID,
+  role: ConductorRole
+) {
+  const couch_role = projectRoleToCouchRole(project_id, role);
+  const users: PouchUser[] = [];
+  const res = await users_db.find({
+    selector: {emails: {$elemMatch: {$eq: email}}},
+  });
+  for (const user of res.docs) {
+    const u = user as PouchUser;
+    const roles = u.roles;
+    u.roles = roles.filter(r => r !== couch_role);
+    users.push(u);
+  }
+  await users_db.bulkDocs(users);
 }
