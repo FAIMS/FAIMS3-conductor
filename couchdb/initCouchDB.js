@@ -197,7 +197,7 @@ const createProject = async () => {
     // clone securityDoc
     const security = Object.assign({}, securityDoc);
     // add project specific roles
-    security.admins.roles.push(env.REACT_APP_CLUSTER_ADMIN_GROUP_NAME);
+    security.admins.roles.push(env.CLUSTER_ADMIN_GROUP_NAME);
     security.members.roles.push(`${env.PROJECT_KEY}||team`);
     security.members.roles.push(`${env.PROJECT_KEY}||admin`);
     await db.insert(security, '_security');
@@ -230,7 +230,7 @@ const createProject = async () => {
     const db = nano.use(dataDbname);
     const security = Object.assign({}, securityDoc);
     // add project specific roles
-    security.admins.roles.push(env.REACT_APP_CLUSTER_ADMIN_GROUP_NAME);
+    security.admins.roles.push(env.CLUSTER_ADMIN_GROUP_NAME);
     security.members.roles.push(`${env.PROJECT_KEY}||team`);
     security.members.roles.push(`${env.PROJECT_KEY}||admin`);
     await db.insert(security, '_security');

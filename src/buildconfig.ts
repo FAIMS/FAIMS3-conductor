@@ -44,46 +44,6 @@ function commit_version(): string {
   }
 }
 
-function prod_build(): boolean {
-  const prodbuild = process.env.REACT_APP_PRODUCTION_BUILD;
-  if (
-    prodbuild === '' ||
-    prodbuild === undefined ||
-    FALSEY_STRINGS.includes(prodbuild.toLowerCase())
-  ) {
-    return false;
-  } else if (TRUTHY_STRINGS.includes(prodbuild.toLowerCase())) {
-    return true;
-  } else {
-    console.error('REACT_APP_PRODUCTION_BUILD badly defined, assuming false');
-    return false;
-  }
-}
-/*
- * This isn't exported, instead to help reduce the number of environment
- * variables to set to get a production build for real users. Can be used in the
- * rest of the configuartion.
- */
-const PROD_BUILD = prod_build();
-
-function directory_protocol(): string {
-  const usehttps = process.env.REACT_APP_USE_HTTPS;
-  if (PROD_BUILD) {
-    return 'https';
-  } else if (
-    usehttps === '' ||
-    usehttps === undefined ||
-    FALSEY_STRINGS.includes(usehttps.toLowerCase())
-  ) {
-    return 'http';
-  } else if (TRUTHY_STRINGS.includes(usehttps.toLowerCase())) {
-    return 'https';
-  } else {
-    console.error('REACT_APP_USE_HTTPS badly defined, assuming false');
-    return 'http';
-  }
-}
-
 /*
   conductor_url - returns the base URL of this Conductor server
 */
@@ -93,47 +53,6 @@ function conductor_url(): string {
     return 'http://localhost:8080';
   }
   return url;
-}
-
-function directory_host(): string {
-  const host = process.env.REACT_APP_DIRECTORY_HOST;
-  if (host === '' || host === undefined) {
-    return '10.80.11.44';
-  }
-  return host;
-}
-
-function directory_port(): number {
-  const port = process.env.REACT_APP_DIRECTORY_PORT;
-  if (port === '' || port === undefined) {
-    if (PROD_BUILD) {
-      return 443;
-    }
-    return 5984;
-  }
-  try {
-    return parseInt(port);
-  } catch (err) {
-    console.error('Falling back to default port', err);
-    return 5984;
-  }
-}
-
-function directory_auth(): undefined | {username: string; password: string} {
-  // Used in the server, as opposed to COUCHDB_USER and PASSWORD for testing.
-  const username = process.env.REACT_APP_DIRECTORY_USERNAME;
-  const password = process.env.REACT_APP_DIRECTORY_PASSWORD;
-
-  if (
-    username === '' ||
-    username === undefined ||
-    password === '' ||
-    password === undefined
-  ) {
-    return undefined;
-  } else {
-    return {username: username, password: password};
-  }
 }
 
 function is_testing() {
@@ -330,15 +249,10 @@ function email_transporter(): any {
 
 export const CONDUCTOR_USER_DB = conductor_user_db();
 export const CONDUCTOR_INVITE_DB = conductor_invite_db();
-export const DIRECTORY_PROTOCOL = directory_protocol();
-export const DIRECTORY_HOST = directory_host();
-export const DIRECTORY_PORT = directory_port();
-export const DIRECTORY_AUTH = directory_auth();
 export const LOCAL_COUCHDB_AUTH = local_couchdb_auth();
 export const RUNNING_UNDER_TEST = is_testing();
 export const COMMIT_VERSION = commit_version();
 export const CONDUCTOR_PUBLIC_URL = conductor_url();
-export const AUTOACTIVATE_PROJECTS = true; // for alpha, beta will change this
 export const CONDUCTOR_PORT = conductor_port();
 export const CONDUCTOR_KEY_ID = signing_key_id();
 export const CONDUCTOR_PRIVATE_KEY_PATH = private_key_path();

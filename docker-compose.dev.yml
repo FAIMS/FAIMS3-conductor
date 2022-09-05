@@ -42,7 +42,7 @@ services:
       - FAIMS_CONDUCTOR_KID 
       - FAIMS_COOKIE_SECRET
       - DATACENTRAL_GROUP_PREFIX
-      - REACT_APP_COMMIT_VERSION
+      - COMMIT_VERSION
       - FAIMS_USERDB=${COUCHDB_PROTOCOL}://couchdb:${COUCHDB_PORT}/people
       - FAIMS_CONDUCTOR_KID=conductor
       - FAIMS_CONDUCTOR_PRIVATE_KEY_PATH=/app/keys/conductor_private_key.pem
