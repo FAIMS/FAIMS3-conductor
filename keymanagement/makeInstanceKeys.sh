@@ -4,7 +4,6 @@ set -euo pipefail
 
 ## no need for this to vary as in this deployment there is only ever one conductor-couchdb pair 
 ## Putting this before the local .env to allow for multi-instance deploys.
-export HOST_TARGET='conductor'
 
 # Local .env
 if [ -f .env ]; then
@@ -12,8 +11,9 @@ if [ -f .env ]; then
     export $(cat .env | grep -v '#' | sed 's/\r$//' | awk '/=/ {print $1}' )
 fi
 
+export HOST_TARGET="${COMPOSE_PROFILE:-conductor}"
 
-
+echo "Keys for ${HOST_TARGET}"
 mkdir -p keys
 openssl genpkey -algorithm RSA -out "keys/${HOST_TARGET}_private_key.pem" -pkeyopt rsa_keygen_bits:2048
 openssl rsa -pubout -in "keys/${HOST_TARGET}_private_key.pem" -out "keys/${HOST_TARGET}_public_key.pem"
