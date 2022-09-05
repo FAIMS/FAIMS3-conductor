@@ -23,6 +23,8 @@ services:
             #  note that some of these are pulled from the environment (.env) 
       #  while others get values here if the value is known for 
       #  docker-compose setup
+
+      # COUCHDB_USER and COUCHDB_PASSWORD used by conductor as well
       - COUCHDB_USER=admin
       - COUCHDB_PASSWORD
       - COUCHDB_PORT
@@ -36,22 +38,38 @@ services:
       - CONDUCTOR_LOCAL_PORT
       - CONDUCTOR_EXTERNAL_PORT
 
+
+      # probably unused?
+      - COUCHDB_PUBLIC_URL
+
+      # https://faimsproject.atlassian.net/wiki/spaces/FAIMS3/pages/151846960/FAIMS3+Conductor+build+run+environment+variables
+
+      # optional
+      - CLUSTER_ADMIN_GROUP_NAME
+
+      - FAIMS_COOKIE_SECRET
+      - FAIMS_CONDUCTOR_INSTANCE_NAME=dev
+      - FAIMS_CONDUCTOR_PUBLIC_KEY_PATH=/app/keys/conductor_public_key.pem
+      - FAIMS_CONDUCTOR_PRIVATE_KEY_PATH=/app/keys/conductor_private_key.pem
+
+      # optional, internal to the conductor running
+      - CONDUCTOR_PORT
+
       # public URL for accessing Conductor & CouchDB
       - CONDUCTOR_PUBLIC_URL
-      - COUCHDB_PUBLIC_URL
+      - COMMIT_VERSION
+
       - CONDUCTOR_AUTH_PROVIDERS
       - CONDUCTOR_EMAIL_HOST_NAME
       - CONDUCTOR_EMAIL_HOST_CONFIG
 
-      # - FAIMS_USERDB
-      # - FAIMS_CONDUCTOR_KID 
-      - FAIMS_COOKIE_SECRET
-      - DATACENTRAL_GROUP_PREFIX
-      - COMMIT_VERSION
       - FAIMS_USERDB=${COUCHDB_PROTOCOL}://${COUCHDB_CONTAINER_NAME}:${COUCHDB_INTERNAL_PORT}/people
+
+      # used as part of key deploy
       - FAIMS_CONDUCTOR_KID=conductor
-      - FAIMS_CONDUCTOR_PRIVATE_KEY_PATH=/app/keys/conductor_private_key.pem
-      - FAIMS_CONDUCTOR_PUBLIC_KEY_PATH=/app/keys/conductor_public_key.pem
-      - FAIMS_CONDUCTOR_INSTANCE_NAME=dev
+
+      # https://faimsproject.atlassian.net/wiki/spaces/FAIMS3/pages/151846960/FAIMS3+Conductor+build+run+environment+variables#Authentication-Provider-Specific-environment-variables
+      - DATACENTRAL_GROUP_PREFIX
       - DATACENTRAL_CLIENT_ID
       - DATACENTRAL_CLIENT_SECRET
+      - HAVE_DATACENTRAL_MANAGE_ROLES=true
