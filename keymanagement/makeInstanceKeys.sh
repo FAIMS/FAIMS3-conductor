@@ -31,7 +31,7 @@ echo $FLATTENED_KEY > "keys/${HOST_TARGET}_rsa_2048_public_key.pem.flattened"
 
 cp ./couchdb/local.ini.dist ./couchdb/local.ini 
 echo "[jwt_keys]" >> ./couchdb/local.ini
-echo "rsa:conductor=$FLATTENED_KEY" >> ./couchdb/local.ini
+echo "rsa:${FAIMS_CONDUCTOR_KID}=${FLATTENED_KEY}" >> ./couchdb/local.ini
 echo '[admin]' >> ./couchdb/local.ini
 echo "admin=${COUCHDB_PASSWORD}" >> ./couchdb/local.ini
 
