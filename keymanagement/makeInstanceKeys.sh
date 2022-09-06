@@ -12,9 +12,10 @@ if [ -f $ENV_FILE ]; then
     export $(cat $ENV_FILE | grep -v '#' | sed 's/\r$//' | awk '/=/ {print $1}' )
 fi
 
-export HOST_TARGET="${COMPOSE_PROFILE:-conductor}"
+export HOST_TARGET="${COMPOSE_PROFILES:-conductor}"
 
-echo "Keys for ${HOST_TARGET} from ${ENV_FILE}"
+
+echo "Keys for ${COMPOSE_PROFILES}: ${HOST_TARGET} from ${ENV_FILE}"
 mkdir -p keys
 openssl genpkey -algorithm RSA -out "keys/${HOST_TARGET}_private_key.pem" -pkeyopt rsa_keygen_bits:2048
 openssl rsa -pubout -in "keys/${HOST_TARGET}_private_key.pem" -out "keys/${HOST_TARGET}_public_key.pem"
