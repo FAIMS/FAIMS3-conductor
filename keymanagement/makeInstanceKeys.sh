@@ -21,14 +21,16 @@ openssl rsa -pubout -in "keys/${HOST_TARGET}_private_key.pem" -out "keys/${HOST_
 
 ## Dropping a flattened key out to support generated pubkeys for iOS testing
 
-cat "keys/${HOST_TARGET}_public_key.pem" | awk '{printf "%s\\n", $0}' > "keys/${HOST_TARGET}_rsa_2048_public_key.pem.flattened"
+export FLATTENED_KEY=$(cat "keys/${HOST_TARGET}_public_key.pem" | awk '{printf "%s\\n", $0}')
+
+echo $FLATTENED_KEY > "keys/${HOST_TARGET}_rsa_2048_public_key.pem.flattened"
 
 ## Generate the jwt.ini file needed for couch deployment, contains the public key
 ## used to validate signed JWTs for authentication to couchdb
 
 cp ./couchdb/local.ini.dist ./couchdb/local.ini 
 echo "[jwt_keys]" >> ./couchdb/local.ini
-echo "rsa:conductor="`cat "keys/${HOST_TARGET}_public_key.pem" | awk '{printf "%s\\n", $0}' >> ./couchdb/local.ini
+echo "rsa:conductor=$FLATTENED_KEY" >> ./couchdb/local.ini
 echo '[admin]' >> ./couchdb/local.ini
 echo "admin=${COUCHDB_PASSWORD}" >> ./couchdb/local.ini
 
