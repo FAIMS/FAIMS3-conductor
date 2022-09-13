@@ -8,27 +8,21 @@ fetch(
     res => res.json()
 ).then(
     token_json => {
+        const token_str = JSON.stringify({
+            token: token_json.token,
+            pubkey: token_json.pubkey,
+            pubalg: token_json.pubalg,
+            origin: window.location.href,
+        });
         if (window.cordova_iab !== undefined) {
-            window.cordova_iab.postMessage(JSON.stringify({
-                token: token_json.token,
-                pubkey: token_json.pubkey,
-                pubalg: token_json.pubalg,
-                origin: window.location.href,
-            }));
+            window.cordova_iab.postMessage(token_str);
             alert("Token sent, hit back button");
         } else if (
             window.webkit !== undefined &&
             window.webkit.messageHandlers !== undefined &&
             window.webkit.messageHandlers.cordova_iab !== undefined
         ) {
-            window.webkit.messageHandlers.cordova_iab.postMessage(
-                JSON.stringify({
-                    token: token_json.token,
-                    pubkey: token_json.pubkey,
-                    pubalg: token_json.pubalg,
-                    origin: window.location.href,
-                })
-            );
+            window.webkit.messageHandlers.cordova_iab.postMessage(token_str);
             alert("Token sent, hit done button");
         } else {
             const app_window = window.opener ?? window.parent;
@@ -44,6 +38,9 @@ fetch(
                 }, "*");
                 window.close();
             }
+            // use app url
+            const urlenc_token = encodeURIComponent(token_str);
+            window.location = "org.fedarch.faims3://auth/" + urlenc_token;
         }
     }
 ).catch(console.error);
