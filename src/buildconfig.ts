@@ -40,6 +40,7 @@ function commit_version(): string {
   ) {
     return 'unknown dev';
   } else {
+    console.log(`Commitver: ${commitver}`);
     return commitver;
   }
 }
@@ -77,9 +78,10 @@ function conductor_invite_db(): string {
   const invite_db = process.env.CONDUCTOR_INVITE_DB;
   const invite_db_default = 'http://localhost:5984/invites';
   if (invite_db === '' || invite_db === undefined) {
-    console.log('FAIMS_invite_db not set, using default');
+    console.log('CONDUCTOR_INVITE_DB not set, using default');
     return invite_db_default;
   } else {
+    console.log(`CONDUCTOR_INVITE_DB set: ${invite_db}`);
     return invite_db;
   }
 }
@@ -110,6 +112,7 @@ function signing_key_id(): string {
     console.log('FAIMS_CONDUCTOR_KID not set, using default');
     return 'test_key';
   } else {
+    console.log(`FAIMS_CONDUCTOR_KID SET ${key_id}`);
     return key_id;
   }
 }
