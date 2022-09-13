@@ -48,9 +48,9 @@ services:
       - CLUSTER_ADMIN_GROUP_NAME
 
       - FAIMS_COOKIE_SECRET
-      - FAIMS_CONDUCTOR_INSTANCE_NAME=dev
-      - FAIMS_CONDUCTOR_PUBLIC_KEY_PATH=/app/keys/conductor_public_key.pem
-      - FAIMS_CONDUCTOR_PRIVATE_KEY_PATH=/app/keys/conductor_private_key.pem
+      - FAIMS_CONDUCTOR_INSTANCE_NAME
+      - FAIMS_CONDUCTOR_PUBLIC_KEY_PATH
+      - FAIMS_CONDUCTOR_PRIVATE_KEY_PATH
 
       # optional, internal to the conductor running
       - CONDUCTOR_PORT

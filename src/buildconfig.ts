@@ -123,6 +123,8 @@ function private_key_path(): string {
     console.log('FAIMS_CONDUCTOR_PRIVATE_KEY_PATH not set, using default');
     return 'private_key.pem';
   } else {
+    console.log('FAIMS_CONDUCTOR_PRIVATE_KEY_PATH set, using ${key_path}');
+
     return key_path;
   }
 }
