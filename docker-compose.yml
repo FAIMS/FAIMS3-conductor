@@ -66,7 +66,7 @@ services:
       - FAIMS_USERDB=${COUCHDB_PROTOCOL}://${COUCHDB_CONTAINER_NAME}:${COUCHDB_INTERNAL_PORT}/people
 
       # used as part of key deploy
-      - FAIMS_CONDUCTOR_KID=conductor
+      - FAIMS_CONDUCTOR_KID
 
       # https://faimsproject.atlassian.net/wiki/spaces/FAIMS3/pages/151846960/FAIMS3+Conductor+build+run+environment+variables#Authentication-Provider-Specific-environment-variables
       - DATACENTRAL_GROUP_PREFIX

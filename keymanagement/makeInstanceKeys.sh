@@ -34,7 +34,7 @@ cp ./couchdb/local.ini.dist ./couchdb/local.ini
 sed --in-place "s/secret = db7a1a86dbc734593febf8ca6fdf0cf8/secret = ${FAIMS_COOKIE_SECRET}/" ./couchdb/local.ini
 sed --in-place "s/uuid = adf990d5dd21b735f65d4140ad1f10c2/uuid = "`uuid`"/" ./couchdb/local.ini
 echo "[jwt_keys]" >> ./couchdb/local.ini
-echo "${FAIMS_CONDUCTOR_KID}=${FLATTENED_KEY}" >> ./couchdb/local.ini
+echo "rsa:${FAIMS_CONDUCTOR_KID}=${FLATTENED_KEY}" >> ./couchdb/local.ini
 echo '[admin]' >> ./couchdb/local.ini
 echo "admin=${COUCHDB_PASSWORD}" >> ./couchdb/local.ini
 
