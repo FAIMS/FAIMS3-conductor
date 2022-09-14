@@ -2,27 +2,42 @@
 
 set -euo pipefail
 
+## no need for this to vary as in this deployment there is only ever one conductor-couchdb pair 
+## Putting this before the local .env to allow for multi-instance deploys.
+
 # Local .env
-if [ -f .env ]; then
+ENV_FILE=${1:-.env}
+if [ -f $ENV_FILE ]; then
     # Load Environment Variables
-    export $(cat .env | grep -v '#' | sed 's/\r$//' | awk '/=/ {print $1}' )
+    export $(cat $ENV_FILE | grep -v '#' | sed 's/\r$//' | awk '/=/ {print $1}' )
 fi
 
+export HOST_TARGET="${COMPOSE_PROFILES:-conductor}"
 
-## no need for this to vary as in this deployment there is only ever one conductor-couchdb pair
-export HOST_TARGET='conductor'
 
+echo "Keys for ${COMPOSE_PROFILES}: ${HOST_TARGET} from ${ENV_FILE}"
 mkdir -p keys
 openssl genpkey -algorithm RSA -out "keys/${HOST_TARGET}_private_key.pem" -pkeyopt rsa_keygen_bits:2048
 openssl rsa -pubout -in "keys/${HOST_TARGET}_private_key.pem" -out "keys/${HOST_TARGET}_public_key.pem"
+
+## Dropping a flattened key out to support generated pubkeys for iOS testing
+
+export FLATTENED_KEY=$(cat "keys/${HOST_TARGET}_public_key.pem" | awk '{printf "%s\\n", $0}')
+
+echo $FLATTENED_KEY > "keys/${HOST_TARGET}_rsa_2048_public_key.pem.flattened"
 
 ## Generate the jwt.ini file needed for couch deployment, contains the public key
 ## used to validate signed JWTs for authentication to couchdb
 
 cp ./couchdb/local.ini.dist ./couchdb/local.ini 
+# sed --in-place "s/port = 5984/port = ${COUCHDB_PORT}/" ./couchdb/local.ini
+sed --in-place "s/secret = db7a1a86dbc734593febf8ca6fdf0cf8/secret = ${FAIMS_COOKIE_SECRET}/" ./couchdb/local.ini
+sed --in-place "s/uuid = adf990d5dd21b735f65d4140ad1f10c2/uuid = "`uuid`"/" ./couchdb/local.ini
 echo "[jwt_keys]" >> ./couchdb/local.ini
-echo "rsa:conductor="`cat "keys/${HOST_TARGET}_public_key.pem" | tr '\n' '\\n'` >> ./couchdb/local.ini
+echo "rsa:${FAIMS_CONDUCTOR_KID}=${FLATTENED_KEY}" >> ./couchdb/local.ini
 echo '[admin]' >> ./couchdb/local.ini
 echo "admin=${COUCHDB_PASSWORD}" >> ./couchdb/local.ini
+
+cat ./couchdb/local.ini
 
 
