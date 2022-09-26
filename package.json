@@ -17,7 +17,7 @@
   "dependencies": {
     "@types/cookie-session": "2.0.44",
     "@types/cors": "2.8.12",
-    "@types/express": "4.17.13",
+    "@types/express": "4.17.14",
     "@types/express-handlebars": "5.3.1",
     "@types/express-session": "1.17.5",
     "@types/jest": "27.5.0",
