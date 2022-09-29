@@ -3,7 +3,7 @@
 #https://stackoverflow.com/a/10544510
 #https://github.com/apache/couchdb-docker
 
-FROM node:lts-buster@sha256:10c88537539012bd30777e41fdd30b30d088abb6dfc995f77ace26071052d4d1
+FROM node:lts-buster@sha256:5968f50bda8ea8bdc65fd4208de287bbb25ca3ba81649494b1b6cf4b9203695e
 
 WORKDIR /app
 # EXPOSE 8080 
