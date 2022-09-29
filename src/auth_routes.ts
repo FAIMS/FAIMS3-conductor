@@ -29,6 +29,9 @@ const AVAILABLE_AUTH_PROVIDER_DISPLAY_INFO: {[name: string]: any} = {
   datacentral: {
     name: 'Data Central',
   },
+  google: {
+    name: 'Google',
+  },
 };
 
 passport.serializeUser((user: Express.User, done: DoneFunction) => {

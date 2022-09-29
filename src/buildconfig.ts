@@ -208,6 +208,26 @@ function datacentral_client_secret(): string {
   }
 }
 
+function google_client_id(): string {
+  const s = process.env.GOOGLE_CLIENT_ID;
+  if (s === '' || s === undefined) {
+    console.log('GOOGLE_CLIENT_ID not set, setting empty');
+    return '';
+  } else {
+    return s;
+  }
+}
+
+function google_client_secret(): string {
+  const s = process.env.GOOGLE_CLIENT_SECRET;
+  if (s === '' || s === undefined) {
+    console.log('GOOGLE_CLIENT_SECRET not set, setting empty');
+    return '';
+  } else {
+    return s;
+  }
+}
+
 function cluster_admin_group_name(): string {
   const name = process.env.CLUSTER_ADMIN_GROUP_NAME;
   if (name === '' || name === undefined) {
@@ -268,6 +288,8 @@ export const DATACENTRAL_GROUP_PREFIX = datacentral_group_prefix();
 export const HAVE_DATACENTRAL_MANAGE_ROLES = datacentral_manage_roles();
 export const DATACENTRAL_CLIENT_ID = datacentral_client_id();
 export const DATACENTRAL_CLIENT_SECRET = datacentral_client_secret();
+export const GOOGLE_CLIENT_ID = google_client_id();
+export const GOOGLE_CLIENT_SECRET = google_client_secret();
 export const CLUSTER_ADMIN_GROUP_NAME = cluster_admin_group_name();
 export const CONDUCTOR_AUTH_PROVIDERS = get_providers_to_use();
 export const EMAIL_HOST_NAME = email_host_name();

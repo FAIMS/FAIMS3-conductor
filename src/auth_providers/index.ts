@@ -23,9 +23,11 @@ import passport from 'passport';
 
 import {determine_callback_url} from '../auth_routes';
 import {get_strategy as dc_get_strategy} from './data_central';
+import {get_strategy as google_get_strategy} from './google';
 
 const AVAILABLE_AUTH_PROVIDERS: {[name: string]: any} = {
   datacentral: dc_get_strategy,
+  google: google_get_strategy,
 };
 
 export function add_auth_providers(providers_to_use: string[]) {
