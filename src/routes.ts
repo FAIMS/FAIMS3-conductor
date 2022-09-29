@@ -227,9 +227,12 @@ app.get('/', async (req, res) => {
 
 app.get('/logout/', (req, res) => {
   if (req.user) {
-    req.logout();
+    req.logout(() => {
+      res.redirect('/');
+    });
+  } else {
+    res.redirect('/');
   }
-  res.redirect('/');
 });
 
 app.get('/send-token/', (req, res) => {
