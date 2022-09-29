@@ -22,7 +22,7 @@ import {Strategy, VerifyCallback} from 'passport-google-oauth20';
 
 import {GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET} from '../buildconfig';
 import {
-  addEmailToUser,
+  addEmailsToUser,
   updateUser,
   getOrCreatePouchUser,
   pouch_user_to_express_user,
@@ -44,7 +44,7 @@ function oauth_verify(
       if (user.name === '') {
         user.name = profile.displayName;
       }
-      addEmailToUser(user, profile.email);
+      addEmailsToUser(user, profile.emails);
       user.profiles['google'] = profile;
 
       return user;
