@@ -23,7 +23,7 @@ services:
       #  while others get values here if the value is known for 
       #  docker-compose setup
 
-- COUCHDB_USER=admin
+      - COUCHDB_USER=admin
       - COUCHDB_PASSWORD
       - COUCHDB_PORT
       - COUCHDB_CONTAINER_NAME
@@ -60,8 +60,9 @@ services:
       - CONDUCTOR_AUTH_PROVIDERS
       - CONDUCTOR_EMAIL_HOST_NAME
       - CONDUCTOR_EMAIL_HOST_CONFIG
-
-      - FAIMS_USERDB=${COUCHDB_PROTOCOL}://${COUCHDB_CONTAINER_NAME}:${COUCHDB_INTERNAL_PORT}/people
+      
+      - CONDUCTOR_INVITE_DB=${COUCHDB_PROTOCOL}://${COUCHDB_CONTAINER_NAME}:${COUCHDB_INTERNAL_PORT}/${CONDUCTOR_INVITE_DB_NAME:-invites}
+      - FAIMS_USERDB=${COUCHDB_PROTOCOL}://${COUCHDB_CONTAINER_NAME}:${COUCHDB_INTERNAL_PORT}/${FAIMS_USERDB_NAME:-people}
 
       # used as part of key deploy
       - FAIMS_CONDUCTOR_KID
