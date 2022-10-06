@@ -254,10 +254,10 @@ function conductor_port(): number {
   return parseInt(port);
 }
 
-function email_host_name(): string {
-  const hostname = process.env.CONDUCTOR_EMAIL_HOST_NAME;
+function email_from_address(): string {
+  const hostname = process.env.CONDUCTOR_EMAIL_FROM_ADDRESS;
   if (hostname === '' || hostname === undefined) {
-    throw Error('CONDUCTOR_EMAIL_HOST_NAME must be set to send email invites');
+    throw Error('CONDUCTOR_EMAIL_FROM_ADDRESS must be set to send email invites');
   }
   return hostname;
 }
@@ -292,5 +292,5 @@ export const GOOGLE_CLIENT_ID = google_client_id();
 export const GOOGLE_CLIENT_SECRET = google_client_secret();
 export const CLUSTER_ADMIN_GROUP_NAME = cluster_admin_group_name();
 export const CONDUCTOR_AUTH_PROVIDERS = get_providers_to_use();
-export const EMAIL_HOST_NAME = email_host_name();
+export const EMAIL_FROM_ADDRESSS = email_from_address();
 export const EMAIL_TRANSPORTER = email_transporter();
