@@ -258,6 +258,8 @@ function email_from_address(): string {
   const hostname = process.env.CONDUCTOR_EMAIL_FROM_ADDRESS;
   if (hostname === '' || hostname === undefined) {
     throw Error('CONDUCTOR_EMAIL_FROM_ADDRESS must be set to send email invites');
+  } else {
+    console.log(`Sending email as ${hostname}`)
   }
   return hostname;
 }
