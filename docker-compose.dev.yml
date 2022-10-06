@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
       # dockerfile relative path is from build context
     ports:
-      - "0.0.0.0:${COUCHDB_PORT}:5984"     
+      - "0.0.0.0:${COUCHDB_EXTERNAL_PORT}:${COUCHDB_PORT}"     
     environment:
       - COUCHDB_USER=admin
       - COUCHDB_PASSWORD
@@ -17,25 +17,24 @@ services:
     volumes:
       - .:/app
     ports:
-      - "0.0.0.0:${CONDUCTOR_LOCAL_PORT}:8000"
+      - "0.0.0.0:${CONDUCTOR_EXTERNAL_PORT}:${CONDUCTOR_PORT}"
     environment:
       #  note that some of these are pulled from the environment (.env) 
       #  while others get values here if the value is known for 
       #  docker-compose setup
 
+      - PROFILE_NAME
+      
       - COUCHDB_USER=admin
       - COUCHDB_PASSWORD
-      - COUCHDB_PORT
       - COUCHDB_CONTAINER_NAME
-      - COUCHDB_INTERNAL_PORT=5984
+      - COUCHDB_PORT
       - COUCHDB_EXTERNAL_PORT
 
       # Where is this server running
       - CONDUCTOR_PROTOCOL
-      - CONDUCTOR_SERVER_DESCRIPTION
-      - CONDUCTOR_LOCAL_PORT
+      - CONDUCTOR_PORT
       - CONDUCTOR_EXTERNAL_PORT
-
 
       # probably unused?
       - COUCHDB_PUBLIC_URL
@@ -46,12 +45,6 @@ services:
       - CLUSTER_ADMIN_GROUP_NAME
 
       - FAIMS_COOKIE_SECRET
-      - FAIMS_CONDUCTOR_INSTANCE_NAME
-      - FAIMS_CONDUCTOR_PUBLIC_KEY_PATH
-      - FAIMS_CONDUCTOR_PRIVATE_KEY_PATH
-
-      # optional, internal to the conductor running
-      - CONDUCTOR_PORT
 
       # public URL for accessing Conductor & CouchDB
       - CONDUCTOR_PUBLIC_URL
@@ -61,11 +54,8 @@ services:
       - CONDUCTOR_EMAIL_HOST_NAME
       - CONDUCTOR_EMAIL_HOST_CONFIG
       
-      - CONDUCTOR_INVITE_DB=${COUCHDB_PROTOCOL}://${COUCHDB_CONTAINER_NAME}:${COUCHDB_INTERNAL_PORT}/${CONDUCTOR_INVITE_DB_NAME:-invites}
-      - FAIMS_USERDB=${COUCHDB_PROTOCOL}://${COUCHDB_CONTAINER_NAME}:${COUCHDB_INTERNAL_PORT}/${FAIMS_USERDB_NAME:-people}
-
-      # used as part of key deploy
-      - FAIMS_CONDUCTOR_KID
+      - CONDUCTOR_INVITE_DB=${COUCHDB_PROTOCOL}://${COUCHDB_CONTAINER_NAME}:${COUCHDB_PORT}/${CONDUCTOR_INVITE_DB_NAME:-invites}
+      - FAIMS_USERDB=${COUCHDB_PROTOCOL}://${COUCHDB_CONTAINER_NAME}:${COUCHDB_PORT}/${FAIMS_USERDB_NAME:-people}
 
       # https://faimsproject.atlassian.net/wiki/spaces/FAIMS3/pages/151846960/FAIMS3+Conductor+build+run+environment+variables#Authentication-Provider-Specific-environment-variables
       - DATACENTRAL_GROUP_PREFIX

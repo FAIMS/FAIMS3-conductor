@@ -8,19 +8,7 @@ The deployment is configured via the `.env` file in the root directory
 of the project.   Copy `.env.dist` to `.env` and the update the values
 as required.
 
-* `COUCHDB_PASSWORD` - admin user password for couchdb (will be created)
-* `COUCHDB_PROTOCOL` - probably `http` - protocol for internal access to couchdb server
-* `COUCHDB_PORT` - port for internal access to couchdb server
-* `DEPLOY_HOST` - public hostname that this service will be available on
-* `CONDUCTOR_PROTOCOL` - probably `http` - protocol for internal access to
-* `CONDUCTOR_PORT` - port that conductor will listen on internally
-* `CONDUCTOR_PUBLIC_URL` - external public URL for the conductor service
-
-The following variables relate to the runtime configuration of the application:
-
-* `DATACENTRAL_GROUP_PREFIX` - group prefix for data central authentication
-* `FAIMS_COOKIE_SECRET` - secret used to sign cookies - a random string
-* `COMMIT_VERSION` - current Conductor commit version
+Environment variables are documented in comments in `.env.dist`.
 
 ## Running
 
