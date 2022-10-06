@@ -117,10 +117,9 @@ function signing_key_id(): string {
   }
 }
 
-
 // Generate public and private keys file names in the same way as makeInstanceKeys.sh
 
-function private_key_path(): string { 
+function private_key_path(): string {
   let host = process.env.PROFILE_NAME;
   if (host === '' || host === undefined) {
     host = 'conductor';
