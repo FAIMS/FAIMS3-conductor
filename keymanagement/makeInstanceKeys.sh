@@ -29,9 +29,8 @@ echo $FLATTENED_KEY > "keys/${HOST_TARGET}_rsa_2048_public_key.pem.flattened"
 ## used to validate signed JWTs for authentication to couchdb
 
 cp ./couchdb/local.ini.dist ./couchdb/local.ini 
-# sed --in-place "s/port = 5984/port = ${COUCHDB_PORT}/" ./couchdb/local.ini
-sed -i "" "s/secret = db7a1a86dbc734593febf8ca6fdf0cf8/secret = ${FAIMS_COOKIE_SECRET}/" ./couchdb/local.ini
-sed -i "" "s/uuid = adf990d5dd21b735f65d4140ad1f10c2/uuid = "`uuid`"/" ./couchdb/local.ini
+sed -i.bak "s/secret = db7a1a86dbc734593febf8ca6fdf0cf8/secret = ${FAIMS_COOKIE_SECRET}/" ./couchdb/local.ini
+sed -i.bak "s/uuid = adf990d5dd21b735f65d4140ad1f10c2/uuid = "`uuid`"/" ./couchdb/local.ini
 echo "[jwt_keys]" >> ./couchdb/local.ini
 echo "rsa:${PROFILE_NAME}=${FLATTENED_KEY}" >> ./couchdb/local.ini
 echo '[admin]' >> ./couchdb/local.ini
