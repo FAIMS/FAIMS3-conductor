@@ -215,10 +215,12 @@ app.get('/', async (req, res) => {
     // Handlebars is pretty useless at including render logic in templates, just
     // parse the raw, pre-processed string in...
     const rendered_project_roles = render_project_roles(req.user.project_roles);
+    const provider = Object.keys(req.user.profiles)[0];
     res.render('home', {
       user: req.user,
       project_roles: rendered_project_roles,
       other_roles: req.user.other_roles,
+      provider: provider,
     });
   } else {
     res.redirect('/auth/');
