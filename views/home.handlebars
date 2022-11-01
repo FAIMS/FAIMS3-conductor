@@ -43,4 +43,45 @@
         </div>
       </div>
     </div>
+  <div class="row gx-3 gy-3">
+      <div class="col-md-2"></div>
+    <div class="col-md-4">
+      <div class="card">
+      <div class="card-header">
+            Need Bearer Token for Exporting Data?
+          </div>
+           <div class="card-body">
+            <p class="card-text">Click <a href="#" onClick="copyTokenToClipboard()">Copy Bearer Token to Clipboard</a> to copy the token that identifies you when instructed to do so by the exporter.</p>
+            <p class="card-text">
+            <div class="btn-group mt-2 mb-4 w-100" role="group">
+              <a class="w-100 btn btn-outline-primary" onClick="copyTokenToClipboard()">Copy Bearer Token to Clipboard</a>
+            </div>
+            </p>
+            <p class="card-text">
+              <details>
+                <summary>Show Bearer Token</summary>
+                  <pre>{{{token}}};{{{userdb}}}
+                  </pre>
+                </details>
+              </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4"></div>
   </div>
+</div>
+
+
+  <script>
+const copyTokenToClipboard = () => {
+    navigator.permissions.query({name: "clipboard-write"}).then((result) => {
+    if (result.state === "granted" || result.state === "prompt") {
+        navigator.clipboard.writeText("{{{token}}};{{{userdb}}}").then(() => {
+            alert("Bearer token copied to clipboard.")
+        }, () => {
+                alert("Could not copy token.")
+        });
+    }
+    });
+}
+</script>
