@@ -2,11 +2,15 @@
 
 The server-side of FAIMS3 handling authentication and authorization
 
+To get started, first set up the `.env` file as specified in Configuration, and
+then set up keys as specified in Running.
+
 ## Configuration
 
 The deployment is configured via the `.env` file in the root directory
-of the project.   Copy `.env.dist` to `.env` and the update the values
-as required.
+of the project.  Copy `.env.dist` to `.env` and the update the values
+as required.  See the deployment docs for full details of the environment
+variables supported.
 
 * `COUCHDB_PASSWORD` - admin user password for couchdb (will be created)
 * `COUCHDB_PROTOCOL` - probably `http` - protocol for internal access to couchdb server
@@ -61,10 +65,10 @@ current working directory inside the container so that you can work on
 code in real time.  To use this you also need a local `node_modules` folder
 since the current directory will shadow the one inside the container. 
 
-To create `node_modules` run `npm install` inside the container:
+To create `node_modules` run `npm ci` inside the container:
 
 ```bash
-docker compose -f docker-compose.dev.yml run conductor npm install
+docker compose -f docker-compose.dev.yml run conductor npm ci
 ```
 
 Then start the services:
