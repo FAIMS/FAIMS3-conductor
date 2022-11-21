@@ -26,7 +26,12 @@ import {get_user_auth_token} from './authkeys/user';
 import {NonUniqueProjectID} from './datamodel/core';
 import {AllProjectRoles} from './datamodel/users';
 // BBS 20221101 Adding this as a proxy for the pouch db url
-import {CONDUCTOR_USER_DB} from './buildconfig';
+import {
+  CONDUCTOR_USER_DB,
+  WEBAPP_PUBLIC_URL,
+  IOS_APP_URL,
+  ANDROID_APP_URL,
+} from './buildconfig';
 import {requireAuthentication, requireNotebookMembership} from './middleware';
 import {
   userCanInviteToProject,
@@ -229,7 +234,7 @@ app.get('/', async (req, res) => {
         project_roles: rendered_project_roles,
         other_roles: req.user.other_roles,
         provider: provider,
-        userdb: CONDUCTOR_USER_DB
+        userdb: CONDUCTOR_USER_DB,
       });
     }
   } else {
@@ -247,7 +252,12 @@ app.get('/logout/', (req, res) => {
 app.get('/send-token/', (req, res) => {
   if (req.user) {
     console.log('hello send-token');
-    res.render('send-token', {user: req.user});
+    res.render('send-token', {
+      user: req.user,
+      web_url: WEBAPP_PUBLIC_URL,
+      android_url: ANDROID_APP_URL,
+      ios_url: IOS_APP_URL,
+    });
   } else {
     res.redirect('/');
   }

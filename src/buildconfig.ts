@@ -56,6 +56,30 @@ function conductor_url(): string {
   return url;
 }
 
+function app_url(): string {
+  const url = process.env.WEB_APP_PUBLIC_URL;
+  if (url === '' || url === undefined) {
+    return 'http://localhost:3000';
+  }
+  return url;
+}
+
+function android_url(): string {
+  const url = process.env.ANDROID_APP_PUBLIC_URL;
+  if (url === '' || url === undefined) {
+    return 'http://localhost:3000';
+  }
+  return url;
+}
+
+function ios_url(): string {
+  const url = process.env.IOS_APP_PUBLIC_URL;
+  if (url === '' || url === undefined) {
+    return 'http://localhost:3000';
+  }
+  return url;
+}
+
 function is_testing() {
   const jest_worker_is_running = process.env.JEST_WORKER_ID !== undefined;
   const jest_imported = false; //typeof jest !== 'undefined';
@@ -298,3 +322,6 @@ export const CLUSTER_ADMIN_GROUP_NAME = cluster_admin_group_name();
 export const CONDUCTOR_AUTH_PROVIDERS = get_providers_to_use();
 export const EMAIL_FROM_ADDRESSS = email_from_address();
 export const EMAIL_TRANSPORTER = email_transporter();
+export const WEBAPP_PUBLIC_URL = app_url();
+export const ANDROID_APP_URL = android_url();
+export const IOS_APP_URL = ios_url();
