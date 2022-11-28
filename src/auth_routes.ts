@@ -34,6 +34,13 @@ const AVAILABLE_AUTH_PROVIDER_DISPLAY_INFO: {[name: string]: any} = {
   },
 };
 
+const HANDLER_OPTIONS: {[name: string]: any} = {
+  datacentral: {},
+  google: {
+    prompt: 'select_account',
+  },
+};
+
 passport.serializeUser((user: Express.User, done: DoneFunction) => {
   console.log('user', user);
   done(null, user.user_id);
@@ -74,13 +81,17 @@ export function add_auth_routes(app: any, handlers: any) {
         typeof req.query?.state === 'string' ||
         typeof req.query?.state === 'undefined'
       ) {
-        passport.authenticate(handler)(req, res, (err?: {}) => {
-          // Hack to avoid users getting caught when they're not in the right
-          // groups.
-          console.error('Authentication Error', err);
-          res.redirect('https://auth.datacentral.org.au/cas/logout');
-          //throw err ?? Error('Authentication failed (next, no error)');
-        });
+        passport.authenticate(handler, HANDLER_OPTIONS[handler])(
+          req,
+          res,
+          (err?: {}) => {
+            // Hack to avoid users getting caught when they're not in the right
+            // groups.
+            console.error('Authentication Error', err);
+            res.redirect('https://auth.datacentral.org.au/cas/logout');
+            //throw err ?? Error('Authentication failed (next, no error)');
+          }
+        );
       } else {
         throw Error(
           `state must be a string, or not set, not ${typeof req.query?.state}`
