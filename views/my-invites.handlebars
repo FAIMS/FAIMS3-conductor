@@ -1,7 +1,7 @@
   <div class="form-signin w-100 m-auto text-center">
     <h3 class="h3 mb-3 fw-normal" style="margin-top:50px">Manage Invites </h3>
     <div class="btn-group mt-2 mb-4" role="group">
-      <button class="w-100 btn btn-outline-primary" type="submit">Go Back to User Account<i class="bi bi-arrow-return-left"></i></button>
+      <a href="/" class="w-100 btn btn-outline-primary">Go Back to User Account<i class="bi bi-arrow-return-left"></i></a>
     </div>
   </div>
   <div class="container">
@@ -17,28 +17,32 @@
               <thead>
               <tr>
                 <th scope="col">Inviter</th>
+                <th scope="col">Project</th>
                 <th scope="col">Notebook Role</th>
                 <th scope="col">Action</th>
               </tr>
               </thead>
               <tbody>
+              {{#each invites}}
               <tr>
-                <td>test.user</td>
-                <td>moderator</td>
+                <td>{{ this.requesting_user }}</td>
+                <td>{{ this.project_id }}</td>
+                <td>{{ this.role }}</td>
                 <td>
                   <div class="btn-group w-100" role="group" aria-label="Basic example">
-                    <button class="w-100 btn btn-outline-success" type="submit">Accept</button>
-                    <button class="w-100 btn btn-outline-danger" type="submit">Reject</button>
+                    <a href="/accept-invite/{{ this._id }}" class="w-100 btn btn-outline-success" type="submit">Accept</a>
+                    <a href="/reject-invite/{{ this._id }}" class="w-100 btn btn-outline-danger" type="submit">Reject</a>
                   </div>
                 </td>
               </tr>
+              {{/each}}
               </tbody>
             </table>
             <div class="alert alert-warning" role="alert">
               <i class="bi bi-info-circle"></i>&nbsp;&nbsp; You will need internet access to sign in and accept invites.
             </div>
             <div class="alert alert-success" role="alert">
-              <i class="bi bi-check-circle"></i>&nbsp;&nbsp; You're all set! <a href="">Return to App <i class="bi bi-arrow-return-left"></i></a>
+              <i class="bi bi-check-circle"></i>&nbsp;&nbsp; You're all set! <a href="/send-token/">Return to App <i class="bi bi-arrow-return-left"></i></a>
             </div>
           </div>
         </div>
