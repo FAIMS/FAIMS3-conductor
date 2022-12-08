@@ -1,14 +1,88 @@
-<p>Hello {{ user.name }}<p>
-{{{ project_roles }}}
-<h6>Your other roles on this conductor are:</h6>
-<ul>
-{{#each other_roles}}
-<li>{{ this }}</li>
-{{/each}}
-</ul>
-<br/>
-<a href="/send-token/" class="btn btn-primary" style="background-color:#1B3E93;">Go back to App</a>
-<a href="/logout/" class="btn">Logout from conductor</a>
-<a href="https://auth.datacentral.org.au/cas/logout" class="btn">Logout from Data Central</a>
-<a href="/invite/" class="btn">Invite users to roles</a>
-<a href="/my-invites/" class="btn">Check my invites</a>
+<div class="form-signin w-100 m-auto text-center">
+    <h3 class="h3 mb-3 fw-normal" style="margin-top:50px">Hello <b>{{ user.name }}</b> </h3>
+    <p class=" mt-3">Currently signed in as <b>{{ user.name }}</b> with <b>{{{provider}}}</b> </p>
+    <div class="btn-group mt-2 mb-4 w-100" role="group">
+        <a href="/send-token/" class="w-100 btn btn-outline-primary" >Return to App<i class="bi bi-arrow-return-left"></i></a>
+        <a href="/logout/" class="w-100 btn btn-primary">Log Out of App <i class="bi bi-box-arrow-right"></i></a>
+    </div>
+  </div>
+  <div class="container">
+    <div class="row gx-3 gy-3">
+      <div class="col-md-2"></div>
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-header">
+            Assigned Roles
+          </div>
+          <div class="card-body">
+              {{{ project_roles }}}
+            <ul>
+              {{#each other_roles}}
+                <li>{{ this }}</li>
+              {{/each}}
+            </ul>
+          <div class="alert alert-info" role="alert">
+            <i class="bi bi-info-circle"></i>&nbsp;&nbsp; If you can't see a role here you expect, try <a href="">signing out</a> and back in again.
+          </div>
+            <a class="card-link" href="/invite/" class="card-link">Invite users to roles</a>
+            <a class="card-link" href="/my-invites/" class="card-link">Check my invites</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-header">
+            Switching User?
+          </div>
+          <div class="card-body">
+            <p class="card-text">You are currenty signed in to <b>{{{provider}}}</b></p>
+            <p class="card-text">If you are signed in with Data Central, and wish to add <i>another</i> Data Central user, you need to <a href="https://auth.datacentral.org.au/cas/logout">sign out here first</a>. Then, go ahead and <a href="/logout/">sign in</a>with a different user. Don't worry, the FAIMS app will allow you to switch between both users.</p>
+            <p>If you want to sign a Data Central user out of FAIMS permanently, use the blue <b>Log Out of App <i class="bi bi-box-arrow-right"></i></b> button above).</p>
+            <div class="callout"><small>Why? The authentication system Data Central uses only allows for one signed-in user at a time.</small></div>
+            <p class="card-text">If you want to add a Google user, you can immediately <a href="/logout/">add a user here</a>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  <div class="row gx-3 gy-3">
+      <div class="col-md-2"></div>
+    <div class="col-md-4">
+      <div class="card">
+      <div class="card-header">
+            Need Bearer Token for Exporting Data?
+          </div>
+           <div class="card-body">
+            <p class="card-text">Click <a href="#" onClick="copyTokenToClipboard()">Copy Bearer Token to Clipboard</a> to copy the token that identifies you when instructed to do so by the exporter.</p>
+            <p class="card-text">
+            <div class="btn-group mt-2 mb-4 w-100" role="group">
+              <a class="w-100 btn btn-outline-primary" onClick="copyTokenToClipboard()">Copy Bearer Token to Clipboard</a>
+            </div>
+            </p>
+            <p class="card-text">
+              <details>
+                <summary>Show Bearer Token</summary>
+                  <pre>{{{token}}};{{{userdb}}}
+                  </pre>
+                </details>
+              </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4"></div>
+  </div>
+</div>
+
+
+  <script>
+const copyTokenToClipboard = () => {
+    navigator.permissions.query({name: "clipboard-write"}).then((result) => {
+    if (result.state === "granted" || result.state === "prompt") {
+        navigator.clipboard.writeText("{{{token}}};{{{userdb}}}").then(() => {
+            alert("Bearer token copied to clipboard.")
+        }, () => {
+                alert("Could not copy token.")
+        });
+    }
+    });
+}
+</script>

@@ -22,7 +22,7 @@
     "@types/express-session": "1.17.5",
     "@types/jest": "27.5.0",
     "@types/jsonwebtoken": "8.5.9",
-    "@types/node": "18.7.23",
+    "@types/node": "18.11.3",
     "@types/nodemailer": "6.4.5",
     "@types/passport": "1.0.7",
     "@types/passport-google-oauth20": "2.0.11",
@@ -30,10 +30,10 @@
     "@types/pouchdb": "6.4.0",
     "@types/supertest": "2.0.12",
     "@types/uuid": "8.3.4",
-    "body-parser": "1.20.0",
+    "body-parser": "1.20.1",
     "cookie-session": "2.0.0",
     "cors": "2.8.5",
-    "express": "4.18.1",
+    "express": "4.18.2",
     "express-handlebars": "6.0.5",
     "express-validator": "6.14.2",
     "fast-check": "2.25.0",
@@ -50,7 +50,7 @@
     "passport-oauth2": "1.6.1",
     "pouchdb": "7.3.0",
     "pouchdb-find": "7.3.0",
-    "supertest": "6.2.4",
+    "supertest": "6.3.0",
     "ts-jest": "27.1.4",
     "ts-node": "10.9.1",
     "typescript": "4.8.4",
@@ -59,12 +59,12 @@
   "devDependencies": {
     "@types/expect": "^24.3.0",
     "@types/mocha": "^10.0.0",
-    "dotenv": "^16.0.2",
+    "dotenv": "^16.0.3",
     "env-cmd": "^10.1.0",
     "jest": "^27.5.1",
-    "mocha": "^10.0.0",
+    "mocha": "^10.1.0",
     "nano": "^10.0.0",
     "nodemon": "^2.0.20",
-    "supertest": "^6.2.4"
+    "supertest": "^6.3.0"
   }
 }

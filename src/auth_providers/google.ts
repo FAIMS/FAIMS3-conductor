@@ -44,7 +44,10 @@ function oauth_verify(
       if (user.name === '') {
         user.name = profile.displayName;
       }
-      addEmailsToUser(user, profile.emails);
+      addEmailsToUser(
+        user,
+        profile.emails.filter((o: any) => o.verified).map((o: any) => o.value)
+      );
       user.profiles['google'] = profile;
 
       return user;

@@ -25,6 +25,13 @@ import {app} from './core';
 import {get_user_auth_token} from './authkeys/user';
 import {NonUniqueProjectID} from './datamodel/core';
 import {AllProjectRoles} from './datamodel/users';
+// BBS 20221101 Adding this as a proxy for the pouch db url
+import {
+  CONDUCTOR_USER_DB,
+  WEBAPP_PUBLIC_URL,
+  IOS_APP_URL,
+  ANDROID_APP_URL,
+} from './buildconfig';
 import {requireAuthentication, requireNotebookMembership} from './middleware';
 import {
   userCanInviteToProject,
@@ -215,11 +222,21 @@ app.get('/', async (req, res) => {
     // Handlebars is pretty useless at including render logic in templates, just
     // parse the raw, pre-processed string in...
     const rendered_project_roles = render_project_roles(req.user.project_roles);
-    res.render('home', {
-      user: req.user,
-      project_roles: rendered_project_roles,
-      other_roles: req.user.other_roles,
-    });
+    const provider = Object.keys(req.user.profiles)[0];
+    // BBS 20221101 Adding token to here so we can support copy from conductor
+    const signing_key = app.get('faims3_token_signing_key');
+    if (signing_key === null || signing_key === undefined) {
+      res.status(500).send('Signing key not set up');
+    } else {
+      res.render('home', {
+        user: req.user,
+        token: await get_user_auth_token(req.user.user_id, signing_key),
+        project_roles: rendered_project_roles,
+        other_roles: req.user.other_roles,
+        provider: provider,
+        userdb: CONDUCTOR_USER_DB,
+      });
+    }
   } else {
     res.redirect('/auth/');
   }
@@ -235,7 +252,12 @@ app.get('/logout/', (req, res) => {
 app.get('/send-token/', (req, res) => {
   if (req.user) {
     console.log('hello send-token');
-    res.render('send-token', {user: req.user});
+    res.render('send-token', {
+      user: req.user,
+      web_url: WEBAPP_PUBLIC_URL,
+      android_url: ANDROID_APP_URL,
+      ios_url: IOS_APP_URL,
+    });
   } else {
     res.redirect('/');
   }

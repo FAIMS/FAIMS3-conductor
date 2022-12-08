@@ -66,3 +66,11 @@ services:
       - HAVE_DATACENTRAL_MANAGE_ROLES=true
       - GOOGLE_CLIENT_ID
       - GOOGLE_CLIENT_SECRET
+
+      - CONDUCTOR_EMAIL_FROM_ADDRESS
+      - CONDUCTOR_EMAIL_TRANSPORTER
+        #
+      # URLs for apps for this instance
+      - WEB_APP_PUBLIC_URL
+      - ANDROID_APP_PUBLIC_URL
+      - IOS_APP_PUBLIC_URL

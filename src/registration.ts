@@ -151,9 +151,9 @@ async function emailInvite(invite: RoleInvite) {
 }
 
 export async function acceptInvite(user: Express.User, invite: RoleInvite) {
-  const project_roles = user.project_roles[invite.project_id] ?? [];
-  project_roles.push(invite.role);
-  user.project_roles[invite.project_id] = project_roles;
+  const project_roles = new Set(user.project_roles[invite.project_id] ?? []);
+  project_roles.add(invite.role);
+  user.project_roles[invite.project_id] = Array.from(project_roles);
   await saveUserToDB(user);
   await deleteInvite(invite);
 }
