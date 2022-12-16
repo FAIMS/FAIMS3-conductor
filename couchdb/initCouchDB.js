@@ -27,14 +27,14 @@ const {env} = require('process');
 // the environment
 
 // BBS 20220829 added env.COUCHDB_CONTAINER_NAME to allow for multiple container names
-const url = `http://admin:${env.COUCHDB_PASSWORD}@${env.COUCHDB_CONTAINER_NAME}:${env.COUCHDB_INTERNAL_PORT}/`;
+const url = `http://admin:${env.COUCHDB_PASSWORD}@${env.COUCHDB_CONTAINER_NAME}:${env.COUCHDB_PORT}/`;
 console.log('COUCHDB URL', url);
 const nano = require('nano')(url);
 
 const directoryDoc = {
   _id: 'default',
   name: 'Default instance',
-  description: `FAIMS instance on ${env.CONDUCTOR_SERVER_DESCRIPTION}`,
+  description: `FAIMS instance on ${env.CONDUCTOR_PUBLIC_URL}`,
   people_db: {
     db_name: 'people',
   },

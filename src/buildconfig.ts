@@ -131,42 +131,38 @@ function local_couchdb_auth():
 }
 
 function signing_key_id(): string {
-  const key_id = process.env.FAIMS_CONDUCTOR_KID;
+  const key_id = process.env.PROFILE_NAME;
   if (key_id === '' || key_id === undefined) {
-    console.log('FAIMS_CONDUCTOR_KID not set, using default');
-    return 'test_key';
+    console.log('PROFILE_NAME not set, using default for signing key');
+    return 'test';
   } else {
-    console.log(`FAIMS_CONDUCTOR_KID SET ${key_id}`);
+    console.log(`Using ${key_id} as signing key ID`);
     return key_id;
   }
 }
 
-function private_key_path(): string {
-  const key_path = process.env.FAIMS_CONDUCTOR_PRIVATE_KEY_PATH;
-  if (key_path === '' || key_path === undefined) {
-    console.log('FAIMS_CONDUCTOR_PRIVATE_KEY_PATH not set, using default');
-    return 'private_key.pem';
-  } else {
-    console.log('FAIMS_CONDUCTOR_PRIVATE_KEY_PATH set, using ${key_path}');
+// Generate public and private keys file names in the same way as makeInstanceKeys.sh
 
-    return key_path;
+function private_key_path(): string {
+  let host = process.env.PROFILE_NAME;
+  if (host === '' || host === undefined) {
+    host = 'conductor';
   }
+  return `keys/${host}_private_key.pem`;
 }
 
 function public_key_path(): string {
-  const key_path = process.env.FAIMS_CONDUCTOR_PUBLIC_KEY_PATH;
-  if (key_path === '' || key_path === undefined) {
-    console.log('FAIMS_CONDUCTOR_PUBLIC_KEY_PATH not set, using default');
-    return 'public_key.pem';
-  } else {
-    return key_path;
+  let host = process.env.PROFILE_NAME;
+  if (host === '' || host === undefined) {
+    host = 'conductor';
   }
+  return `keys/${host}_public_key.pem`;
 }
 
 function instance_name(): string {
-  const name = process.env.FAIMS_CONDUCTOR_INSTANCE_NAME;
+  const name = process.env.PROFILE_NAME;
   if (name === '' || name === undefined) {
-    console.log('FAIMS_CONDUCTOR_INSTANCE_NAME not set, using default');
+    console.log('PROFILE_NAME not set, using default for instance name');
     return 'test';
   } else {
     return name;
