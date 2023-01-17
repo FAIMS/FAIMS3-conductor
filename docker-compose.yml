@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
       # dockerfile relative path is from build context
     ports:
-      - "0.0.0.0:${COUCHDB_PORT}:5984"     
+      - "0.0.0.0:${COUCHDB_EXTERNAL_PORT}:${COUCHDB_PORT}"
     # volumes:
     #   - ./couchdb/local.ini:/opt/couchdb/etc/local.d/local.ini
     environment:
