@@ -24,6 +24,7 @@ import {
   RevisionID,
   AttributeValuePairID,
   ProjectID,
+  ListingID,
 } from './core';
 
 export const UI_SPECIFICATION_NAME = 'ui-specification';
@@ -76,6 +77,17 @@ export type PossibleConnectionInfo =
       };
     };
 
+export type DirectoryEntry =
+  | undefined
+  | {
+      _id: string;
+      name: string;
+      description: string;
+      people_db?: PossibleConnectionInfo;
+      projects_db?: PossibleConnectionInfo;
+      auth_mechanisms: {[key: string]: AuthInfo};
+    };
+
 export interface ListingsObject {
   _id: string;
   name: string;
@@ -122,6 +134,17 @@ export interface ProjectObject {
 export type ProjectsList = {
   [key: string]: ProjectObject;
 };
+
+export interface ProjectInformation {
+  project_id: ProjectID;
+  name: string;
+  description?: string;
+  last_updated?: string;
+  created?: string;
+  status?: string;
+  listing_id: ListingID;
+  non_unique_project_id: NonUniqueProjectID;
+}
 
 export interface EncodedProjectMetadata {
   _id: string; // optional as we may want to include the raw json in places
@@ -195,6 +218,38 @@ export type ProjectMetaObject =
   // | ProjectSchema
   // | EncodedProjectUIModel
   EncodedProjectMetadata;
+
+export interface ProjectUIFields {
+  [key: string]: any;
+}
+
+export interface ProjectUIViewsets {
+  [type: string]: {
+    label?: string;
+    views: string[];
+    submit_label?: string;
+    is_visible?: boolean;
+  };
+}
+
+export interface ProjectUIViews {
+  [key: string]: {
+    label?: string;
+    fields: string[];
+    uidesign?: string;
+    next_label?: string;
+    is_logic?: {[key: string]: string[]}; //add for branching logic
+  };
+}
+
+export interface ProjectUIModel {
+  _id?: string; // optional as we may want to include the raw json in places
+  _rev?: string; // optional as we may want to include the raw json in places
+  fields: ProjectUIFields;
+  views: ProjectUIViews;
+  viewsets: ProjectUIViewsets;
+  visible_types: string[];
+}
 
 /*
  * Elements of a Project's dataDB can be any one of these,

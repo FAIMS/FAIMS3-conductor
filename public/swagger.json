@@ -1,0 +1,73 @@
+{
+
+    "swagger": "2.0",
+    "info": {
+        "description": "This is the FAIMS Conductor server API documentation.",
+        "version": "1.0.0",
+        "title": "FAIMS3 API",
+        "termsOfService": "http://faims.edu.au/terms/",
+        "contact": {
+            "email": "help@faims.edu.au"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        }
+    },
+    "host": "localhost:8080",
+    "basePath": "/api",
+    "paths": {
+        "/hello/": {
+            "get": {
+                "summary": "Say hello",
+                "description": "Return a hello message as JSON",
+                "produces": ["application/json"],
+                "responses": [
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "/notebooks/": {
+            "get": {
+                "summary": "Get a list of notebooks",
+                "description": "Get a list of the notebooks managed by this server",
+                "produces": ["application/json"],
+                "responses": [
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Notebook",
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "definitions": {
+        "Notebook": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+
+}

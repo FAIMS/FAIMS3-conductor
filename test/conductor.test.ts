@@ -18,8 +18,11 @@
  *   Implement some basic tests for API functionality of conductor
  */
 
+jest.mock('pouchdb');
+
 import request from 'supertest';
 import {app} from '../src/routes';
+
 
 test('check is up', async () => {
   const result = await request(app).get('/up');

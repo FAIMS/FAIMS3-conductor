@@ -13,11 +13,12 @@
  * See, the License, for the specific language governing permissions and
  * limitations under the License.
  *
- * Filename: src/authkeys/index.test.ts
+ * Filename: authkeys.test.ts
  * Description:
- *   This module exports the configuration of the build, including things like
- *   which server to use and whether to include test data
+ *   Tests for authkeys handling
  */
+
+jest.mock('pouchdb');
 
 import {testProp, fc} from 'jest-fast-check';
 import {importPKCS8, importSPKI} from 'jose';

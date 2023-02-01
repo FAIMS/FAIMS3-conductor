@@ -27,6 +27,7 @@ import passport from 'passport';
 import {engine as express_handlebars} from 'express-handlebars';
 
 import {COOKIE_SECRET} from './buildconfig';
+import {api} from './api/routes';
 
 export const app = express();
 
@@ -40,9 +41,11 @@ app.use(
   })
 );
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(express.json());
 app.use(cors());
 app.use(passport.initialize());
 app.use(passport.session());
 app.engine('handlebars', express_handlebars());
 app.set('view engine', 'handlebars');
 app.use(express.static('public'));
+app.use('/api', api);

@@ -37,6 +37,23 @@ export function requireAuthentication(
   }
 }
 
+/*
+ * Similar but for use in the API, just return an unuthorised repsonse
+ * should check for an Authentication header...see passport-http-bearer
+ */
+export function requireAuthenticationAPI(
+  req: Express.Request,
+  res: Express.Response,
+  next: Express.NextFunction
+) {
+  // For testing...just check for an Auth header
+  if (req.headers.authorization) {
+    next();
+  } else {
+    res.status(401).json({error: 'authentication required'});
+  }
+}
+
 export function requireNotebookMembership(
   req: Express.Request,
   res: Express.Response,

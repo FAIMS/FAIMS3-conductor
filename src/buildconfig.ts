@@ -40,7 +40,6 @@ function commit_version(): string {
   ) {
     return 'unknown dev';
   } else {
-    console.log(`Commitver: ${commitver}`);
     return commitver;
   }
 }
@@ -87,6 +86,28 @@ function is_testing() {
   return jest_worker_is_running || jest_imported || test_node_env;
 }
 
+function couchdb_url(): string {
+  const couchdb = process.env.COUCHDB_URL;
+  const couchdbDefault = 'http://localhost:5984/';
+  if (couchdb === '' || couchdb === undefined) {
+    console.log('COUCHDB_URL not set, using default');
+    return couchdbDefault;
+  } else {
+    return couchdb;
+  }
+}
+
+function conductor_directory_db(): string {
+  const couchdb = process.env.COUCHDB_URL;
+  const couchdbDefault = 'http://localhost:5984/';
+  if (couchdb === '' || couchdb === undefined) {
+    console.log('COUCHDB_URL not set, using default');
+    return couchdbDefault + 'directory';
+  } else {
+    return couchdb + 'directory';
+  }
+}
+
 function conductor_user_db(): string {
   const userdb = process.env.FAIMS_USERDB;
   const userdb_default = 'http://localhost:5984/people';
@@ -105,7 +126,6 @@ function conductor_invite_db(): string {
     console.log('CONDUCTOR_INVITE_DB not set, using default');
     return invite_db_default;
   } else {
-    console.log(`CONDUCTOR_INVITE_DB set: ${invite_db}`);
     return invite_db;
   }
 }
@@ -136,7 +156,6 @@ function signing_key_id(): string {
     console.log('PROFILE_NAME not set, using default for signing key');
     return 'test';
   } else {
-    console.log(`Using ${key_id} as signing key ID`);
     return key_id;
   }
 }
@@ -185,7 +204,6 @@ function datacentral_group_prefix(): string {
     console.log('DATACENTRAL_GROUP_PREFIX not set, using default');
     return 'FAIMS';
   } else {
-    console.log(`DATACENTRAL_GROUP_PREFIX set, using ${name}`);
     return name;
   }
 }
@@ -280,8 +298,6 @@ function email_from_address(): string {
     throw Error(
       'CONDUCTOR_EMAIL_FROM_ADDRESS must be set to send email invites'
     );
-  } else {
-    console.log(`Sending email as ${hostname}`);
   }
   return hostname;
 }
@@ -298,6 +314,8 @@ function email_transporter(): any {
 
 export const CONDUCTOR_USER_DB = conductor_user_db();
 export const CONDUCTOR_INVITE_DB = conductor_invite_db();
+export const CONDUCTOR_DIRECTORY_DB = conductor_directory_db();
+export const COUCHDB_URL = couchdb_url();
 export const LOCAL_COUCHDB_AUTH = local_couchdb_auth();
 export const RUNNING_UNDER_TEST = is_testing();
 export const COMMIT_VERSION = commit_version();
