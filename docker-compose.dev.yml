@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
       # dockerfile relative path is from build context
     ports:
-      - "0.0.0.0:${COUCHDB_EXTERNAL_PORT}:5984"     
+      - "0.0.0.0:${COUCHDB_EXTERNAL_PORT}:${COUCHDB_INTERNAL_PORT}"     
       # We are presuming that there is no proxy server on the dev server, so we're not using COUCHDB_PORT here
     environment:
       - COUCHDB_USER=admin
@@ -31,7 +31,7 @@ services:
       - COUCHDB_CONTAINER_NAME
       - COUCHDB_PORT
       - COUCHDB_EXTERNAL_PORT
-
+      - COUCHDB_INTERNAL_PORT
       # Where is this server running
       - CONDUCTOR_PROTOCOL
       - CONDUCTOR_PORT

@@ -6,9 +6,10 @@ services:
       dockerfile: Dockerfile
       # dockerfile relative path is from build context
     ports:
-      - "0.0.0.0:${COUCHDB_PORT}:5984" # We need to hardcode couchdb local-to-couchdb here. 
+      - "0.0.0.0:${COUCHDB_PORT}:${COUCHDB_INTERNAL_PORT}" 
       # COUCHDB_PORT is the one visible to local-host-docker. COUCHDB_EXTERNAL_PORT is visible past the proxy server.
-      # We are hardcoding the internal port because the couchdb-listener never has a different port configured (and never needs one)
+      # COUCHDB_INTERNAL_PORT added because it's called in initCouchDB.js
+      
     # volumes:
     #   - ./couchdb/local.ini:/opt/couchdb/etc/local.d/local.ini
     environment:
@@ -34,6 +35,8 @@ services:
       - COUCHDB_PORT
       - COUCHDB_CONTAINER_NAME
       - COUCHDB_EXTERNAL_PORT
+      - COUCHDB_INTERNAL_PORT
+      # BBS 20230203 readded couchdb_internal_port
 
       # Where is this server running
       - CONDUCTOR_PROTOCOL
