@@ -6,7 +6,9 @@ services:
       dockerfile: Dockerfile
       # dockerfile relative path is from build context
     ports:
-      - "0.0.0.0:${COUCHDB_EXTERNAL_PORT}:${COUCHDB_PORT}"
+      - "0.0.0.0:${COUCHDB_PORT}:5984" # We need to hardcode couchdb local-to-couchdb here. 
+      # COUCHDB_PORT is the one visible to local-host-docker. COUCHDB_EXTERNAL_PORT is visible past the proxy server.
+      # We are hardcoding the internal port because the couchdb-listener never has a different port configured (and never needs one)
     # volumes:
     #   - ./couchdb/local.ini:/opt/couchdb/etc/local.d/local.ini
     environment:
@@ -56,8 +58,8 @@ services:
       - CONDUCTOR_AUTH_PROVIDERS
       - CONDUCTOR_EMAIL_HOST_NAME
       - CONDUCTOR_EMAIL_HOST_CONFIG
-      - CONDUCTOR_INVITE_DB=${COUCHDB_PROTOCOL}://${COUCHDB_CONTAINER_NAME}:${COUCHDB_PORT}/${CONDUCTOR_INVITE_DB_NAME:-invites}
-      - FAIMS_USERDB=${COUCHDB_PROTOCOL}://${COUCHDB_CONTAINER_NAME}:${COUCHDB_PORT}/${FAIMS_USERDB_NAME:-people}
+      - CONDUCTOR_INVITE_DB=${COUCHDB_PROTOCOL}://${COUCHDB_CONTAINER_NAME}:${COUCHDB_EXTERNAL_PORT}/${CONDUCTOR_INVITE_DB_NAME:-invites}
+      - FAIMS_USERDB=${COUCHDB_PROTOCOL}://${COUCHDB_CONTAINER_NAME}:${COUCHDB_EXTERNAL_PORT}/${FAIMS_USERDB_NAME:-people}
 
       # https://faimsproject.atlassian.net/wiki/spaces/FAIMS3/pages/151846960/FAIMS3+Conductor+build+run+environment+variables#Authentication-Provider-Specific-environment-variables
       - DATACENTRAL_GROUP_PREFIX
