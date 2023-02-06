@@ -26,6 +26,23 @@ import cors from 'cors';
 import passport from 'passport';
 import {engine as express_handlebars} from 'express-handlebars';
 
+// use swaggerUI to display the UI documentation
+// need this workaround to have the swagger-ui-dist package
+// load our swagger.json rather than the petstore
+// https://github.com/swagger-api/swagger-ui/issues/5710
+const pathToSwaggerUi = require('swagger-ui-dist').getAbsoluteFSPath();
+
+import {readFileSync} from 'fs';
+import {join} from 'path';
+
+const indexContent = readFileSync(
+  join(pathToSwaggerUi, 'swagger-initializer.js')
+)
+  .toString()
+  .replace('https://petstore.swagger.io/v2/swagger.json', '/swagger.json');
+
+// Workaround done
+
 import {COOKIE_SECRET} from './buildconfig';
 import {api} from './api/routes';
 
@@ -49,3 +66,7 @@ app.engine('handlebars', express_handlebars());
 app.set('view engine', 'handlebars');
 app.use(express.static('public'));
 app.use('/api', api);
+
+// Swagger-UI Routes
+app.get('/apidoc/swagger-initializer.js', (req, res) => res.send(indexContent));
+app.use('/apidoc/', express.static(pathToSwaggerUi));

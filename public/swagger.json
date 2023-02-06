@@ -1,6 +1,6 @@
 {
 
-    "swagger": "2.0",
+    "openapi": "3.0.0",
     "info": {
         "description": "This is the FAIMS Conductor server API documentation.",
         "version": "1.0.0",
@@ -14,13 +14,23 @@
             "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
         }
     },
-    "host": "localhost:8080",
-    "basePath": "/api",
+    "servers": [
+        {"url": "http://localhost:8080/api"}
+    ],
+    "components": {
+        "securitySchemes": {
+            "Auth": {
+                "type": "http",
+                "scheme": "bearer"
+            }
+        },
+    },
     "paths": {
         "/hello/": {
             "get": {
                 "summary": "Say hello",
                 "description": "Return a hello message as JSON",
+                "security": {"Auth": []},
                 "produces": ["application/json"],
                 "responses": [
                     "200": {
