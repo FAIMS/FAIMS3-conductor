@@ -80,12 +80,36 @@ export const getNotebooks = async (): Promise<ProjectInformation[]> => {
 };
 
 /**
+ * Slugify a string, replacing special characters with less special ones
+ * @param str input string
+ * @returns url safe version of the string
+ */
+const slugify = (str: string) => {
+  str = str.replace(/^\s+|\s+$/g, ''); // trim
+  str = str.toLowerCase();
+
+  // remove accents, swap ñ for n, etc
+  const from = 'ãàáäâáº½èéëêìíïîõòóöôùúüûñç·/_,:;';
+  const to = 'aaaaaeeeeeiiiiooooouuuunc------';
+  for (let i = 0, l = from.length; i < l; i++) {
+    str = str.replace(new RegExp(from.charAt(i), 'g'), to.charAt(i));
+  }
+
+  str = str
+    .replace(/[^a-z0-9 -]/g, '') // remove invalid chars
+    .replace(/\s+/g, '-') // collapse whitespace and replace by -
+    .replace(/-+/g, '-'); // collapse dashes
+
+  return str;
+}
+
+/**
  * Generate a good project identifier for a new project
  * @param projectName the project name string
  * @returns a suitable project identifier
  */
 const generateProjectID = (projectName: string): ProjectID => {
-  return `${Date.now().toFixed()}-${projectName}`;
+  return `${Date.now().toFixed()}-${slugify(projectName)}`;
 };
 
 type AutoIncReference = {

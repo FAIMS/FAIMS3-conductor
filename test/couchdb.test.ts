@@ -40,9 +40,9 @@ test('createNotebook', async () => {
   const jsonText = fs.readFileSync('./test/sample_notebook.json', 'utf-8');
   const {metadata, uiSpec} = JSON.parse(jsonText);
 
-  const projectID = await createNotebook('Test Notebook', uiSpec, metadata);
+  const projectID = await createNotebook('Test Nõtebõõk', uiSpec, metadata);
 
-  expect(projectID.substring(13)).toBe('-Test Notebook');
+  expect(projectID.substring(13)).toBe('-test-notebook');
 
   const notebooks = await getNotebooks();
   expect(notebooks.length).toBe(1);
