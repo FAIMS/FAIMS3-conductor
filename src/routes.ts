@@ -25,6 +25,7 @@ import {app} from './core';
 import {get_user_auth_token} from './authkeys/user';
 import {NonUniqueProjectID} from './datamodel/core';
 import {AllProjectRoles} from './datamodel/users';
+
 // BBS 20221101 Adding this as a proxy for the pouch db url
 import {
   CONDUCTOR_USER_DB,
@@ -225,16 +226,19 @@ app.get('/', async (req, res) => {
     const provider = Object.keys(req.user.profiles)[0];
     // BBS 20221101 Adding token to here so we can support copy from conductor
     const signing_key = app.get('faims3_token_signing_key');
+    const jwt_token = await get_user_auth_token(req.user.user_id, signing_key);
+    const token = {jwt_token:jwt_token, public_key:signing_key.public_key_string, alg:signing_key.alg, userdb:CONDUCTOR_USER_DB};
     if (signing_key === null || signing_key === undefined) {
       res.status(500).send('Signing key not set up');
     } else {
       res.render('home', {
         user: req.user,
-        token: await get_user_auth_token(req.user.user_id, signing_key),
+        token: btoa(JSON.stringify(token)),
         project_roles: rendered_project_roles,
         other_roles: req.user.other_roles,
         provider: provider,
         userdb: CONDUCTOR_USER_DB,
+        public_key: signing_key.public_key
       });
     }
   } else {
