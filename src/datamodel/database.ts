@@ -219,6 +219,10 @@ export type ProjectMetaObject =
   // | EncodedProjectUIModel
   EncodedProjectMetadata;
 
+export interface ProjectMetadata {
+  [key: string]: any;
+}
+
 export interface ProjectUIFields {
   [key: string]: any;
 }

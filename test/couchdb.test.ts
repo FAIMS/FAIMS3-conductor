@@ -19,7 +19,11 @@
  */
 
 import {getProjectMetaDB, initialiseDatabases} from '../src/couchdb';
-import {createNotebook, getNotebooks} from '../src/couchdb/notebooks';
+import {
+  createNotebook,
+  getNotebookMetadata,
+  getNotebooks,
+} from '../src/couchdb/notebooks';
 import * as fs from 'fs';
 
 jest.mock('pouchdb');
@@ -46,10 +50,28 @@ test('createNotebook', async () => {
 
   const notebooks = await getNotebooks();
   expect(notebooks.length).toBe(1);
-  const db = getProjectMetaDB(projectID);
+  const db = await getProjectMetaDB(projectID);
   if (db) {
-    const autoInc = db?.get('local-autoincrementers') as any;
+    const autoInc = (await db.get('local-autoincrementers')) as any;
     expect(autoInc.references.length).toBe(2);
     expect(autoInc.references[0].form_id).toBe('FORM1SECTION1');
+  }
+});
+
+test('getNotebookMetadata', async () => {
+  initialiseDatabases();
+
+  const jsonText = fs.readFileSync('./test/sample_notebook.json', 'utf-8');
+  const {metadata, uiSpec} = JSON.parse(jsonText);
+  const name = 'Test Notebook';
+  const projectID = await createNotebook(name, uiSpec, metadata);
+
+  const retrievedMetadata = await getNotebookMetadata(projectID);
+
+  expect(retrievedMetadata).not.toBeNull();
+  if (retrievedMetadata) {
+    expect(retrievedMetadata['lead_institution']).toBe(
+      metadata['lead_institution']
+    );
   }
 });

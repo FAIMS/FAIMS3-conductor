@@ -23,6 +23,7 @@ The `directory` database holds a default document as follows:
     "projects_db": {
       "db_name": "projects"
     },
+    "conductor_url": "https://dev.conductor.faims.edu.au/",
     "auth_mechanisms": {
       "demo": {
         "portal": "conductor_host",
@@ -33,10 +34,8 @@ The `directory` database holds a default document as follows:
   }
   ```
 
-Under `auth_mechanisms` we have one entry for each authentication mechanism, currently only one
-tested option which is DataCentral.  The `portal` property is the URL of the Conductor host that
-the front end should authenticate with.  `type` should be `oauth`.  `name` is used to display
-the name of the authentication service in the front end.
+`conductor_url` is the URL of the Conductor instance we will use for authentication etc.
+`auth_mechanisms` is no longer used (as far as I can see).
 
 ### `people`
 

@@ -19,14 +19,17 @@
  */
 
 import PouchDB from 'pouchdb';
-import {getProjectsDB} from '.';
+import {getProjectMetaDB, getProjectsDB} from '.';
 import {CLUSTER_ADMIN_GROUP_NAME, COUCHDB_URL} from '../buildconfig';
 import {ProjectID, resolve_project_id} from '../datamodel/core';
 import {
   ProjectInformation,
+  ProjectMetadata,
+  ProjectMetaObject,
   ProjectObject,
   ProjectUIFields,
   ProjectUIModel,
+  PROJECT_METADATA_PREFIX,
 } from '../datamodel/database';
 
 /**
@@ -83,6 +86,7 @@ export const getNotebooks = async (): Promise<ProjectInformation[]> => {
  * Slugify a string, replacing special characters with less special ones
  * @param str input string
  * @returns url safe version of the string
+ * https://ourcodeworld.com/articles/read/255/creating-url-slugs-properly-in-javascript-including-transliteration-for-utf-8
  */
 const slugify = (str: string) => {
   str = str.replace(/^\s+|\s+$/g, ''); // trim
@@ -101,7 +105,7 @@ const slugify = (str: string) => {
     .replace(/-+/g, '-'); // collapse dashes
 
   return str;
-}
+};
 
 /**
  * Generate a good project identifier for a new project
@@ -231,16 +235,11 @@ export const createNotebook = async (
   if (autoIncrementers) {
     await metaDB.put(autoIncrementers);
   }
+  uispec['_id'] = 'ui-specification';
   await metaDB.put(uispec as PouchDB.Core.PutDocument<ProjectUIModel>);
-  // add metadata, one document per attribute value pair
-  for (const field in metadata) {
-    const doc = {
-      _id: `project-metadata-${field}`,
-      is_attachment: false, // TODO: well it might not be false! Deal with attachments
-      metadata: metadata[field],
-    };
-    await metaDB.put(doc);
-  }
+
+  await writeProjectMetadata(metaDB, metadata);
+
   // data database
   const dataDB = new PouchDB(dataDBName);
 
@@ -255,4 +254,60 @@ export const createNotebook = async (
   }
 
   return project_id;
+};
+
+export const writeProjectMetadata = async (
+  metaDB: PouchDB.Database,
+  metadata: any
+) => {
+  // add metadata, one document per attribute value pair
+  for (const field in metadata) {
+    const doc = {
+      _id: PROJECT_METADATA_PREFIX + '-' + field,
+      is_attachment: false, // TODO: well it might not be false! Deal with attachments
+      metadata: metadata[field],
+    };
+    await metaDB.put(doc);
+  }
+  // also add the whole metadata as 'projectvalue'
+  metadata._id = PROJECT_METADATA_PREFIX + '-projectvalue';
+  await metaDB.put(metadata);
+  return metadata;
+};
+
+/**
+ * getNotebookMetadata -- return metadata for a single notebook from the database
+ * @param project_id a project identifier
+ * @returns a ProjectObject object or null if it doesn't exist
+ */
+export const getNotebookMetadata = async (
+  project_id: string
+): Promise<ProjectMetadata | null> => {
+  const result: ProjectMetadata = {};
+  try {
+    if (await shouldDisplayProject(project_id)) {
+      // get the metadata from the db
+      const projectDB = await getProjectMetaDB(project_id);
+      if (projectDB) {
+        const metaDocs = await projectDB.allDocs({include_docs: true});
+        metaDocs.rows.forEach((doc: any) => {
+          const id: string = doc['id'];
+          if (id && id.startsWith(PROJECT_METADATA_PREFIX)) {
+            const key: string = id.substring(
+              PROJECT_METADATA_PREFIX.length + 1
+            );
+            result[key] = doc.doc.metadata;
+          }
+        });
+        return result;
+      } else {
+        console.error('no metadata database found for', project_id);
+      }
+    } else {
+      console.error('permission denied for project', project_id);
+    }
+  } catch (error) {
+    console.log('unknown project', project_id);
+  }
+  return null;
 };

@@ -43,6 +43,7 @@ import {
 } from './registration';
 import {getInvite, getInvitesForEmails} from './couchdb/invites';
 import {removeRoleFromEmail} from './couchdb/users';
+import { getNotebookMetadata } from './couchdb/notebooks';
 
 export {app};
 
@@ -133,13 +134,18 @@ app.get(
   async (req, res) => {
     const user = req.user as Express.User; // requireAuthentication ensures user
     const project_id = req.params.notebook_id;
-    const isAdmin = userEquivalentToProjectAdmin(user, project_id);
-    res.render('notebook-landing', {
-      isAdmin: isAdmin,
-      notebook_id: project_id,
-      notebook_name: 'TODO',
-      notebook_description: 'TODO',
-    });
+    const project = await getNotebookMetadata(project_id);
+    if (project) {
+      const isAdmin = userEquivalentToProjectAdmin(user, project_id);
+      res.render('notebook-landing', {
+        isAdmin: isAdmin,
+        notebook_id: project.project_id,
+        notebook_name: project.name,
+        notebook_description: 'TODO',
+      });
+    } else {
+      res.status(404).end();
+    }
   }
 );
 

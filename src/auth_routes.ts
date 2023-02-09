@@ -42,12 +42,10 @@ const HANDLER_OPTIONS: {[name: string]: any} = {
 };
 
 passport.serializeUser((user: Express.User, done: DoneFunction) => {
-  console.log('user', user);
   done(null, user.user_id);
 });
 
 passport.deserializeUser((id: string, done: DoneFunction) => {
-  console.log('id', id);
   get_user_from_username(id)
     .then(user_data => {
       done(null, user_data);

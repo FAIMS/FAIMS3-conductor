@@ -64,12 +64,14 @@ export const getProjectsDB = (): PouchDB.Database | undefined => {
   return _projectsDB;
 };
 
-export const getProjectMetaDB = (
+export const getProjectMetaDB = async (
   projectID: ProjectID
-): PouchDB.Database | undefined => {
+): Promise<PouchDB.Database | undefined> => {
   if (_projectsDB) {
     try {
-      const projectDoc = _projectsDB.get(projectID) as unknown as ProjectObject;
+      const projectDoc = (await _projectsDB.get(
+        projectID
+      )) as unknown as ProjectObject;
       if (projectDoc.metadata_db) {
         const dbname = projectDoc.metadata_db.db_name;
         const pouch_options: PouchDB.Configuration.RemoteDatabaseConfiguration =
@@ -81,6 +83,7 @@ export const getProjectMetaDB = (
         return new PouchDB(dbname, pouch_options);
       }
     } catch (error) {
+      console.error('Error getting project DB for ', projectID);
       return undefined;
     }
   }

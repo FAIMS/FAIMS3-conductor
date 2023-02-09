@@ -18,34 +18,41 @@ class PouchDB {
     if (!doc) {
       throw Error(`document ${document} not in mock database} `);
     }
-    return doc;
+    return new Promise((resolve, reject) => {
+      resolve(doc);
+    });
   }
 
   allDocs() {
     const objects = Object.values(dataStore[this.name]);
-    return {
-      offset: 0,
-      total_rows: objects.length,
-      rows: objects.map(doc => {
-        return {
-          doc: doc,
-          id: doc._id,
-          key: doc._id,
-          value: {
-            rev: doc._id,
-          },
-        };
-      }),
-    };
+    return new Promise((resolve, reject) => {
+      resolve({
+        offset: 0,
+        total_rows: objects.length,
+        rows: objects.map(doc => {
+          return {
+            doc: doc,
+            id: doc._id,
+            key: doc._id,
+            value: {
+              rev: doc._id,
+            },
+          };
+        }),
+      });
+    });
   }
 
   put(document: any) {
     dataStore[this.name][document._id] = document;
-    return {};
+    return new Promise((resolve, reject) => {
+      resolve({});
+    });
   }
 
   show() {
-    console.log(JSON.stringify(dataStore, null, 2));
+    //console.log(JSON.stringify(dataStore, null, 2));
+    console.log(Object.keys(dataStore));
   }
 }
 
