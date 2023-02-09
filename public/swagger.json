@@ -20,10 +20,16 @@
     "components": {
         "securitySchemes": {
             "Auth": {
-                "type": "http",
-                "scheme": "bearer"
+                "type": "apiKey",
+                "in": "header",
+                "name": "X-API-KEY"
             }
         },
+        "responses": {
+            "UnauthorizedError": {
+                "description": "Access token is missing or invalid"
+            }
+        }
     },
     "paths": {
         "/hello/": {
@@ -32,7 +38,7 @@
                 "description": "Return a hello message as JSON",
                 "security": {"Auth": []},
                 "produces": ["application/json"],
-                "responses": [
+                "responses": {
                     "200": {
                         "description": "successful operation",
                         "schema": {
@@ -43,16 +49,20 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/UnauthorizedError"
                     }
-                ]
+                }
             }
         },
         "/notebooks/": {
             "get": {
                 "summary": "Get a list of notebooks",
                 "description": "Get a list of the notebooks managed by this server",
-                "produces": ["application/json"],
-                "responses": [
+                "produces": ["application/json"], 
+                "security": {"Auth": []},
+                "responses": {
                     "200": {
                         "description": "successful operation",
                         "schema": {
@@ -61,8 +71,11 @@
                                 "$ref": "#/definitions/Notebook",
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/UnauthorizedError"
                     }
-                ]
+                }
             }
         }
     },
