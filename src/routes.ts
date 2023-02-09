@@ -25,6 +25,8 @@ import {app} from './core';
 import {get_user_auth_token} from './authkeys/user';
 import {NonUniqueProjectID} from './datamodel/core';
 import {AllProjectRoles} from './datamodel/users';
+import type {SigningKey} from './types';
+
 // BBS 20221101 Adding this as a proxy for the pouch db url
 import {
   CONDUCTOR_USER_DB,
@@ -235,6 +237,7 @@ app.get('/', async (req, res) => {
         other_roles: req.user.other_roles,
         provider: provider,
         userdb: CONDUCTOR_USER_DB,
+        public_key: signing_key.public_key
       });
     }
   } else {
