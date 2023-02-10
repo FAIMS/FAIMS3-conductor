@@ -73,5 +73,6 @@ test('getNotebookMetadata', async () => {
     expect(retrievedMetadata['lead_institution']).toBe(
       metadata['lead_institution']
     );
+    expect(retrievedMetadata['name']).toBe(name);
   }
 });

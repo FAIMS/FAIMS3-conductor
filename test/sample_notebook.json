@@ -1,24 +1,11 @@
 {
     "metadata": {
         "access": {
-            "accessFORM1":
-            [
-                "admin"
-            ],
-            "accessFORM2":
-            [
-                "admin"
-            ],
-            "accessFORM3":
-            [
-                "admin"
-            ]
+            "accessFORM1": ["admin"],
+            "accessFORM2": ["admin"],
+            "accessFORM3": ["admin"]
         },
-        "accesses":   [
-            "admin",
-            "moderator",
-            "team"
-        ],
+        "accesses":   ["admin", "moderator", "team"],
         "filenames": [],
         "forms": {
             "FORM1":

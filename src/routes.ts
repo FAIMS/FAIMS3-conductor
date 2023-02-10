@@ -43,7 +43,7 @@ import {
 } from './registration';
 import {getInvite, getInvitesForEmails} from './couchdb/invites';
 import {removeRoleFromEmail} from './couchdb/users';
-import { getNotebookMetadata } from './couchdb/notebooks';
+import {getNotebookMetadata} from './couchdb/notebooks';
 
 export {app};
 

@@ -238,6 +238,8 @@ export const createNotebook = async (
   uispec['_id'] = 'ui-specification';
   await metaDB.put(uispec as PouchDB.Core.PutDocument<ProjectUIModel>);
 
+  // ensure that the name is in the metadata
+  metadata.name = projectName;
   await writeProjectMetadata(metaDB, metadata);
 
   // data database

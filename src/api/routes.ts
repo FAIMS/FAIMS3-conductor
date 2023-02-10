@@ -41,11 +41,11 @@ api.get('/notebooks/', requireAuthenticationAPI, async (req, res) => {
 api.post('/notebooks/', requireAuthenticationAPI, async (req, res) => {
   // post a new notebook
   const uiSpec = req.body.uispec;
-  const projectId = req.body.id;
+  const projectName = req.body.name;
   const metadata = req.body.metadata;
 
-  const result = await createNotebook(projectId, uiSpec, metadata);
-  res.json({notebook: result});
+  const projectID = await createNotebook(projectName, uiSpec, metadata);
+  res.json({notebook: projectID});
 });
 
 /**
