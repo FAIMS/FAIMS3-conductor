@@ -24,9 +24,11 @@ import {testProp, fc} from 'jest-fast-check';
 import {importPKCS8, importSPKI} from 'jose';
 
 import {create_auth_key} from '../src/authkeys/create';
-import {read_auth_key} from '../src/authkeys/read';
+import {validateToken} from '../src/authkeys/read';
 import type {CouchDBUsername, CouchDBUserRoles} from '../src/datamodel/users';
 import type {SigningKey} from '../src/authkeys/types';
+import {getSigningKey} from '../src/authkeys/signing_keys';
+import {CONDUCTOR_INSTANCE_NAME, CONDUCTOR_KEY_ID} from '../src/buildconfig';
 
 const SIGNING_ALGORITHM = 'RS256';
 const INSTANCE_NAME = 'test';
@@ -103,19 +105,21 @@ describe('roundtrip creating and reading token', () => {
       roles: CouchDBUserRoles,
       name: string
     ) => {
-      const signing_key = await get_test_key();
+      const signing_key = await getSigningKey();
 
       return create_auth_key(username, roles, signing_key, name)
         .then(token => {
-          return read_auth_key(token, signing_key);
+          return validateToken(token);
         })
         .then(token_props => {
-          //console.log(token_props);
-          expect(username).toBe(token_props.username);
-          expect(roles).toStrictEqual(token_props.roles);
-          expect(name).toStrictEqual(token_props.name);
-          expect(INSTANCE_NAME).toBe(token_props.instance_name);
-          expect(KEY_ID).toBe(token_props.key_id);
+          expect(token_props).not.toBe(undefined);
+          if (token_props) {
+            expect(username).toBe(token_props.username);
+            expect(roles).toStrictEqual(token_props.roles);
+            expect(name).toStrictEqual(token_props.name);
+            expect(CONDUCTOR_INSTANCE_NAME).toBe(token_props.instance_name);
+            expect(CONDUCTOR_KEY_ID).toBe(token_props.key_id);
+          }
         });
     }
   );

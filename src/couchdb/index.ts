@@ -74,7 +74,6 @@ export const createProjectDB = (
   }
   try {
     const db = new PouchDB(COUCHDB_URL + dbName, pouch_options);
-    console.log('created project database', dbName);
     return db;
   } catch (error) {
     console.error('error creating project database');
@@ -92,7 +91,7 @@ export const getProjectMetaDB = async (
         projectID
       )) as unknown as ProjectObject;
       if (projectDoc.metadata_db) {
-        const dbname = projectDoc.metadata_db.db_name;
+        const dbname = COUCHDB_URL + projectDoc.metadata_db.db_name;
         const pouch_options: PouchDB.Configuration.RemoteDatabaseConfiguration =
           {};
 

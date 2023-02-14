@@ -12,11 +12,30 @@ class PouchDB {
     }
   }
 
+  static plugin() {}
+
+  // mock version of the security plugin
+  security() {
+    return {
+      save: () => {},
+      members: {
+        roles: {
+          add: () => {},
+        },
+      },
+      admins: {
+        roles: {
+          add: () => {},
+        },
+      },
+    };
+  }
+
   get(document: any) {
     // should throw an error if the document isn't here:
     const doc = dataStore[this.name][document];
     if (!doc) {
-      throw Error(`document ${document} not in mock database} `);
+      throw Error(`document ${document} not in mock database ${this.name} `);
     }
     return new Promise((resolve, reject) => {
       resolve(doc);
@@ -45,6 +64,7 @@ class PouchDB {
 
   put(document: any) {
     dataStore[this.name][document._id] = document;
+    // console.log(`document ${document._id} added in mock database ${this.name}`);
     return new Promise((resolve, reject) => {
       resolve({});
     });

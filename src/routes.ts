@@ -44,6 +44,7 @@ import {
 import {getInvite, getInvitesForEmails} from './couchdb/invites';
 import {removeRoleFromEmail} from './couchdb/users';
 import {getNotebookMetadata} from './couchdb/notebooks';
+import { getSigningKey } from './authkeys/signing_keys';
 
 export {app};
 
@@ -230,7 +231,7 @@ app.get('/', async (req, res) => {
     const rendered_project_roles = render_project_roles(req.user.project_roles);
     const provider = Object.keys(req.user.profiles)[0];
     // BBS 20221101 Adding token to here so we can support copy from conductor
-    const signing_key = app.get('faims3_token_signing_key');
+    const signing_key = await getSigningKey();
     if (signing_key === null || signing_key === undefined) {
       res.status(500).send('Signing key not set up');
     } else {
@@ -271,7 +272,7 @@ app.get('/send-token/', (req, res) => {
 
 app.get('/get-token/', async (req, res) => {
   if (req.user) {
-    const signing_key = app.get('faims3_token_signing_key');
+    const signing_key = await getSigningKey();
     if (signing_key === null || signing_key === undefined) {
       res.status(500).send('Signing key not set up');
     } else {

@@ -15,29 +15,40 @@
  *
  * Filename: src/authkeys/read.ts
  * Description:
- *   This module exports the configuration of the build, including things like
- *   which server to use and whether to include test data
+ *   Provides a function to validate a user token and return user details
  */
 
 import {jwtVerify} from 'jose';
+import {getSigningKey} from './signing_keys';
 
-import type {SigningKey} from './types';
+/**
+ * validateToken
+ * @param token bearer token received in a request
+ * @returns Details of the verified user or undefined
+ */
+export const validateToken = async (token: string) => {
+  const signingKey = await getSigningKey();
 
-export async function read_auth_key(token: string, signing_key: SigningKey) {
-  const {payload, protectedHeader} = await jwtVerify(
-    token,
-    signing_key.public_key,
-    {
-      algorithms: [signing_key.alg],
-    }
-  );
+  console.log(`verifying token: '${token}'`);
+  try {
+    const {payload, protectedHeader} = await jwtVerify(
+      token,
+      signingKey.public_key,
+      {
+        algorithms: [signingKey.alg],
+      }
+    );
 
-  return {
-    username: payload.sub,
-    roles: payload['_couchdb.roles'],
-    name: payload['name'],
-    instance_name: payload.iss,
-    issued_at: payload.iat,
-    key_id: protectedHeader.kid,
-  };
-}
+    return {
+      username: payload.sub,
+      roles: payload['_couchdb.roles'],
+      name: payload['name'],
+      instance_name: payload.iss,
+      issued_at: payload.iat,
+      key_id: protectedHeader.kid,
+    };
+  } catch (error) {
+    console.error(error);
+    return undefined;
+  }
+};

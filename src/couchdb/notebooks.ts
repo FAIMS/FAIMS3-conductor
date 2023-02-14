@@ -233,7 +233,7 @@ export const createNotebook = async (
     return undefined;
   }
 
-  const metaSecurity = await metaDB.security(securityDoc);
+  const metaSecurity = await metaDB.security();
   metaSecurity.admins.roles.add(CLUSTER_ADMIN_GROUP_NAME);
   metaSecurity.members.roles.add(`${project_id}||team`);
   metaSecurity.members.roles.add(`${project_id}||admin`);
@@ -257,7 +257,7 @@ export const createNotebook = async (
     return undefined;
   }
 
-  const dataSecurity = await dataDB.security(securityDoc);
+  const dataSecurity = await dataDB.security();
   dataSecurity.admins.roles.add(CLUSTER_ADMIN_GROUP_NAME);
   dataSecurity.members.roles.add(`${project_id}||team`);
   dataSecurity.members.roles.add(`${project_id}||admin`);

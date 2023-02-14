@@ -21,13 +21,39 @@
 
 import {open} from 'fs/promises';
 import {importPKCS8, importSPKI} from 'jose';
+import {
+  CONDUCTOR_INSTANCE_NAME,
+  CONDUCTOR_KEY_ID,
+  CONDUCTOR_PUBLIC_KEY_PATH,
+  CONDUCTOR_PRIVATE_KEY_PATH,
+} from '../buildconfig';
 
 import type {KeyConfig, SigningKey} from './types';
 
-export async function load_signing_key(config: KeyConfig): Promise<SigningKey> {
+let SIGNING_KEY: SigningKey;
+
+/**
+ * getSigningKey - get the authoritative public/private key pair for this app
+ * @returns the singing key instance
+ */
+export const getSigningKey = async (): Promise<SigningKey> => {
+  if (!SIGNING_KEY) {
+    SIGNING_KEY = await loadSigningKey({
+      signing_algorithm: 'RS256',
+      instance_name: CONDUCTOR_INSTANCE_NAME,
+      key_id: CONDUCTOR_KEY_ID,
+      public_key_file: CONDUCTOR_PUBLIC_KEY_PATH,
+      private_key_file: CONDUCTOR_PRIVATE_KEY_PATH,
+    });
+  }
+  return SIGNING_KEY;
+}
+
+const loadSigningKey = async (config: KeyConfig): Promise<SigningKey> => {
   let filehandle;
   let private_key_string;
   let public_key_string;
+  console.log(config);
   try {
     filehandle = await open(config.private_key_file, 'r');
     private_key_string = await filehandle.readFile('utf-8');
@@ -58,3 +84,4 @@ export async function load_signing_key(config: KeyConfig): Promise<SigningKey> {
     kid: config.key_id,
   };
 }
+
