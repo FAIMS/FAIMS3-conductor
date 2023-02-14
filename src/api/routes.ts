@@ -40,12 +40,18 @@ api.get('/notebooks/', requireAuthenticationAPI, async (req, res) => {
  */
 api.post('/notebooks/', requireAuthenticationAPI, async (req, res) => {
   // post a new notebook
-  const uiSpec = req.body.uispec;
+  const uiSpec = req.body['ui-specification'];
   const projectName = req.body.name;
   const metadata = req.body.metadata;
 
-  const projectID = await createNotebook(projectName, uiSpec, metadata);
-  res.json({notebook: projectID});
+  try {
+    console.log('creating notebook', projectName)
+    const projectID = await createNotebook(projectName, uiSpec, metadata);
+    console.log('projectID', projectID);
+    res.json({notebook: projectID});
+  } catch {
+    res.json({error: 'there was an error'});
+  }
 });
 
 /**

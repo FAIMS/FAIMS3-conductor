@@ -50,6 +50,7 @@
     "passport-oauth2": "1.6.1",
     "pouchdb": "7.3.0",
     "pouchdb-find": "7.3.0",
+    "pouchdb-security-helper": "^2.1.2",
     "supertest": "6.3.0",
     "swagger-ui-dist": "^4.15.5",
     "ts-jest": "27.1.4",
@@ -66,6 +67,7 @@
     "jest": "^27.5.1",
     "mocha": "^10.1.0",
     "nano": "^10.0.0",
+    "node-fetch": "^3.3.0",
     "nodemon": "^2.0.20",
     "supertest": "^6.3.0"
   }

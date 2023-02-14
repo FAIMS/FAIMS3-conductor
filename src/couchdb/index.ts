@@ -22,7 +22,7 @@ import PouchDB from 'pouchdb';
 
 import {COUCHDB_URL, LOCAL_COUCHDB_AUTH} from '../buildconfig';
 import {ProjectID} from '../datamodel/core';
-import {ProjectDataObject, ProjectObject} from '../datamodel/database';
+import {ProjectObject} from '../datamodel/database';
 import {initialiseDirectoryDB, initialiseProjectsDB} from './initialise';
 
 const DIRECTORY_DB_NAME = 'directory';
@@ -62,6 +62,25 @@ export const getProjectsDB = (): PouchDB.Database | undefined => {
   }
 
   return _projectsDB;
+};
+
+export const createProjectDB = (
+  dbName: string
+): PouchDB.Database | undefined => {
+  const pouch_options: PouchDB.Configuration.RemoteDatabaseConfiguration = {};
+
+  if (LOCAL_COUCHDB_AUTH !== undefined) {
+    pouch_options.auth = LOCAL_COUCHDB_AUTH;
+  }
+  try {
+    const db = new PouchDB(COUCHDB_URL + dbName, pouch_options);
+    console.log('created project database', dbName);
+    return db;
+  } catch (error) {
+    console.error('error creating project database');
+    console.error(error);
+  }
+  return undefined;
 };
 
 export const getProjectMetaDB = async (

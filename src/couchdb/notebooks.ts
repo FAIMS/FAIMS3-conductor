@@ -19,7 +19,7 @@
  */
 
 import PouchDB from 'pouchdb';
-import {getProjectMetaDB, getProjectsDB} from '.';
+import {createProjectDB, getProjectMetaDB, getProjectsDB} from '.';
 import {CLUSTER_ADMIN_GROUP_NAME, COUCHDB_URL} from '../buildconfig';
 import {ProjectID, resolve_project_id} from '../datamodel/core';
 import {
@@ -31,6 +31,8 @@ import {
   ProjectUIModel,
   PROJECT_METADATA_PREFIX,
 } from '../datamodel/database';
+import securityPlugin from 'pouchdb-security-helper';
+PouchDB.plugin(securityPlugin);
 
 /**
  * Determine whether we should return this project
@@ -179,7 +181,7 @@ export const createNotebook = async (
     _id: '_design/attachment_filter',
     views: {
       attachment_filter: {
-        map: `function (doc: any) {
+        map: `function (doc) {
           if (doc.attach_format_version === undefined) {
             emit(doc._id);
           }
@@ -200,7 +202,6 @@ export const createNotebook = async (
     }`,
   };
   const securityDoc = {
-    _id: '_security',
     admins: {
       names: [],
       roles: [CLUSTER_ADMIN_GROUP_NAME],
@@ -211,8 +212,8 @@ export const createNotebook = async (
     },
   };
 
-  const metaDBName = `${COUCHDB_URL}metadata-${project_id}`;
-  const dataDBName = `${COUCHDB_URL}data-${project_id}`;
+  const metaDBName = `metadata-${project_id}`;
+  const dataDBName = `data-${project_id}`;
   const projectDoc = {
     _id: project_id,
     name: projectName,
@@ -226,9 +227,17 @@ export const createNotebook = async (
   };
 
   // TODO: check whether the project database exists already...
+  const metaDB = createProjectDB(metaDBName);
+  if (!metaDB) {
+    console.log('returning undefined');
+    return undefined;
+  }
 
-  const metaDB = new PouchDB(metaDBName);
-  await metaDB.put(securityDoc);
+  const metaSecurity = await metaDB.security(securityDoc);
+  metaSecurity.admins.roles.add(CLUSTER_ADMIN_GROUP_NAME);
+  metaSecurity.members.roles.add(`${project_id}||team`);
+  metaSecurity.members.roles.add(`${project_id}||admin`);
+  await metaSecurity.save();
 
   // derive autoincrementers from uispec
   const autoIncrementers = getAutoIncrementers(uispec);
@@ -243,18 +252,29 @@ export const createNotebook = async (
   await writeProjectMetadata(metaDB, metadata);
 
   // data database
-  const dataDB = new PouchDB(dataDBName);
-
-  await dataDB.put(securityDoc);
-  await dataDB.put(attachmentFilterDoc);
-  await dataDB.put(userPermissionsDoc);
-
-  // finally add an entry to the projects db about this project
-  const projectsDB = getProjectsDB();
-  if (projectsDB) {
-    await projectsDB.put(projectDoc);
+  const dataDB = createProjectDB(dataDBName);
+  if (!dataDB) {
+    return undefined;
   }
 
+  const dataSecurity = await dataDB.security(securityDoc);
+  dataSecurity.admins.roles.add(CLUSTER_ADMIN_GROUP_NAME);
+  dataSecurity.members.roles.add(`${project_id}||team`);
+  dataSecurity.members.roles.add(`${project_id}||admin`);
+  await dataSecurity.save();
+
+  try {
+    await dataDB.put(attachmentFilterDoc);
+    await dataDB.put(userPermissionsDoc);
+
+    // finally add an entry to the projects db about this project
+    const projectsDB = getProjectsDB();
+    if (projectsDB) {
+      await projectsDB.put(projectDoc);
+    }
+  } catch (error) {
+    console.log(error);
+  }
   return project_id;
 };
 

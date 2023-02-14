@@ -42,19 +42,23 @@ test('createNotebook', async () => {
   initialiseDatabases();
 
   const jsonText = fs.readFileSync('./test/sample_notebook.json', 'utf-8');
-  const {metadata, uiSpec} = JSON.parse(jsonText);
+  const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
 
   const projectID = await createNotebook('Test Nõtebõõk', uiSpec, metadata);
 
-  expect(projectID.substring(13)).toBe('-test-notebook');
+  expect(projectID).not.toBe(undefined);
 
-  const notebooks = await getNotebooks();
-  expect(notebooks.length).toBe(1);
-  const db = await getProjectMetaDB(projectID);
-  if (db) {
-    const autoInc = (await db.get('local-autoincrementers')) as any;
-    expect(autoInc.references.length).toBe(2);
-    expect(autoInc.references[0].form_id).toBe('FORM1SECTION1');
+  if (projectID) {
+    expect(projectID.substring(13)).toBe('-test-notebook');
+
+    const notebooks = await getNotebooks();
+    expect(notebooks.length).toBe(1);
+    const db = await getProjectMetaDB(projectID);
+    if (db) {
+      const autoInc = (await db.get('local-autoincrementers')) as any;
+      expect(autoInc.references.length).toBe(2);
+      expect(autoInc.references[0].form_id).toBe('FORM1SECTION1');
+    }
   }
 });
 
@@ -62,17 +66,20 @@ test('getNotebookMetadata', async () => {
   initialiseDatabases();
 
   const jsonText = fs.readFileSync('./test/sample_notebook.json', 'utf-8');
-  const {metadata, uiSpec} = JSON.parse(jsonText);
+  const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
   const name = 'Test Notebook';
   const projectID = await createNotebook(name, uiSpec, metadata);
 
-  const retrievedMetadata = await getNotebookMetadata(projectID);
+  expect(projectID).not.toBe(undefined);
+  if (projectID) {
+    const retrievedMetadata = await getNotebookMetadata(projectID);
 
-  expect(retrievedMetadata).not.toBeNull();
-  if (retrievedMetadata) {
-    expect(retrievedMetadata['lead_institution']).toBe(
-      metadata['lead_institution']
-    );
-    expect(retrievedMetadata['name']).toBe(name);
+    expect(retrievedMetadata).not.toBeNull();
+    if (retrievedMetadata) {
+      expect(retrievedMetadata['lead_institution']).toBe(
+        metadata['lead_institution']
+      );
+      expect(retrievedMetadata['name']).toBe(name);
+    }
   }
 });
