@@ -41,7 +41,7 @@ test('getNotebooks', async () => {
 test('createNotebook', async () => {
   initialiseDatabases();
 
-  const jsonText = fs.readFileSync('./test/sample_notebook.json', 'utf-8');
+  const jsonText = fs.readFileSync('./notebooks/sample_notebook.json', 'utf-8');
   const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
 
   const projectID = await createNotebook('Test Nõtebõõk', uiSpec, metadata);
@@ -65,7 +65,7 @@ test('createNotebook', async () => {
 test('getNotebookMetadata', async () => {
   initialiseDatabases();
 
-  const jsonText = fs.readFileSync('./test/sample_notebook.json', 'utf-8');
+  const jsonText = fs.readFileSync('./notebooks/sample_notebook.json', 'utf-8');
   const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
   const name = 'Test Notebook';
   const projectID = await createNotebook(name, uiSpec, metadata);

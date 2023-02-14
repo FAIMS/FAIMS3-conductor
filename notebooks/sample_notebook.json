@@ -1,5 +1,6 @@
 {
     "metadata": {
+        "name": "Blue Mountains Survey",
         "access": {
             "accessFORM1": ["admin"],
             "accessFORM2": ["admin"],

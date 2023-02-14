@@ -29,7 +29,7 @@ import {getSigningKey} from './signing_keys';
 export const validateToken = async (token: string) => {
   const signingKey = await getSigningKey();
 
-  console.log(`verifying token: '${token}'`);
+  //console.log(`verifying token: '${token}'`);
   try {
     const {payload, protectedHeader} = await jwtVerify(
       token,

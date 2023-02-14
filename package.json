@@ -12,7 +12,8 @@
     "start": "node .",
     "watch": "nodemon --ignore build --ext ts --exec 'tsc --incremental && node .'",
     "test": "env-cmd -f ./.env.test jest --silent=false test/*.test.ts",
-    "initdb": "env-cmd node couchdb/initCouchDB.js"
+    "initdb": "env-cmd node couchdb/initCouchDB.js",
+    "load-notebooks": "env-cmd node scripts/loadNotebook.js"
   },
   "dependencies": {
     "@types/cookie-session": "2.0.44",
