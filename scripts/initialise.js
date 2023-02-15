@@ -1,3 +1,4 @@
+/* eslint-disable node/no-unpublished-require */
 /*
  * Copyright 2021, 2022 Macquarie University
  *
@@ -13,13 +14,11 @@
  * See, the License, for the specific language governing permissions and
  * limitations under the License.
  *
- * Filename: loadNotebooks.js
+ * Filename: initialise.js
  * Description:
- *   Load notebooks into the running couchdb instance from the ./notebooks folder
- *    any .json file in that folder is treated as a notebook and uploaded.
+ *   Initialise the couchdb instance with required databases
  */
 
-const fs = require('fs');
 // how to import fetch in a node script...
 // needed to add this file to .eslintignore because it complains about 'import'
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args)); 
@@ -33,15 +32,11 @@ if (!process.env.USER_TOKEN) {
 
 const token = process.env.USER_TOKEN;
 
-const main = async filename => {
-  console.log(filename);
-  const jsonText = fs.readFileSync(filename, 'utf-8');
-  const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
-  const name = metadata.name;
-  fetch(CONDUCTOR_URL + '/api/notebooks/', {
+const main = async () => {
+
+  fetch(CONDUCTOR_URL + '/api/initialise/', {
     method: 'POST',
-    headers: {'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json'},
-    body: JSON.stringify({metadata, 'ui-specification': uiSpec, name}),
+    headers: {'Authorization': `Bearer ${token}`}
   })
   .then(response => response.json())
   .then(data => {
@@ -54,15 +49,4 @@ const main = async filename => {
 };
 
 
-const extension = (filename) => {
-    return filename.substring(filename.lastIndexOf('.')+1, filename.length) || filename;
-}
-
-const dirname = './notebooks/';
-fs.readdir(dirname, (err, files) => {
-    files.forEach(filename => {
-        if (extension(filename) === 'json') {
-            main(dirname + filename);
-        }
-    });
-});
+main()

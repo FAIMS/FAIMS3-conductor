@@ -39,11 +39,26 @@ docker compose up -d
 will start the couchdb and conductor servers to listen on the configured port.
 
 Once the services are up and running we need to initialise the CouchDB
-database:
+database. This is done by sending a request to the API and to do this you need
+to get a valid user token.  First, connect to the conductor instance
+on <http://localhost:8080/> or whatever port you have configured.  Login
+using one of the configured authentication methods.  Now, from the
+Conductor home page (<http://localhost:8080>) scroll down to "Copy Bearer Token
+to Clipboard". Paste this value into your .env file as the value of `USER_TOKEN`. 
+
+Once you have this token, you can run the script to initialise the databases:
 
 ```bash
+npm run initdb
+```
 
-docker compose exec conductor npm run initdb
+There is also a script that will populate the database with notebooks that are
+stored in the `notebooks` directory.  There should be two sample notebooks in
+there but you can also create new ones. This script again uses the `USER_TOKEN`
+value from .env and can be run by:
+
+```bash
+npm run load-notebooks
 ```
 
 ## Development
