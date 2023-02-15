@@ -90,7 +90,7 @@ export const getNotebooks = async (): Promise<ProjectInformation[]> => {
  * https://ourcodeworld.com/articles/read/255/creating-url-slugs-properly-in-javascript-including-transliteration-for-utf-8
  */
 const slugify = (str: string) => {
-  str = str.replace(/^\s+|\s+$/g, ''); // trim
+  str = str.trim();
   str = str.toLowerCase();
 
   // remove accents, swap ñ for n, etc
@@ -205,7 +205,7 @@ export const createNotebook = async (
   const dataDBName = `data-${project_id}`;
   const projectDoc = {
     _id: project_id,
-    name: projectName,
+    name: projectName.trim(),
     metadata_db: {
       db_name: metaDBName,
     },
@@ -237,7 +237,7 @@ export const createNotebook = async (
   await metaDB.put(uispec as PouchDB.Core.PutDocument<ProjectUIModel>);
 
   // ensure that the name is in the metadata
-  metadata.name = projectName;
+  metadata.name = projectName.trim();
   await writeProjectMetadata(metaDB, metadata);
 
   // data database
