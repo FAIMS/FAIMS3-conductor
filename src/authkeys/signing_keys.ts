@@ -47,7 +47,7 @@ export const getSigningKey = async (): Promise<SigningKey> => {
     });
   }
   return SIGNING_KEY;
-}
+};
 
 const loadSigningKey = async (config: KeyConfig): Promise<SigningKey> => {
   let filehandle;
@@ -83,5 +83,4 @@ const loadSigningKey = async (config: KeyConfig): Promise<SigningKey> => {
     alg: config.signing_algorithm,
     kid: config.key_id,
   };
-}
-
+};

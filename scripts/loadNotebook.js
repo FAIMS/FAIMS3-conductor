@@ -1,5 +1,7 @@
 const fs = require('fs');
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+// how to import fetch in a node script...
+// needed to add this file to .eslintignore because it complains about 'import'
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args)); 
 
 const CONDUCTOR_URL = process.env.CONDUCTOR_PUBLIC_URL;
 

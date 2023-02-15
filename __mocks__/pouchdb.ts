@@ -37,14 +37,14 @@ class PouchDB {
     if (!doc) {
       throw Error(`document ${document} not in mock database ${this.name} `);
     }
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       resolve(doc);
     });
   }
 
   allDocs() {
     const objects = Object.values(dataStore[this.name]);
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       resolve({
         offset: 0,
         total_rows: objects.length,
@@ -65,7 +65,7 @@ class PouchDB {
   put(document: any) {
     dataStore[this.name][document._id] = document;
     // console.log(`document ${document._id} added in mock database ${this.name}`);
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       resolve({});
     });
   }

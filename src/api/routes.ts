@@ -45,7 +45,7 @@ api.post('/notebooks/', requireAuthenticationAPI, async (req, res) => {
   const metadata = req.body.metadata;
 
   try {
-    console.log('creating notebook', projectName)
+    console.log('creating notebook', projectName);
     const projectID = await createNotebook(projectName, uiSpec, metadata);
     console.log('projectID', projectID);
     res.json({notebook: projectID});

@@ -20,12 +20,11 @@
 
 import PouchDB from 'pouchdb';
 import {createProjectDB, getProjectMetaDB, getProjectsDB} from '.';
-import {CLUSTER_ADMIN_GROUP_NAME, COUCHDB_URL} from '../buildconfig';
+import {CLUSTER_ADMIN_GROUP_NAME} from '../buildconfig';
 import {ProjectID, resolve_project_id} from '../datamodel/core';
 import {
   ProjectInformation,
   ProjectMetadata,
-  ProjectMetaObject,
   ProjectObject,
   ProjectUIFields,
   ProjectUIModel,
@@ -200,16 +199,6 @@ export const createNotebook = async (
       }
       return;
     }`,
-  };
-  const securityDoc = {
-    admins: {
-      names: [],
-      roles: [CLUSTER_ADMIN_GROUP_NAME],
-    },
-    members: {
-      names: [],
-      roles: [`${project_id}||team`, `${project_id}||admin`],
-    },
   };
 
   const metaDBName = `metadata-${project_id}`;

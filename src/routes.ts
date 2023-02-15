@@ -44,7 +44,7 @@ import {
 import {getInvite, getInvitesForEmails} from './couchdb/invites';
 import {removeRoleFromEmail} from './couchdb/users';
 import {getNotebookMetadata} from './couchdb/notebooks';
-import { getSigningKey } from './authkeys/signing_keys';
+import {getSigningKey} from './authkeys/signing_keys';
 
 export {app};
 
