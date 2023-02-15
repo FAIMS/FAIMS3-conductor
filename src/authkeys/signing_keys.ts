@@ -53,7 +53,6 @@ const loadSigningKey = async (config: KeyConfig): Promise<SigningKey> => {
   let filehandle;
   let private_key_string;
   let public_key_string;
-  console.log(config);
   try {
     filehandle = await open(config.private_key_file, 'r');
     private_key_string = await filehandle.readFile('utf-8');
