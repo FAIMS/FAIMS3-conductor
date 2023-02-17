@@ -36,6 +36,8 @@ services:
       - COUCHDB_CONTAINER_NAME
       - COUCHDB_EXTERNAL_PORT
       - COUCHDB_INTERNAL_PORT
+      - COUCHDB_URL=${COUCHDB_PROTOCOL}://${COUCHDB_CONTAINER_NAME}:${COUCHDB_INTERNAL_PORT}/
+
       # BBS 20230203 readded couchdb_internal_port
 
       # Where is this server running
