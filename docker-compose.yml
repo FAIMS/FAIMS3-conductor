@@ -5,6 +5,10 @@ services:
       context: couchdb
       dockerfile: Dockerfile
       # dockerfile relative path is from build context
+    volumes: 
+      - type: volume
+        source: couchdb-data
+        target: /opt/couchdb/data
     ports:
       - "0.0.0.0:${COUCHDB_PORT}:${COUCHDB_INTERNAL_PORT}" 
       # COUCHDB_PORT is the one visible to local-host-docker. COUCHDB_EXTERNAL_PORT is visible past the proxy server.
@@ -79,3 +83,6 @@ services:
       - WEB_APP_PUBLIC_URL
       - ANDROID_APP_PUBLIC_URL
       - IOS_APP_PUBLIC_URL
+
+volumes:
+  couchdb-data:

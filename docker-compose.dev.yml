@@ -5,6 +5,10 @@ services:
       context: couchdb
       dockerfile: Dockerfile
       # dockerfile relative path is from build context
+    volumes: 
+      - type: volume
+        source: couchdb-data
+        target: /opt/couchdb/data
     ports:
       - "0.0.0.0:${COUCHDB_EXTERNAL_PORT}:${COUCHDB_INTERNAL_PORT}"     
       # We are presuming that there is no proxy server on the dev server, so we're not using COUCHDB_PORT here
@@ -81,3 +85,5 @@ services:
       - IOS_APP_PUBLIC_URL
 networks:
   conductor-local-dev: {}
+volumes:
+  couchdb-data:
