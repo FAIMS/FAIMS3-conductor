@@ -20,9 +20,8 @@
     "components": {
         "securitySchemes": {
             "Auth": {
-                "type": "apiKey",
-                "in": "header",
-                "name": "X-API-KEY"
+                "type": "http",
+                "scheme": "bearer"
             }
         },
         "responses": {
@@ -68,7 +67,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/Notebook",
+                                "$ref": "#/definitions/NotebookMeta",
                             }
                         }
                     },
@@ -76,11 +75,20 @@
                         "$ref": "#/components/responses/UnauthorizedError"
                     }
                 }
+            },
+            "post": {
+                "summary": "Create a new notebook",
+                "description": "Create a new notebook by uploading JSON metadata and ui-specification",
+                "produces": ["application/json"],
+                "security": {"Auth": []},
+                "requestBody": {
+                    "$ref": "#/definitions/Notebook"
+                }
             }
         }
     },
     "definitions": {
-        "Notebook": {
+        "NotebookMeta": {
             "type": "object",
             "properties": {
                 "id": {
@@ -89,6 +97,20 @@
                 "name": {
                     "type": "string"
                 }
+            }
+        },
+        "Notebook": {
+            "type": "object",
+            "properties": {
+                "metadata": {
+                    "type": "object"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "ui-specification": {
+                    "type": "object"
+                },
             }
         }
     }
