@@ -48,7 +48,11 @@ export async function requireAuthenticationAPI(
   next: Express.NextFunction
 ) {
   // For testing...just check for an Auth header
-  if (
+  // but also accept a regular user login
+  if (req.user) {
+    next();
+    return;
+  } else if (
     req.headers.authorization &&
     req.headers.authorization.startsWith('Bearer ')
   ) {
