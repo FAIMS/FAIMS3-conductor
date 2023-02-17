@@ -6,10 +6,13 @@ services:
       dockerfile: Dockerfile
       # dockerfile relative path is from build context
     ports:
-      - "0.0.0.0:${COUCHDB_EXTERNAL_PORT}:${COUCHDB_PORT}"     
+      - "0.0.0.0:${COUCHDB_EXTERNAL_PORT}:${COUCHDB_INTERNAL_PORT}"     
+      # We are presuming that there is no proxy server on the dev server, so we're not using COUCHDB_PORT here
     environment:
       - COUCHDB_USER=admin
       - COUCHDB_PASSWORD
+    networks:
+      - conductor-local-dev
   conductor:
     build:
       context: .
@@ -18,6 +21,8 @@ services:
       - .:/app
     ports:
       - "0.0.0.0:${CONDUCTOR_EXTERNAL_PORT}:${CONDUCTOR_PORT}"
+    networks:
+      - conductor-local-dev
     environment:
       #  note that some of these are pulled from the environment (.env) 
       #  while others get values here if the value is known for 
@@ -32,6 +37,7 @@ services:
       - COUCHDB_EXTERNAL_PORT
       - COUCHDB_URL=${COUCHDB_PROTOCOL}://${COUCHDB_CONTAINER_NAME}:${COUCHDB_PORT}/
 
+      - COUCHDB_INTERNAL_PORT
       # Where is this server running
       - CONDUCTOR_PROTOCOL
       - CONDUCTOR_PORT
@@ -73,3 +79,5 @@ services:
       - WEB_APP_PUBLIC_URL
       - ANDROID_APP_PUBLIC_URL
       - IOS_APP_PUBLIC_URL
+networks:
+  conductor-local-dev: {}
