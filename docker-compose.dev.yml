@@ -5,6 +5,10 @@ services:
       context: couchdb
       dockerfile: Dockerfile
       # dockerfile relative path is from build context
+    volumes: 
+      - type: volume
+        source: couchdb-data
+        target: /opt/couchdb/data
     ports:
       - "0.0.0.0:${COUCHDB_EXTERNAL_PORT}:${COUCHDB_INTERNAL_PORT}"     
       # We are presuming that there is no proxy server on the dev server, so we're not using COUCHDB_PORT here
@@ -35,6 +39,8 @@ services:
       - COUCHDB_CONTAINER_NAME
       - COUCHDB_PORT
       - COUCHDB_EXTERNAL_PORT
+      - COUCHDB_URL=${COUCHDB_PROTOCOL}://${COUCHDB_CONTAINER_NAME}:${COUCHDB_PORT}/
+
       - COUCHDB_INTERNAL_PORT
       # Where is this server running
       - CONDUCTOR_PROTOCOL
@@ -59,9 +65,9 @@ services:
       - CONDUCTOR_AUTH_PROVIDERS
       - CONDUCTOR_EMAIL_HOST_NAME
       - CONDUCTOR_EMAIL_HOST_CONFIG
-      
-      - CONDUCTOR_INVITE_DB=${COUCHDB_PROTOCOL}://${COUCHDB_CONTAINER_NAME}:${COUCHDB_EXTERNAL_PORT}/${CONDUCTOR_INVITE_DB_NAME:-invites}
-      - FAIMS_USERDB=${COUCHDB_PROTOCOL}://${COUCHDB_CONTAINER_NAME}:${COUCHDB_EXTERNAL_PORT}/${FAIMS_USERDB_NAME:-people}
+
+      - CONDUCTOR_INVITE_DB=${COUCHDB_URL}${CONDUCTOR_INVITE_DB_NAME:-invites}
+      - FAIMS_USERDB=${COUCHDB_URL}${FAIMS_USERDB_NAME:-people}
 
       # https://faimsproject.atlassian.net/wiki/spaces/FAIMS3/pages/151846960/FAIMS3+Conductor+build+run+environment+variables#Authentication-Provider-Specific-environment-variables
       - DATACENTRAL_GROUP_PREFIX
@@ -80,3 +86,5 @@ services:
       - IOS_APP_PUBLIC_URL
 networks:
   conductor-local-dev: {}
+volumes:
+  couchdb-data:

@@ -44,6 +44,8 @@ import {
 } from './registration';
 import {getInvite, getInvitesForEmails} from './couchdb/invites';
 import {removeRoleFromEmail} from './couchdb/users';
+import {getNotebookMetadata} from './couchdb/notebooks';
+import {getSigningKey} from './authkeys/signing_keys';
 
 export {app};
 
@@ -134,13 +136,18 @@ app.get(
   async (req, res) => {
     const user = req.user as Express.User; // requireAuthentication ensures user
     const project_id = req.params.notebook_id;
-    const isAdmin = userEquivalentToProjectAdmin(user, project_id);
-    res.render('notebook-landing', {
-      isAdmin: isAdmin,
-      notebook_id: project_id,
-      notebook_name: 'TODO',
-      notebook_description: 'TODO',
-    });
+    const project = await getNotebookMetadata(project_id);
+    if (project) {
+      const isAdmin = userEquivalentToProjectAdmin(user, project_id);
+      res.render('notebook-landing', {
+        isAdmin: isAdmin,
+        notebook_id: project.project_id,
+        notebook_name: project.name,
+        notebook_description: 'TODO',
+      });
+    } else {
+      res.status(404).end();
+    }
   }
 );
 
@@ -225,9 +232,14 @@ app.get('/', async (req, res) => {
     const rendered_project_roles = render_project_roles(req.user.project_roles);
     const provider = Object.keys(req.user.profiles)[0];
     // BBS 20221101 Adding token to here so we can support copy from conductor
-    const signing_key = app.get('faims3_token_signing_key');
+    const signing_key = await getSigningKey();
     const jwt_token = await get_user_auth_token(req.user.user_id, signing_key);
-    const token = {jwt_token:jwt_token, public_key:signing_key.public_key_string, alg:signing_key.alg, userdb:CONDUCTOR_USER_DB};
+    const token = {
+      jwt_token: jwt_token,
+      public_key: signing_key.public_key_string,
+      alg: signing_key.alg,
+      userdb: CONDUCTOR_USER_DB,
+    };
     if (signing_key === null || signing_key === undefined) {
       res.status(500).send('Signing key not set up');
     } else {
@@ -238,7 +250,7 @@ app.get('/', async (req, res) => {
         other_roles: req.user.other_roles,
         provider: provider,
         userdb: CONDUCTOR_USER_DB,
-        public_key: signing_key.public_key
+        public_key: signing_key.public_key,
       });
     }
   } else {
@@ -269,7 +281,7 @@ app.get('/send-token/', (req, res) => {
 
 app.get('/get-token/', async (req, res) => {
   if (req.user) {
-    const signing_key = app.get('faims3_token_signing_key');
+    const signing_key = await getSigningKey();
     if (signing_key === null || signing_key === undefined) {
       res.status(500).send('Signing key not set up');
     } else {

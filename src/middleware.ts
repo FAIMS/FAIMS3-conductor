@@ -20,6 +20,7 @@
  */
 
 import Express from 'express';
+import {validateToken} from './authkeys/read';
 import {CLUSTER_ADMIN_GROUP_NAME} from './buildconfig';
 
 /*
@@ -35,6 +36,30 @@ export function requireAuthentication(
   } else {
     res.redirect('/auth/');
   }
+}
+
+/*
+ * Similar but for use in the API, just return an unuthorised repsonse
+ * should check for an Authentication header...see passport-http-bearer
+ */
+export async function requireAuthenticationAPI(
+  req: Express.Request,
+  res: Express.Response,
+  next: Express.NextFunction
+) {
+  // For testing...just check for an Auth header
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer ')
+  ) {
+    const token = req.headers.authorization.substring(7);
+    if (await validateToken(token)) {
+      // could we set req.user here?
+      next();
+      return;
+    }
+  }
+  res.status(401).json({error: 'authentication required'});
 }
 
 export function requireNotebookMembership(

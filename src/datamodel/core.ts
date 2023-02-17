@@ -25,9 +25,11 @@
 // cannot enforce system-wide unique project IDs without a 'namespace' listing id)
 export type ProjectID = string;
 export type NonUniqueProjectID = string;
+/** Listing identifier */
+export type ListingID = string;
 
 export function resolve_project_id(
-  listing_id: string,
+  listing_id: ListingID,
   nonunique_id: NonUniqueProjectID
 ): ProjectID {
   const cleaned_listing_id = listing_id.replace('||', '\\|\\|');
