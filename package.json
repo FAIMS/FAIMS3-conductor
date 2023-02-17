@@ -50,7 +50,7 @@
     "passport-google-oauth20": "2.0.0",
     "passport-oauth2": "1.6.1",
     "pouchdb": "7.3.0",
-    "pouchdb-find": "7.3.0",
+    "pouchdb-find": "8.0.1",
     "pouchdb-security-helper": "^2.1.2",
     "supertest": "6.3.0",
     "swagger-ui-dist": "^4.15.5",
