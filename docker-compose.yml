@@ -67,9 +67,9 @@ services:
       - CONDUCTOR_AUTH_PROVIDERS
       - CONDUCTOR_EMAIL_HOST_NAME
       - CONDUCTOR_EMAIL_HOST_CONFIG
-      - CONDUCTOR_INVITE_DB=${COUCHDB_PUBLIC_URL}/${CONDUCTOR_INVITE_DB_NAME:-invites}
-      - FAIMS_USERDB=${COUCHDB_PUBLIC_URL}/${FAIMS_USERDB_NAME:-people}
-      # Container name doesn't work behind a proxy server.
+      - CONDUCTOR_INVITE_DB=${COUCHDB_URL}${CONDUCTOR_INVITE_DB_NAME:-invites}
+      - FAIMS_USERDB=${COUCHDB_URL}${FAIMS_USERDB_NAME:-people}
+      
       # https://faimsproject.atlassian.net/wiki/spaces/FAIMS3/pages/151846960/FAIMS3+Conductor+build+run+environment+variables#Authentication-Provider-Specific-environment-variables
       - DATACENTRAL_GROUP_PREFIX
       - DATACENTRAL_CLIENT_ID
