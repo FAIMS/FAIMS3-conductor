@@ -76,6 +76,12 @@ export const initialiseDirectoryDB = async (
       await db.get('default');
     } catch {
       await db.put(directoryDoc);
+
+      // directory needs to be public
+      const security = db.security();
+      security.admins.roles.removeAll();
+      security.members.roles.removeAll();
+      await security.save();
     }
   }
 };
