@@ -23,6 +23,7 @@ import {
   createNotebook,
   getNotebookMetadata,
   getNotebooks,
+  getNotebookUISpec,
 } from '../src/couchdb/notebooks';
 import * as fs from 'fs';
 
@@ -80,6 +81,26 @@ test('getNotebookMetadata', async () => {
         metadata['lead_institution']
       );
       expect(retrievedMetadata['name']).toBe(name);
+    }
+  }
+});
+
+test('getNotebookUISpec', async () => {
+  initialiseDatabases();
+
+  const jsonText = fs.readFileSync('./notebooks/sample_notebook.json', 'utf-8');
+  const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
+  const name = 'Test Notebook';
+  const projectID = await createNotebook(name, uiSpec, metadata);
+
+  expect(projectID).not.toBe(undefined);
+  if (projectID) {
+    const retrieved = await getNotebookUISpec(projectID);
+
+    expect(retrieved).not.toBeNull();
+    if (retrieved) {
+      expect(retrieved['fviews'].length).toBe(uiSpec.fviews.length);
+      expect(retrieved['fields']).not.toBe(undefined);
     }
   }
 });

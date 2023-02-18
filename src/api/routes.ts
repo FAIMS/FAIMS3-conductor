@@ -64,7 +64,8 @@ api.post('/notebooks/', requireAuthenticationAPI, async (req, res) => {
     console.log('projectID', projectID);
     res.json({notebook: projectID});
   } catch {
-    res.json({error: 'there was an error'});
+    res.json({error: 'there was an error creating the notebook'});
+    res.status(500).end();
   }
 });
 
