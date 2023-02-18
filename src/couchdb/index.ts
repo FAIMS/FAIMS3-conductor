@@ -85,9 +85,10 @@ export const createProjectDB = (
 export const getProjectMetaDB = async (
   projectID: ProjectID
 ): Promise<PouchDB.Database | undefined> => {
-  if (_projectsDB) {
+  const projectsDB = getProjectsDB();
+  if (projectsDB) {
     try {
-      const projectDoc = (await _projectsDB.get(
+      const projectDoc = (await projectsDB.get(
         projectID
       )) as unknown as ProjectObject;
       if (projectDoc.metadata_db) {
