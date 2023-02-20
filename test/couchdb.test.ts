@@ -18,7 +18,11 @@
  *   Tests for the interface to couchDB
  */
 
-import {getProjectMetaDB, initialiseDatabases} from '../src/couchdb';
+import {
+  getDirectoryDB,
+  getProjectMetaDB,
+  initialiseDatabases,
+} from '../src/couchdb';
 import {
   createNotebook,
   getNotebookMetadata,
@@ -31,6 +35,23 @@ jest.mock('pouchdb');
 
 test('check initialise', () => {
   initialiseDatabases();
+
+  const directoryDB = getDirectoryDB();
+  expect(directoryDB).not.toBe(undefined);
+  if (directoryDB) {
+    try {
+      const default_document = directoryDB.get('default') as any;
+      expect(default_document.name).toBe('default');
+
+      const permissions_document = directoryDB.get(
+        '_design/permissions'
+      ) as any;
+      expect(permissions_document['_id']).toBe('_design/permissions');
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
 });
 
 test('getNotebooks', async () => {
