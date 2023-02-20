@@ -73,7 +73,6 @@ export const initialiseDirectoryDB = async (
   const permissions = {
     _id: '_design/permissions',
     validate_doc_update: `function(newDoc, oldDoc, userCtx) {
-      log(userCtx.roles);
       if (userCtx.roles.indexOf('_admin') >= 0) {
         return;
       }
