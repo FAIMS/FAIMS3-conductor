@@ -24,6 +24,7 @@ import {
   createNotebook,
   getNotebookMetadata,
   getNotebookUISpec,
+  getNotebookRecords,
 } from '../couchdb/notebooks';
 import {requireAuthenticationAPI} from '../middleware';
 import {initialiseDatabases} from '../couchdb';
@@ -80,3 +81,18 @@ api.get('/notebooks/:id', requireAuthenticationAPI, async (req, res) => {
     res.status(404).end();
   }
 });
+
+// export current versions of all records in this notebook
+api.get(
+  '/notebooks/:id/records/',
+  requireAuthenticationAPI,
+  async (req, res) => {
+    const records = await getNotebookRecords(req.params.id);
+    if (records) {
+      res.json({records});
+    } else {
+      res.json({error: 'notebook not found'});
+      res.status(404).end();
+    }
+  }
+);

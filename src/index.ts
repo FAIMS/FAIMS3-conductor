@@ -28,6 +28,17 @@ import {CONDUCTOR_PORT, CONDUCTOR_AUTH_PROVIDERS} from './buildconfig';
 import {app} from './routes';
 import {add_auth_routes} from './auth_routes';
 
+import {registerClient} from 'faims3-datamodel';
+import {getProjectDataDB, getProjectMetaDB} from './couchdb';
+
+// set up the database module faims3-datamodel with our callbacks to get databases
+registerClient({
+  getDataDB: getProjectDataDB,
+  getProjectDB: getProjectMetaDB,
+  getLocalStateDB: () => {},
+  shouldDisplayRecord: () => true,
+});
+
 process.on('unhandledRejection', error => {
   console.error(error); // This prints error with stack included (as for normal errors)
   throw error; // Following best practices re-throw error and let the process exit with error code

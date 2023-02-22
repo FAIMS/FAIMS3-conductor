@@ -23,14 +23,15 @@ import {createProjectDB, getProjectMetaDB, getProjectsDB} from '.';
 import {CLUSTER_ADMIN_GROUP_NAME} from '../buildconfig';
 import {ProjectID, resolve_project_id} from '../datamodel/core';
 import {
-  ProjectInformation,
   ProjectMetadata,
   ProjectObject,
   ProjectUIFields,
   ProjectUIModel,
   PROJECT_METADATA_PREFIX,
 } from '../datamodel/database';
+
 import securityPlugin from 'pouchdb-security-helper';
+import {getFullRecordData, getRecordsWithRegex} from 'faims3-datamodel';
 PouchDB.plugin(securityPlugin);
 
 /**
@@ -326,8 +327,6 @@ export const getNotebookMetadata = async (
   return null;
 };
 
-
-
 /**
  * getNotebookUISpec -- return metadata for a single notebook from the database
  * @param project_id a project identifier
@@ -355,4 +354,24 @@ export const getNotebookUISpec = async (
     console.log('unknown project', project_id);
   }
   return null;
+};
+
+export const getNotebookRecords = async (
+  project_id: string
+): Promise<any | null> => {
+  // TODO: use the faims3-datamodel module to read the notebook data
+  const records = await getRecordsWithRegex(project_id, '.*', true);
+  console.log('Records: ', project_id, records);
+  const fullRecords: any[] = [];
+  for (let i = 0; i < records.length; i++) {
+    const data = await getFullRecordData(
+      project_id,
+      records[i].record_id,
+      records[i].revision_id,
+      true
+    );
+    fullRecords.push(data);
+  };
+  console.log('FULL', fullRecords);
+  return fullRecords;
 };
