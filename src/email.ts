@@ -17,12 +17,12 @@
  * Description:
  *   This module contains helpers for sending email within the conductor.
  */
-import {EMAIL_FROM_ADDRESSS, EMAIL_TRANSPORTER} from './buildconfig';
+import {EMAIL_FROM_ADDRESS, EMAIL_TRANSPORTER} from './buildconfig';
 
 export type ConductorEmail = any; // TODO: find/setup correct type
 
 export async function sendEmail(email: ConductorEmail) {
-  email['from'] = `${EMAIL_FROM_ADDRESSS}`;
+  email['from'] = `${EMAIL_FROM_ADDRESS}`;
   try {
     await EMAIL_TRANSPORTER.sendMail(email);
   } catch (err) {

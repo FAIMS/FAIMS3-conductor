@@ -42,6 +42,7 @@ const HANDLER_OPTIONS: {[name: string]: any} = {
 };
 
 passport.serializeUser((user: Express.User, done: DoneFunction) => {
+  console.log('trying to serialize user...');
   done(null, user.user_id);
 });
 
@@ -59,26 +60,40 @@ export function determine_callback_url(provider_name: string): string {
 
 export function add_auth_routes(app: any, handlers: any) {
   console.log('Adding auth routes', handlers);
+
   app.get('/auth/', (req: any, res: any) => {
     // Allow the user to decide what auth mechanism to use
     console.log('XXXXXX', handlers);
     const available_provider_info = [];
     for (const handler of handlers) {
-      console.debug('handlers', handlers);
       available_provider_info.push({
         label: handler,
         name: AVAILABLE_AUTH_PROVIDER_DISPLAY_INFO[handler].name,
       });
     }
-    res.render('auth', {providers: available_provider_info});
+    res.render('auth', {
+      providers: available_provider_info,
+      localAuth: true, // maybe make this configurable?
+    });
   });
 
+  // handle local login post request
+  app.post(
+    '/auth/local',
+    passport.authenticate('local', {
+      successRedirect: '/',
+      failureRedirect: '/auth/',
+    })
+  );
+
+  // set up handlers for OAuth providers
   for (const handler of handlers) {
     app.get(`/auth/${handler}/`, (req: any, res: any) => {
       if (
         typeof req.query?.state === 'string' ||
         typeof req.query?.state === 'undefined'
       ) {
+        console.log('authenticating', handler);
         passport.authenticate(handler, HANDLER_OPTIONS[handler])(
           req,
           res,

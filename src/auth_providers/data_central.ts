@@ -31,7 +31,7 @@ import {
   HAVE_DATACENTRAL_MANAGE_ROLES,
 } from '../buildconfig';
 import {
-  addEmailToUser,
+  addEmailsToUser,
   updateUser,
   getOrCreatePouchUser,
   pouch_user_to_express_user,
@@ -119,7 +119,7 @@ function oauth_verify(
       if (user.name === '') {
         user.name = profile.attributes.displayName;
       }
-      addEmailToUser(user, profile.attributes.mail);
+      addEmailsToUser(user, [profile.attributes.mail]);
       user.profiles['datacentral'] = profile;
 
       return user;

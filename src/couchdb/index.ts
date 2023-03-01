@@ -23,7 +23,7 @@ import PouchDB from 'pouchdb';
 import {COUCHDB_URL, LOCAL_COUCHDB_AUTH} from '../buildconfig';
 import {ProjectID} from '../datamodel/core';
 import {ProjectObject} from '../datamodel/database';
-import {initialiseDirectoryDB, initialiseProjectsDB} from './initialise';
+import {initialiseDirectoryDB, initialiseProjectsDB, initialiseUserDB} from './initialise';
 
 const DIRECTORY_DB_NAME = 'directory';
 const PROJECTS_DB_NAME = 'projects';
@@ -32,6 +32,7 @@ const PROJECTS_DB_NAME = 'projects';
 
 let _directoryDB: PouchDB.Database | undefined;
 let _projectsDB: PouchDB.Database | undefined;
+let _usersDB: PouchDB.Database | undefined;
 
 export const getDirectoryDB = (): PouchDB.Database | undefined => {
   if (!_directoryDB) {
@@ -50,19 +51,38 @@ export const getDirectoryDB = (): PouchDB.Database | undefined => {
   return _directoryDB;
 };
 
-export const getProjectsDB = (): PouchDB.Database | undefined => {
-  if (!_projectsDB) {
+export const getUsersDB = (): PouchDB.Database | undefined => {
+  if (!_usersDB) {
     const pouch_options: PouchDB.Configuration.RemoteDatabaseConfiguration = {};
 
     if (LOCAL_COUCHDB_AUTH !== undefined) {
       pouch_options.auth = LOCAL_COUCHDB_AUTH;
     }
-    const dbName = COUCHDB_URL + PROJECTS_DB_NAME;
-    _projectsDB = new PouchDB(dbName, pouch_options);
+    const dbName = COUCHDB_URL + 'people';
+    _usersDB = new PouchDB(dbName, pouch_options);
   }
 
-  return _projectsDB;
+  return _usersDB;
 };
+
+export const getProjectsDB = (): PouchDB.Database | undefined => {
+  if (!_directoryDB) {
+    const pouch_options: PouchDB.Configuration.RemoteDatabaseConfiguration = {};
+
+    if (LOCAL_COUCHDB_AUTH !== undefined) {
+      pouch_options.auth = LOCAL_COUCHDB_AUTH;
+    }
+    const directorydb = COUCHDB_URL + DIRECTORY_DB_NAME;
+    try {
+      _directoryDB = new PouchDB(directorydb, pouch_options);
+    } catch (error) {
+      console.log('bad thing happened', error);
+    }
+  }
+  return _directoryDB;
+};
+
+
 
 export const createProjectDB = (
   dbName: string
@@ -152,6 +172,13 @@ export const initialiseDatabases = async () => {
     await initialiseProjectsDB(projectsDB);
   } catch (error) {
     console.log('something wrong with projects db init', error);
+  }
+
+  const usersDB = getUsersDB();
+  try {
+    await initialiseUserDB(usersDB);
+  } catch (error) {
+    console.log('something wrong with user db init', error);
   }
 };
 

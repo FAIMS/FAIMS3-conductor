@@ -18,7 +18,8 @@
  *   Functions to initialise the databases required for FAIMS in couchdb
  */
 
-import {CONDUCTOR_PUBLIC_URL} from '../buildconfig';
+import {registerLocalUser} from '../auth_providers/local';
+import {CONDUCTOR_PUBLIC_URL, EMAIL_FROM_ADDRESS, LOCAL_COUCHDB_AUTH} from '../buildconfig';
 
 export const initialiseProjectsDB = async (
   db: PouchDB.Database | undefined
@@ -94,5 +95,17 @@ export const initialiseDirectoryDB = async (
       security.members.roles.removeAll();
       await security.save();
     }
+  }
+};
+
+export const initialiseUserDB = async (db: PouchDB.Database | undefined) => {
+  // register a local admin user with the same password as couchdb
+  console.log('initialisng user db');
+  if (db && LOCAL_COUCHDB_AUTH) {
+    registerLocalUser(
+      'Admin User',
+      EMAIL_FROM_ADDRESS,
+      LOCAL_COUCHDB_AUTH.password
+    );
   }
 };
