@@ -23,14 +23,15 @@ import {createProjectDB, getProjectMetaDB, getProjectsDB} from '.';
 import {CLUSTER_ADMIN_GROUP_NAME} from '../buildconfig';
 import {ProjectID, resolve_project_id} from '../datamodel/core';
 import {
-  ProjectInformation,
   ProjectMetadata,
   ProjectObject,
   ProjectUIFields,
   ProjectUIModel,
   PROJECT_METADATA_PREFIX,
 } from '../datamodel/database';
+
 import securityPlugin from 'pouchdb-security-helper';
+import {getFullRecordData, getRecordsWithRegex} from 'faims3-datamodel';
 PouchDB.plugin(securityPlugin);
 
 /**
@@ -48,8 +49,8 @@ const shouldDisplayProject = async (_project_id: string) => {
  * getNotebooks -- return an array of notebooks from the database
  * @returns an array of ProjectObject objects
  */
-export const getNotebooks = async (): Promise<ProjectInformation[]> => {
-  const output: ProjectInformation[] = [];
+export const getNotebooks = async (): Promise<any[]> => {
+  const output: any[] = [];
   const projects: ProjectObject[] = [];
   // in the frontend, the listing_id names the backend instance,
   // so far it's either 'default' or 'locallycreatedproject'
@@ -67,6 +68,8 @@ export const getNotebooks = async (): Promise<ProjectInformation[]> => {
     for (const project of projects) {
       const project_id = project._id;
       const full_project_id = resolve_project_id(listing_id, project_id);
+      const projectMeta = await getNotebookMetadata(project_id);
+      console.log(projectMeta);
       if (await shouldDisplayProject(full_project_id)) {
         output.push({
           name: project.name,
@@ -76,6 +79,7 @@ export const getNotebooks = async (): Promise<ProjectInformation[]> => {
           project_id: full_project_id,
           listing_id: listing_id,
           non_unique_project_id: project_id,
+          metadata: projectMeta,
         });
       }
     }
@@ -321,4 +325,56 @@ export const getNotebookMetadata = async (
     console.log('unknown project', project_id);
   }
   return null;
+};
+
+/**
+ * getNotebookUISpec -- return metadata for a single notebook from the database
+ * @param project_id a project identifier
+ * @returns the UISPec of the project or null if it doesn't exist
+ */
+export const getNotebookUISpec = async (
+  project_id: string
+): Promise<ProjectMetadata | null> => {
+  try {
+    if (await shouldDisplayProject(project_id)) {
+      // get the metadata from the db
+      const projectDB = await getProjectMetaDB(project_id);
+      if (projectDB) {
+        const uiSpec = (await projectDB.get('ui-specification')) as any;
+        delete uiSpec._id;
+        delete uiSpec._rev;
+        return uiSpec;
+      } else {
+        console.error('no metadata database found for', project_id);
+      }
+    } else {
+      console.error('permission denied for project', project_id);
+    }
+  } catch (error) {
+    console.log('unknown project', project_id);
+  }
+  return null;
+};
+
+/**
+ * getNotebookRecords - retrieve all data records for this notebook
+ * including record metadata, data fields and annotations
+ * @param project_id project identifier
+ * @returns an array of records
+ */
+export const getNotebookRecords = async (
+  project_id: string
+): Promise<any | null> => {
+  const records = await getRecordsWithRegex(project_id, '.*', true);
+  const fullRecords: any[] = [];
+  for (let i = 0; i < records.length; i++) {
+    const data = await getFullRecordData(
+      project_id,
+      records[i].record_id,
+      records[i].revision_id,
+      true
+    );
+    fullRecords.push(data);
+  }
+  return fullRecords;
 };

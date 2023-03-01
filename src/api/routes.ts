@@ -19,7 +19,13 @@
  */
 
 import express from 'express';
-import {getNotebooks, createNotebook} from '../couchdb/notebooks';
+import {
+  getNotebooks,
+  createNotebook,
+  getNotebookMetadata,
+  getNotebookUISpec,
+  getNotebookRecords,
+} from '../couchdb/notebooks';
 import {requireAuthenticationAPI} from '../middleware';
 import {initialiseDatabases} from '../couchdb';
 
@@ -27,6 +33,15 @@ export const api = express.Router();
 
 api.get('/hello/', requireAuthenticationAPI, (_req: any, res: any) => {
   res.send({message: 'hello from the api!'});
+});
+
+/**
+ * POST to /api/initialise does initialisation on the databases
+ * - not sure how we'll use this or what protection it needs
+ */
+api.post('/initialise/', requireAuthenticationAPI, async (req, res) => {
+  initialiseDatabases();
+  res.json({success: true});
 });
 
 api.get('/notebooks/', requireAuthenticationAPI, async (req, res) => {
@@ -50,15 +65,34 @@ api.post('/notebooks/', requireAuthenticationAPI, async (req, res) => {
     console.log('projectID', projectID);
     res.json({notebook: projectID});
   } catch {
-    res.json({error: 'there was an error'});
+    res.json({error: 'there was an error creating the notebook'});
+    res.status(500).end();
   }
 });
 
-/**
- * POST to /api/initialise does initialisation on the databases
- * - not sure how we'll use this or what protection it needs
- */
-api.post('/initialise/', requireAuthenticationAPI, async (req, res) => {
-  initialiseDatabases();
-  res.json({success: true});
+api.get('/notebooks/:id', requireAuthenticationAPI, async (req, res) => {
+  // get full details of a single notebook
+  const metadata = await getNotebookMetadata(req.params.id);
+  const uiSpec = await getNotebookUISpec(req.params.id);
+  if (metadata && uiSpec) {
+    res.json({metadata, 'ui-specification': uiSpec});
+  } else {
+    res.json({error: 'not found'});
+    res.status(404).end();
+  }
 });
+
+// export current versions of all records in this notebook
+api.get(
+  '/notebooks/:id/records/',
+  requireAuthenticationAPI,
+  async (req, res) => {
+    const records = await getNotebookRecords(req.params.id);
+    if (records) {
+      res.json({records});
+    } else {
+      res.json({error: 'notebook not found'});
+      res.status(404).end();
+    }
+  }
+);

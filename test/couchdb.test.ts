@@ -18,11 +18,16 @@
  *   Tests for the interface to couchDB
  */
 
-import {getProjectMetaDB, initialiseDatabases} from '../src/couchdb';
+import {
+  getDirectoryDB,
+  getProjectMetaDB,
+  initialiseDatabases,
+} from '../src/couchdb';
 import {
   createNotebook,
   getNotebookMetadata,
   getNotebooks,
+  getNotebookUISpec,
 } from '../src/couchdb/notebooks';
 import * as fs from 'fs';
 
@@ -30,6 +35,22 @@ jest.mock('pouchdb');
 
 test('check initialise', () => {
   initialiseDatabases();
+
+  const directoryDB = getDirectoryDB();
+  expect(directoryDB).not.toBe(undefined);
+  if (directoryDB) {
+    try {
+      const default_document = directoryDB.get('default') as any;
+      expect(default_document.name).toBe('default');
+
+      const permissions_document = directoryDB.get(
+        '_design/permissions'
+      ) as any;
+      expect(permissions_document['_id']).toBe('_design/permissions');
+    } catch (error) {
+      console.log(error);
+    }
+  }
 });
 
 test('getNotebooks', async () => {
@@ -80,6 +101,26 @@ test('getNotebookMetadata', async () => {
         metadata['lead_institution']
       );
       expect(retrievedMetadata['name']).toBe(name);
+    }
+  }
+});
+
+test('getNotebookUISpec', async () => {
+  initialiseDatabases();
+
+  const jsonText = fs.readFileSync('./notebooks/sample_notebook.json', 'utf-8');
+  const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
+  const name = 'Test Notebook';
+  const projectID = await createNotebook(name, uiSpec, metadata);
+
+  expect(projectID).not.toBe(undefined);
+  if (projectID) {
+    const retrieved = await getNotebookUISpec(projectID);
+
+    expect(retrieved).not.toBeNull();
+    if (retrieved) {
+      expect(retrieved['fviews'].length).toBe(uiSpec.fviews.length);
+      expect(retrieved['fields']).not.toBe(undefined);
     }
   }
 });

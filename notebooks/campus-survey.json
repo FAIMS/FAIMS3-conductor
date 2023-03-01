@@ -2,26 +2,26 @@
     "metadata": {
         "name": "Campus Survey Demo",
         "access": {
-            "accessFORM1": ["admin"],
-            "accessFORM2": ["admin"]
+            "accessSurveyAreaForm": ["admin"],
+            "accessLandscapeElementForm": ["admin"]
         },
         "accesses":   ["admin", "moderator", "team"],
         "forms": {
-            "FORM1":
+            "SurveyAreaForm":
             {
-                "submitActionFORM1": "Save and New",
-                "annotationFORM1": true,
-                "uncertaintyFORM1": false,
-                "formaccessinheritFORM1": false,
-                "visibleFORM1": true
+                "submitActionSurveyAreaForm": "Save and New",
+                "annotationSurveyAreaForm": true,
+                "uncertaintySurveyAreaForm": false,
+                "formaccessinheritSurveyAreaForm": false,
+                "visibleSurveyAreaForm": true
             },
-            "FORM2":
+            "LandscapeElementForm":
             {
-                "submitActionFORM2": "Save and New",
-                "annotationFORM2": true,
-                "uncertaintyFORM2": false,
-                "formaccessinheritFORM2": false,
-                "visibleFORM2": true
+                "submitActionLandscapeElementForm": "Save and New",
+                "annotationLandscapeElementForm": true,
+                "uncertaintyLandscapeElementForm": false,
+                "formaccessinheritLandscapeElementForm": false,
+                "visibleLandscapeElementForm": true
             }
         },
         "ispublic": false,
@@ -35,8 +35,8 @@
         "project_lead": "Penny Crook",
         "project_status": "New",
         "sections": {
-            "FORM1SECTION1": {
-                "sectiondescriptionFORM1SECTION1": "Here you will describe the survey session."
+            "SurveyAreaFormSECTION1": {
+                "sectiondescriptionSurveyAreaFormSECTION1": "Here you will describe the survey session."
             }
         },
         "attachments": {
@@ -231,14 +231,14 @@
                     }
                 }
             },
-            "hridFORM2": {
+            "hridLandscapeElementForm": {
                 "component-namespace": "faims-custom",
                 "component-name": "TemplatedStringField",
                 "type-returned": "faims-core::String",
                 "component-parameters": {
                     "fullWidth": true,
-                    "name": "hridFORM2",
-                    "id": "hridFORM2",
+                    "name": "hridLandscapeElementForm",
+                    "id": "hridLandscapeElementForm",
                     "helperText": "This is unique ID for each landscape element composed from an auto-incrementer and the element type.",
                     "variant": "filled",
                     "required": true,
@@ -288,7 +288,7 @@
                     "variant": "outlined",
                     "required": true,
                     "num_digits": 5,
-                    "form_id": "FORM2SECTION1",
+                    "form_id": "LandscapeElementFormSECTION1",
                     "label": "AutoIncrementer"
                 },
                 "validationSchema": [
@@ -649,14 +649,14 @@
                     }
                 }
             },
-            "hridFORM1": {
+            "hridSurveyAreaForm": {
                 "component-namespace": "faims-custom",
                 "component-name": "TemplatedStringField",
                 "type-returned": "faims-core::String",
                 "component-parameters": {
                     "fullWidth": true,
-                    "name": "hridFORM1",
-                    "id": "hridFORM1",
+                    "name": "hridSurveyAreaForm",
+                    "id": "hridSurveyAreaForm",
                     "helperText": "A read-only field composited from campus-zone and nickname to make a custom ID.",
                     "variant": "filled",
                     "required": true,
@@ -704,7 +704,7 @@
                     "helperText": "Associate/record new street furniture with this survey area",
                     "variant": "outlined",
                     "required": false,
-                    "related_type": "FORM2",
+                    "related_type": "LandscapeElementForm",
                     "relation_type": "faims-core::Child",
                     "InputProps": {
                         "type": "text"
@@ -926,7 +926,7 @@
                     "helperText": "Select or Add new related survey area",
                     "variant": "outlined",
                     "required": false,
-                    "related_type": "FORM1",
+                    "related_type": "SurveyAreaForm",
                     "relation_type": "faims-core::Linked",
                     "InputProps":
                     {
@@ -958,7 +958,7 @@
                     ]
                     ],
                     "related_type_label": "Area",
-                    "current_form": "FORM1",
+                    "current_form": "SurveyAreaForm",
                     "current_form_label": "Area"
                 },
                 "validationSchema":
@@ -986,9 +986,9 @@
             }
         },
         "fviews": {
-            "FORM1SECTION1": {
+            "SurveyAreaFormSECTION1": {
                 "fields": [
-                    "hridFORM1",
+                    "hridSurveyAreaForm",
                     "newfield800c3f33",
                     "newfieldefa5e828",
                     "newfield530132cf",
@@ -1001,9 +1001,9 @@
                 "uidesign": "form",
                 "label": "Survey Details"
             },
-            "FORM2SECTION1": {
+            "LandscapeElementFormSECTION1": {
                 "fields": [
-                    "hridFORM2",
+                    "hridLandscapeElementForm",
                     "newfielde48d0b3e",
                     "newfield45892ead",
                     "newfieldb284a817",
@@ -1017,7 +1017,7 @@
                 "uidesign": "form",
                 "label": "Description"
             },
-            "FORM1SECTION2": {
+            "SurveyAreaFormSECTION2": {
                 "fields": [
                     "newfield2fffda00",
                     "newfield708566a7"
@@ -1033,23 +1033,23 @@
             }
         },
         "viewsets": {
-            "FORM1": {
+            "SurveyAreaForm": {
                 "views": [
-                    "FORM1SECTION1",
-                    "FORM1SECTION2"
+                    "SurveyAreaFormSECTION1",
+                    "SurveyAreaFormSECTION2"
                 ],
                 "label": "Survey Area"
             },
-            "FORM2": {
+            "LandscapeElementForm": {
                 "views": [
-                    "FORM2SECTION1"
+                    "LandscapeElementFormSECTION1"
                 ],
                 "label": "Landscape Element"
             }
         },
         "visible_types": [
-            "FORM1",
-            "FORM2"
+            "SurveyAreaForm",
+            "LandscapeElementForm"
         ]
     }
 }

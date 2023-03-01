@@ -13,9 +13,9 @@
  * See, the License, for the specific language governing permissions and
  * limitations under the License.
  *
- * Filename: initCouchDB.js
+ * Filename: initialise.js
  * Description:
- *   Functions to create database contents in couchdb
+ *   Functions to initialise the databases required for FAIMS in couchdb
  */
 
 import {CONDUCTOR_PUBLIC_URL} from '../buildconfig';
@@ -70,12 +70,23 @@ export const initialiseDirectoryDB = async (
     },
   };
 
+  const permissions = {
+    _id: '_design/permissions',
+    validate_doc_update: `function(newDoc, oldDoc, userCtx) {
+      if (userCtx.roles.indexOf('_admin') >= 0) {
+        return;
+      }
+      throw({forbidden: "Access denied. Only the FAIMS admin can modify the directory."});
+    }`,
+  };
+
   if (db) {
     // do we already have a default document?
     try {
       await db.get('default');
     } catch {
       await db.put(directoryDoc);
+      await db.put(permissions);
 
       // directory needs to be public
       const security = db.security();

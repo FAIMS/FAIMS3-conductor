@@ -85,9 +85,10 @@ export const createProjectDB = (
 export const getProjectMetaDB = async (
   projectID: ProjectID
 ): Promise<PouchDB.Database | undefined> => {
-  if (_projectsDB) {
+  const projectsDB = getProjectsDB();
+  if (projectsDB) {
     try {
-      const projectDoc = (await _projectsDB.get(
+      const projectDoc = (await projectsDB.get(
         projectID
       )) as unknown as ProjectObject;
       if (projectDoc.metadata_db) {
@@ -98,6 +99,36 @@ export const getProjectMetaDB = async (
         if (LOCAL_COUCHDB_AUTH !== undefined) {
           pouch_options.auth = LOCAL_COUCHDB_AUTH;
         }
+        return new PouchDB(dbname, pouch_options);
+      }
+    } catch (error) {
+      console.error('Error getting project metadata DB for ', projectID);
+      return undefined;
+    }
+  }
+  return undefined;
+};
+
+export const getProjectDataDB = async (
+  projectID: ProjectID
+): Promise<PouchDB.Database | undefined> => {
+  console.log('getting project data db for ', projectID);
+  const projectsDB = getProjectsDB();
+  if (projectsDB) {
+    try {
+      const projectDoc = (await projectsDB.get(
+        projectID
+      )) as unknown as ProjectObject;
+      console.log(projectDoc);
+      if (projectDoc.data_db) {
+        const dbname = COUCHDB_URL + projectDoc.data_db.db_name;
+        const pouch_options: PouchDB.Configuration.RemoteDatabaseConfiguration =
+          {};
+
+        if (LOCAL_COUCHDB_AUTH !== undefined) {
+          pouch_options.auth = LOCAL_COUCHDB_AUTH;
+        }
+        console.log('returning a db connection');
         return new PouchDB(dbname, pouch_options);
       }
     } catch (error) {
