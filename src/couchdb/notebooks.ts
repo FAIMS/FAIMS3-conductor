@@ -356,12 +356,16 @@ export const getNotebookUISpec = async (
   return null;
 };
 
+/**
+ * getNotebookRecords - retrieve all data records for this notebook
+ * including record metadata, data fields and annotations
+ * @param project_id project identifier
+ * @returns an array of records
+ */
 export const getNotebookRecords = async (
   project_id: string
 ): Promise<any | null> => {
-  // TODO: use the faims3-datamodel module to read the notebook data
   const records = await getRecordsWithRegex(project_id, '.*', true);
-  console.log('Records: ', project_id, records);
   const fullRecords: any[] = [];
   for (let i = 0; i < records.length; i++) {
     const data = await getFullRecordData(
@@ -371,7 +375,6 @@ export const getNotebookRecords = async (
       true
     );
     fullRecords.push(data);
-  };
-  console.log('FULL', fullRecords);
+  }
   return fullRecords;
 };

@@ -76,7 +76,7 @@ export const initialiseDirectoryDB = async (
       if (userCtx.roles.indexOf('_admin') >= 0) {
         return;
       }
-      throw({forbidden: \"Access denied. Only the FAIMS admin can modify the directory.\"});
+      throw({forbidden: "Access denied. Only the FAIMS admin can modify the directory."});
     }`,
   };
 
