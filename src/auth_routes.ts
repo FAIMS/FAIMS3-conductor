@@ -63,7 +63,7 @@ export function add_auth_routes(app: any, handlers: any) {
 
   app.get('/auth/', (req: any, res: any) => {
     // Allow the user to decide what auth mechanism to use
-    console.log('XXXXXX', handlers); 
+    console.log('XXXXXX', handlers);
     const available_provider_info = [];
     for (const handler of handlers) {
       available_provider_info.push({
