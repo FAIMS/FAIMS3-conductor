@@ -28,7 +28,7 @@ import {get_strategy as local_get_strategy} from './local';
 
 const AVAILABLE_AUTH_PROVIDERS: {[name: string]: any} = {
   datacentral: dc_get_strategy,
-  google: google_get_strategy
+  google: google_get_strategy,
 };
 
 export function add_auth_providers(providers_to_use: string[]) {

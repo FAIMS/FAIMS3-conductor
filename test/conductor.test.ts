@@ -18,7 +18,8 @@
  *   Implement some basic tests for API functionality of conductor
  */
 
-jest.mock('pouchdb');
+import PouchDB from 'pouchdb';
+PouchDB.plugin(require('pouchdb-adapter-memory')); // enable memory adapter for testing
 
 import request from 'supertest';
 import {app} from '../src/routes';

@@ -19,7 +19,11 @@
  */
 
 import {registerLocalUser} from '../auth_providers/local';
-import {CONDUCTOR_PUBLIC_URL, EMAIL_FROM_ADDRESS, LOCAL_COUCHDB_AUTH} from '../buildconfig';
+import {
+  CONDUCTOR_PUBLIC_URL,
+  EMAIL_FROM_ADDRESS,
+  LOCAL_COUCHDB_AUTH,
+} from '../buildconfig';
 
 export const initialiseProjectsDB = async (
   db: PouchDB.Database | undefined
@@ -89,20 +93,22 @@ export const initialiseDirectoryDB = async (
       await db.put(directoryDoc);
       await db.put(permissions);
 
-      // directory needs to be public
-      const security = db.security();
-      security.admins.roles.removeAll();
-      security.members.roles.removeAll();
-      await security.save();
+      // can't save security on an in-memory database so skip if testing
+      if (process.env.NODE_ENV !== 'test') {
+        // directory needs to be public
+        const security = db.security();
+        security.admins.roles.removeAll();
+        security.members.roles.removeAll();
+        await security.save();
+      }
     }
   }
 };
 
 export const initialiseUserDB = async (db: PouchDB.Database | undefined) => {
   // register a local admin user with the same password as couchdb
-  console.log('initialisng user db');
   if (db && LOCAL_COUCHDB_AUTH) {
-    registerLocalUser(
+    await registerLocalUser(
       'Admin User',
       EMAIL_FROM_ADDRESS,
       LOCAL_COUCHDB_AUTH.password

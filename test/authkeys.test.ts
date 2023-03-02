@@ -18,7 +18,8 @@
  *   Tests for authkeys handling
  */
 
-jest.mock('pouchdb');
+import PouchDB from 'pouchdb';
+PouchDB.plugin(require('pouchdb-adapter-memory')); // enable memory adapter for testing
 
 import {testProp, fc} from 'jest-fast-check';
 

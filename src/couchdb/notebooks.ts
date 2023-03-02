@@ -69,7 +69,6 @@ export const getNotebooks = async (): Promise<any[]> => {
       const project_id = project._id;
       const full_project_id = resolve_project_id(listing_id, project_id);
       const projectMeta = await getNotebookMetadata(project_id);
-      console.log(projectMeta);
       if (await shouldDisplayProject(full_project_id)) {
         output.push({
           name: project.name,
@@ -226,11 +225,14 @@ export const createNotebook = async (
     return undefined;
   }
 
-  const metaSecurity = await metaDB.security();
-  metaSecurity.admins.roles.add(CLUSTER_ADMIN_GROUP_NAME);
-  metaSecurity.members.roles.add(`${project_id}||team`);
-  metaSecurity.members.roles.add(`${project_id}||admin`);
-  await metaSecurity.save();
+  // can't save security on a memory database so skip this if we're testing
+  if (process.env.NODE_ENV !== 'test') {
+    const metaSecurity = await metaDB.security();
+    metaSecurity.admins.roles.add(CLUSTER_ADMIN_GROUP_NAME);
+    metaSecurity.members.roles.add(`${project_id}||team`);
+    metaSecurity.members.roles.add(`${project_id}||admin`);
+    await metaSecurity.save();
+  }
 
   // derive autoincrementers from uispec
   const autoIncrementers = getAutoIncrementers(uispec);
@@ -250,11 +252,14 @@ export const createNotebook = async (
     return undefined;
   }
 
-  const dataSecurity = await dataDB.security();
-  dataSecurity.admins.roles.add(CLUSTER_ADMIN_GROUP_NAME);
-  dataSecurity.members.roles.add(`${project_id}||team`);
-  dataSecurity.members.roles.add(`${project_id}||admin`);
-  await dataSecurity.save();
+  // can't save security on a memory database so skip this if we're testing
+  if (process.env.NODE_ENV !== 'test') {
+    const dataSecurity = await dataDB.security();
+    dataSecurity.admins.roles.add(CLUSTER_ADMIN_GROUP_NAME);
+    dataSecurity.members.roles.add(`${project_id}||team`);
+    dataSecurity.members.roles.add(`${project_id}||admin`);
+    await dataSecurity.save();
+  }
 
   try {
     await dataDB.put(attachmentFilterDoc);

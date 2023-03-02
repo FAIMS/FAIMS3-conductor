@@ -19,7 +19,6 @@
  */
 
 import {pbkdf2} from 'crypto';
-import {hash} from 'fast-check';
 import {Strategy} from 'passport-local';
 import {
   addEmailsToUser,
@@ -57,23 +56,23 @@ export const get_strategy = () => {
   );
 };
 
-export const registerLocalUser = (
+export const registerLocalUser = async (
   name: string,
   email: string,
   password: string
 ) => {
-  getOrCreatePouchUser(email).then(user => {
-    pbkdf2(password, SALT, 100000, 64, 'sha256', (err, hashedPassword) => {
-      if (err) {
-        throw Error('error hashing password');
-      }
-      user.profiles['local'] = {
-        password: hashedPassword.toString(),
-      };
-      console.log('new local user', user);
+  const user = await getOrCreatePouchUser(email);
 
-      addEmailsToUser(user, [email]);
-      updateUser(user);
-    });
+  pbkdf2(password, SALT, 100000, 64, 'sha256', (err, hashedPassword) => {
+    if (err) {
+      throw Error('error hashing password');
+    }
+    user.profiles['local'] = {
+      password: hashedPassword.toString(),
+    };
+    //console.log('new local user', user);
+
+    addEmailsToUser(user, [email]);
+    updateUser(user);
   });
 };

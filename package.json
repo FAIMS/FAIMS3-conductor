@@ -11,7 +11,7 @@
     "prestart": "npm run-script compile",
     "start": "node .",
     "watch": "nodemon --ignore build --ext ts --exec 'tsc --incremental && node .'",
-    "test": "env-cmd jest --silent=false test/*.test.ts",
+    "test": "env-cmd -f .env.test jest --silent=false test/*.test.ts",
     "initdb": "env-cmd node scripts/initialise.js",
     "load-notebooks": "env-cmd node scripts/loadNotebook.js"
   },
@@ -70,6 +70,7 @@
     "nano": "^10.1.1",
     "node-fetch": "^3.3.0",
     "nodemon": "^2.0.20",
+    "pouchdb-adapter-memory": "^8.0.1",
     "supertest": "^6.3.3"
   }
 }

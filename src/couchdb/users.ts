@@ -45,6 +45,7 @@ export async function getOrCreatePouchUser(
       const user = (await users_db.get(user_id)) as PouchUser;
       return user;
     } else {
+      console.log('Failed to connect to user db');
       throw Error('Failed to connect to user database');
     }
   } catch (err: any) {
@@ -59,8 +60,8 @@ export async function getOrCreatePouchUser(
         owned: [],
       };
     } else {
-      console.error('Failed to get user', err);
-      throw Error('Failed to get user');
+      //console.error('Failed to get user', err);
+      throw Error(`Failed to get user ${user_id}`);
     }
   }
 }
@@ -264,7 +265,7 @@ export function removeOtherRoleFromUser(
  * removeRoleFromEmail - modify the roles of a user in the database, removing some permissions
  *   will update the database
  * @param email user email address
- * @param project_id Project identifier to remove permissions from 
+ * @param project_id Project identifier to remove permissions from
  * @param role role to remove permissions for
  */
 export async function removeRoleFromEmail(

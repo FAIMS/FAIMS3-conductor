@@ -17,6 +17,8 @@
  * Description:
  *   Tests for the interface to couchDB
  */
+import PouchDB from 'pouchdb';
+PouchDB.plugin(require('pouchdb-adapter-memory')); // enable memory adapter for testing
 
 import {
   getDirectoryDB,
@@ -31,36 +33,30 @@ import {
 } from '../src/couchdb/notebooks';
 import * as fs from 'fs';
 
-jest.mock('pouchdb');
-
-test('check initialise', () => {
-  initialiseDatabases();
+test('check initialise', async () => {
+  await initialiseDatabases();
 
   const directoryDB = getDirectoryDB();
   expect(directoryDB).not.toBe(undefined);
   if (directoryDB) {
-    try {
-      const default_document = directoryDB.get('default') as any;
-      expect(default_document.name).toBe('default');
+    const default_document = (await directoryDB.get('default')) as any;
+    expect(default_document.name).toBe('Default instance');
 
-      const permissions_document = directoryDB.get(
-        '_design/permissions'
-      ) as any;
-      expect(permissions_document['_id']).toBe('_design/permissions');
-    } catch (error) {
-      console.log(error);
-    }
+    const permissions_document = (await directoryDB.get(
+      '_design/permissions'
+    )) as any;
+    expect(permissions_document['_id']).toBe('_design/permissions');
   }
 });
 
 test('getNotebooks', async () => {
-  initialiseDatabases();
+  await initialiseDatabases();
   const notebooks = await getNotebooks();
   expect(notebooks).not.toBeNull();
 });
 
 test('createNotebook', async () => {
-  initialiseDatabases();
+  await initialiseDatabases();
 
   const jsonText = fs.readFileSync('./notebooks/sample_notebook.json', 'utf-8');
   const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
@@ -84,13 +80,12 @@ test('createNotebook', async () => {
 });
 
 test('getNotebookMetadata', async () => {
-  initialiseDatabases();
+  await initialiseDatabases();
 
   const jsonText = fs.readFileSync('./notebooks/sample_notebook.json', 'utf-8');
   const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
   const name = 'Test Notebook';
   const projectID = await createNotebook(name, uiSpec, metadata);
-
   expect(projectID).not.toBe(undefined);
   if (projectID) {
     const retrievedMetadata = await getNotebookMetadata(projectID);
@@ -106,7 +101,7 @@ test('getNotebookMetadata', async () => {
 });
 
 test('getNotebookUISpec', async () => {
-  initialiseDatabases();
+  await initialiseDatabases();
 
   const jsonText = fs.readFileSync('./notebooks/sample_notebook.json', 'utf-8');
   const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
