@@ -59,7 +59,8 @@ export const get_strategy = () => {
 export const registerLocalUser = async (
   name: string,
   email: string,
-  password: string
+  password: string,
+  roles: string[]
 ) => {
   const user = await getOrCreatePouchUser(email);
 
@@ -70,9 +71,10 @@ export const registerLocalUser = async (
     user.profiles['local'] = {
       password: hashedPassword.toString(),
     };
-    //console.log('new local user', user);
-
+    user.name = name;
+    user.roles = roles;
     addEmailsToUser(user, [email]);
+    console.log('new local user', user);
     updateUser(user);
   });
 };

@@ -111,7 +111,8 @@ export const initialiseUserDB = async (db: PouchDB.Database | undefined) => {
     await registerLocalUser(
       'Admin User',
       EMAIL_FROM_ADDRESS,
-      LOCAL_COUCHDB_AUTH.password
+      LOCAL_COUCHDB_AUTH.password,
+      ['cluster-admin']
     );
   }
 };
