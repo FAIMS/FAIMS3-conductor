@@ -23,7 +23,7 @@ import passport from 'passport';
 
 import {CONDUCTOR_PUBLIC_URL} from './buildconfig';
 import {DoneFunction} from './types';
-import {get_user_from_username} from './couchdb/users';
+import {getUserFromEmailOrUsername} from './couchdb/users';
 
 const AVAILABLE_AUTH_PROVIDER_DISPLAY_INFO: {[name: string]: any} = {
   datacentral: {
@@ -47,7 +47,7 @@ passport.serializeUser((user: Express.User, done: DoneFunction) => {
 });
 
 passport.deserializeUser((id: string, done: DoneFunction) => {
-  get_user_from_username(id)
+  getUserFromEmailOrUsername(id)
     .then(user_data => {
       done(null, user_data);
     })

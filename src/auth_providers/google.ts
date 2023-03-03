@@ -24,43 +24,62 @@ import {GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET} from '../buildconfig';
 import {
   addEmailsToUser,
   updateUser,
-  getOrCreatePouchUser,
-  pouch_user_to_express_user,
+  getUserFromEmailOrUsername,
+  createUser,
 } from '../couchdb/users';
-import {PouchUser} from '../datamodel/users';
 
-function oauth_verify(
+async function oauth_verify(
   req: Request,
   accessToken: string,
   refreshToken: string,
   results: any,
   profile: any,
-  cb: VerifyCallback
+  done: VerifyCallback
 ) {
   console.debug('google oauth', accessToken, refreshToken, results, profile);
-  const user_id = profile.id;
-  getOrCreatePouchUser(user_id)
-    .then((user: PouchUser) => {
-      if (user.name === '') {
-        user.name = profile.displayName;
-      }
-      addEmailsToUser(
-        user,
-        profile.emails.filter((o: any) => o.verified).map((o: any) => o.value)
-      );
-      user.profiles['google'] = profile;
 
-      return user;
-    })
-    .then(async (user: PouchUser) => {
+  // three cases:
+  //   - we have a user with this user_id from a previous google login
+  //   - we already have a user with the email address in this profile, add the profile if not there
+  //   - we don't, create a new user record and add the profile
+
+  let user = await getUserFromEmailOrUsername(profile.id);
+  if (user) {
+    // TODO: do we need to validate further? could check that the profiles match???
+    done(null, user, profile);
+  }
+
+  const emails = profile.emails
+    .filter((o: any) => o.verified)
+    .map((o: any) => o.value);
+
+  for (let i = 0; i < emails.length; i++) {
+    user = await getUserFromEmailOrUsername(emails[i]);
+    if (user) {
+      // add the profile if not already there
+      if (!('google' in user.profiles)) {
+        user.profiles['google'] = profile;
+        await updateUser(user);
+      }
+      done(null, user, profile);
+      break;
+    }
+  }
+  if (!user) {
+    let errorMsg = '';
+    // otherwise, we make a new user
+    [user, errorMsg] = await createUser(emails[0], profile.id);
+
+    if (user) {
+      user.name = profile.displayName;
+      user.profiles['google'] = profile;
+      addEmailsToUser(user, emails);
       await updateUser(user);
-      return pouch_user_to_express_user(user);
-    })
-    .then((user: Express.User) => cb(null, user, profile))
-    .catch(err => {
-      console.error('User saving error', err);
-      cb(new Error('Failed to save user'), undefined);
-    });
+      done(null, user, profile);
+    } else {
+      throw Error(errorMsg);
+    }
+  }
 }
 
 export function get_strategy(callback_url: string): Strategy {

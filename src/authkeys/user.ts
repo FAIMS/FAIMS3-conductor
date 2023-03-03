@@ -22,14 +22,14 @@
 import {create_auth_key} from './create';
 import type {CouchDBUsername} from '../datamodel/users';
 import type {SigningKey} from './types';
-import {get_couchdb_user_from_username} from '../couchdb/users';
+import {getUserFromEmailOrUsername} from '../couchdb/users';
 
 export async function get_user_auth_token(
   username: CouchDBUsername,
   signing_key: SigningKey
 ) {
   console.debug('Getting user roles for', username);
-  const user = await get_couchdb_user_from_username(username);
+  const user = await getUserFromEmailOrUsername(username);
   if (user === null) {
     throw Error(`No such user ${username}`);
   }

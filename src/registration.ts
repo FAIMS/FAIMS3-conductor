@@ -22,8 +22,7 @@ import {v4 as uuidv4} from 'uuid';
 
 import {NonUniqueProjectID} from './datamodel/core';
 import {RoleInvite, Email, ConductorRole} from './datamodel/users';
-import {saveUserToDB} from './couchdb/users';
-import {express_user_to_pouch_user} from './couchdb/users';
+import {updateUser} from './couchdb/users';
 import {saveInvite, deleteInvite} from './couchdb/invites';
 import {CONDUCTOR_PUBLIC_URL, CLUSTER_ADMIN_GROUP_NAME} from './buildconfig';
 import {sendEmail} from './email';
@@ -116,7 +115,7 @@ export async function inviteEmailToProject(
 ) {
   const invite: RoleInvite = {
     _id: uuidv4(),
-    requesting_user: express_user_to_pouch_user(user)._id,
+    requesting_user: user.user_id,
     email: email,
     project_id: project_id,
     role: role,
@@ -154,7 +153,7 @@ export async function acceptInvite(user: Express.User, invite: RoleInvite) {
   const project_roles = new Set(user.project_roles[invite.project_id] ?? []);
   project_roles.add(invite.role);
   user.project_roles[invite.project_id] = Array.from(project_roles);
-  await saveUserToDB(user);
+  await updateUser(user);
   await deleteInvite(invite);
 }
 

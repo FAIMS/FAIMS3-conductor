@@ -67,20 +67,84 @@ export async function getOrCreatePouchUser(
 }
 
 /**
- * getUserByEmail - retrieve a user record given their email address
- * @param email User email address
- * @returns A PouchUser record or null if the user is not in the database
+ * createUser - create a new user record ensuring that the username or password
+ *   - at least one of these needs to be supplied but the other can be empty
+ * @param email - email address
+ * @param username - username
+ * @returns a new Express.User object ready to be saved in the DB
  */
-export async function getUserByEmail(email: string): Promise<null | PouchUser> {
+export async function createUser(
+  email: string,
+  username: string
+): Promise<[Express.User | null, string]> {
+  if (!email && !username) {
+    return [null, 'at least one of username and email is required'];
+  }
+
+  const users_db = getUsersDB();
+  if (users_db) {
+    if (email && (await getUserFromEmail(email))) {
+      return [null, `user with email '${email}' already exists`];
+    }
+    if (username && (await getUserFromUsername(username))) {
+      return [null, `user with username ${username} already exists`];
+    }
+    if (!username) {
+      username = email.toLowerCase();
+    }
+
+    // make a new user record
+    return [
+      {
+        _id: username,
+        user_id: username,
+        name: '',
+        emails: [email.toLowerCase()],
+        roles: [],
+        project_roles: [] as unknown as AllProjectRoles,
+        other_roles: [],
+        owned: [],
+        profiles: {},
+      },
+      '',
+    ];
+  } else {
+    console.log('Failed to connect to user db');
+    throw Error('Failed to connect to user database');
+  }
+}
+
+/**
+ * getUserFromEmailOrUsername - find a user based on an identifier that could be either an email or username
+ * @param identifier - either an email address or username
+ * @returns The Express.User record denoted by the identifier or null if it doesn't exist
+ */
+export async function getUserFromEmailOrUsername(
+  identifier: string
+): Promise<null | Express.User> {
+  let user;
+  user = await getUserFromEmail(identifier);
+  if (!user) {
+    user = await getUserFromUsername(identifier);
+  }
+  return user;
+}
+
+/**
+ * getUserFromEmail - retrieve a user record given their email address
+ * @param email User email address
+ * @returns An Express.User record or null if the user is not in the database
+ */
+async function getUserFromEmail(email: string): Promise<null | Express.User> {
   const users_db = getUsersDB();
   if (users_db) {
     const result = await users_db.find({
-      selector: {emails: {$elemMatch: {$eq: email}}},
+      selector: {emails: {$elemMatch: {$eq: email.toLowerCase()}}},
     });
     if (result.docs.length === 0) {
       return null;
     } else if (result.docs.length === 1) {
-      return result.docs[0] as PouchUser;
+      return result.docs[0] as Express.User;
     } else {
       throw Error(`Multiple conflicting users with email ${email}`);
     }
@@ -90,19 +154,41 @@ export async function getUserByEmail(email: string): Promise<null | PouchUser> {
 }
 
 /**
- * updateUser - update a user record
- * @param user A PouchUser record to be written to the database
+ * getUserFromUsername - retrieve a user record given their username
+ * @param username - the username
+ * @returns An Express.User record or null if the user is not in the database
  */
-export async function updateUser(user: PouchUser): Promise<void> {
+async function getUserFromUsername(
+  username: CouchDBUsername
+): Promise<Express.User | null> {
   const users_db = getUsersDB();
   if (users_db) {
     try {
+      return (await users_db.get(username)) as Express.User;
+    } catch (err) {
+      return null;
+    }
+  } else {
+    throw Error('Failed to connect to user database');
+  }
+}
+
+/**
+ * updateUser - update a user record
+ * @param user An Express.User record to be written to the database
+ */
+export async function updateUser(user: Express.User): Promise<void> {
+  const users_db = getUsersDB();
+  if (users_db) {
+    try {
+      user._id = user.user_id;
       await users_db.put(user);
     } catch (err: any) {
       if (err.status === 409) {
         try {
-          const existing_user = await users_db.get(user._id);
+          const existing_user = await users_db.get(user.user_id);
           user._rev = existing_user._rev;
+          console.log('updating user', user);
           await users_db.put(user);
         } catch (err) {
           console.error('Failed to update user in conflict', err);
@@ -115,41 +201,6 @@ export async function updateUser(user: PouchUser): Promise<void> {
     }
   } else {
     throw Error('Failed to connect to user database');
-  }
-}
-
-// used in authkeys/users.ts to get properties '.roles' and '.name'
-export async function get_couchdb_user_from_username(
-  username: CouchDBUsername
-): Promise<PouchUser | null> {
-  const users_db = getUsersDB();
-  if (users_db) {
-    try {
-      const user = await users_db.get(username);
-      return user as PouchUser;
-    } catch (err) {
-      console.error('Failed to get user', err);
-      return null;
-    }
-  } else {
-    throw Error('Failed to connect to user database');
-  }
-}
-
-// called in auth_routes.ts in deserializeUser
-export async function get_user_from_username(
-  username: CouchDBUsername
-): Promise<Express.User | null> {
-  try {
-    const couch_user = await get_couchdb_user_from_username(username);
-    if (couch_user === null) {
-      return null;
-    }
-    const user = pouch_user_to_express_user(couch_user);
-    return user;
-  } catch (err) {
-    console.error('Failed to get user', err);
-    return null;
   }
 }
 
@@ -190,50 +241,44 @@ function couchDBRolesToConductorRoles(
       project_roles[project_name] = proj_roles;
     }
   }
-
+  console.log('ROLES', project_roles, other_roles);
   return [project_roles, other_roles];
 }
 
-export function express_user_to_pouch_user(user: Express.User): PouchUser {
-  return {
-    type: 'user',
-    _id: user.user_id,
-    name: user.name,
-    emails: user.emails,
-    roles: conductorRolesToCouchDBRoles(user.project_roles, user.other_roles),
-    owned: user.owned,
-    profiles: user.profiles,
-  };
-}
+// export function express_user_to_pouch_user(user: Express.User): PouchUser {
+//   return {
+//     type: 'user',
+//     _id: user.user_id,
+//     name: user.name,
+//     emails: user.emails,
+//     roles: conductorRolesToCouchDBRoles(user.project_roles, user.other_roles),
+//     owned: user.owned,
+//     profiles: user.profiles,
+//   };
+// }
 
-export function pouch_user_to_express_user(user: PouchUser): Express.User {
-  const [project_roles, other_roles] = couchDBRolesToConductorRoles(user.roles);
-  return {
-    user_id: user._id,
-    name: user.name,
-    emails: user.emails,
-    project_roles: project_roles,
-    other_roles: other_roles,
-    owned: user.owned,
-    profiles: user.profiles,
-  };
-}
-
-export async function saveUserToDB(user: Express.User) {
-  await updateUser(express_user_to_pouch_user(user));
-}
+// export function pouch_user_to_express_user(user: PouchUser): Express.User {
+//   const [project_roles, other_roles] = couchDBRolesToConductorRoles(user.roles);
+//   return {
+//     user_id: user._id,
+//     name: user.name,
+//     emails: user.emails,
+//     roles: user.roles,             // copied over so that we can get rid of PouchUser eventually
+//     project_roles: project_roles,
+//     other_roles: other_roles,
+//     owned: user.owned,
+//     profiles: user.profiles,
+//   };
+// }
 
 /**
  * addEmailsToUser - modify the 'emails' property of this record (but don't save it to the db)
- * @param user a PouchUser record
+ * @param user an Express.User record
  * @param emails an array of email addresses
  */
-export function addEmailsToUser(
-  user: PouchUser | Express.User,
-  emails: string[]
-) {
+export function addEmailsToUser(user: Express.User, emails: string[]) {
   const all_emails = new Set(user.emails.concat(emails));
-  user.emails = Array.from(all_emails);
+  user.emails = Array.from(all_emails).map(e => e.toLowerCase());
 }
 
 export function removeProjectRoleFromUser(
@@ -276,12 +321,12 @@ export async function removeRoleFromEmail(
   const users_db = getUsersDB();
   if (users_db) {
     const couch_role = projectRoleToCouchRole(project_id, role);
-    const users: PouchUser[] = [];
+    const users: Express.User[] = [];
     const res = await users_db.find({
       selector: {emails: {$elemMatch: {$eq: email}}},
     });
     for (const user of res.docs) {
-      const u = user as PouchUser;
+      const u = user as Express.User;
       const roles = u.roles;
       u.roles = roles.filter(r => r !== couch_role);
       users.push(u);

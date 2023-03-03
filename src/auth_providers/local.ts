@@ -20,13 +20,7 @@
 
 import {pbkdf2} from 'crypto';
 import {Strategy} from 'passport-local';
-import {
-  addEmailsToUser,
-  getOrCreatePouchUser,
-  getUserByEmail,
-  pouch_user_to_express_user,
-  updateUser,
-} from '../couchdb/users';
+import {createUser, getUserFromEmailOrUsername, updateUser} from '../couchdb/users';
 
 const SALT = 'someNiceSaltForYourPassword';
 
@@ -37,14 +31,14 @@ type LocalProfile = {
 export const get_strategy = () => {
   return new Strategy(
     async (username: string, password: string, done: CallableFunction) => {
-      const user = await getUserByEmail(username);
+      const user = await getUserFromEmailOrUsername(username);
       if (user) {
         // check the password...
         pbkdf2(password, SALT, 100000, 64, 'sha256', (err, hashedPassword) => {
           const storedPassword = (user.profiles['local'] as LocalProfile)
             .password as string;
           if (hashedPassword.toString() === storedPassword) {
-            return done(null, pouch_user_to_express_user(user));
+            return done(null, user);
           } else {
             return done(null, false);
           }
@@ -56,14 +50,36 @@ export const get_strategy = () => {
   );
 };
 
+/**
+ * registerLocalUser - create a new user account
+ *   either `username` or `email` is required to make an account
+ *   no existing account should exist with these credentials
+ * @param username - a username, not previously used
+ * @param email - an email address, not previously used
+ * @param name - user's full name
+ * @param password - a password
+ * @param roles - a list of user roles
+ */
 export const registerLocalUser = async (
-  name: string,
+  username: string,
   email: string,
+  name: string,
   password: string,
   roles: string[]
 ) => {
-  const user = await getOrCreatePouchUser(email);
+  const [user, error] = await createUser(email, username);
+  if (user) {
+    user.name = name;
+    user.roles = roles;
+    addLocalPasswordForUser(user, password);
+  }
+  return [user, error];
+};
 
+export const addLocalPasswordForUser = async (
+  user: Express.User,
+  password: string
+) => {
   pbkdf2(password, SALT, 100000, 64, 'sha256', (err, hashedPassword) => {
     if (err) {
       throw Error('error hashing password');
@@ -71,9 +87,6 @@ export const registerLocalUser = async (
     user.profiles['local'] = {
       password: hashedPassword.toString(),
     };
-    user.name = name;
-    user.roles = roles;
-    addEmailsToUser(user, [email]);
     console.log('new local user', user);
     updateUser(user);
   });

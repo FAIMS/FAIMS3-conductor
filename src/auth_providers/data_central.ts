@@ -31,13 +31,12 @@ import {
   HAVE_DATACENTRAL_MANAGE_ROLES,
 } from '../buildconfig';
 import {
-  addEmailsToUser,
   updateUser,
-  getOrCreatePouchUser,
-  pouch_user_to_express_user,
+  getUserFromEmailOrUsername,
+  createUser,
 } from '../couchdb/users';
 import {VerifyCallback, DoneFunction} from '../types';
-import {PouchUser, UserServiceProfileUnlocked} from '../datamodel/users';
+import {UserServiceProfileUnlocked} from '../datamodel/users';
 
 const MAIN_GROUPS = ['editor', 'public', 'moderator'];
 export const LOGOUT_URL = 'https://auth.datacentral.org.au/cas/logout';
@@ -90,49 +89,60 @@ function get_user_id(profile: UserServiceProfileUnlocked): string {
   return profile.id.toLowerCase().trim();
 }
 
-function addDCRoles(user: PouchUser, roles: string[]) {
+function addDCRoles(user: Express.User, roles: string[]) {
   // TODO: This should be modified work with roles being managed by conductor
   // itself
   user.roles = roles;
 }
 
-function oauth_verify(
+async function oauth_verify(
   req: Request,
   accessToken: string,
   refreshToken: string,
   results: any,
   profile: any,
-  cb: VerifyCallback
+  done: VerifyCallback
 ) {
   console.debug('DC oauth', accessToken, refreshToken, results, profile);
-  const user_id = get_user_id(profile);
-  getOrCreatePouchUser(user_id)
-    .then((user: PouchUser) => {
-      if (HAVE_DATACENTRAL_MANAGE_ROLES) {
-        addDCRoles(
-          user,
-          dc_groups_to_couchdb_roles(
-            ensure_string_array(profile.attributes.groups)
-          )
-        );
-      }
-      if (user.name === '') {
-        user.name = profile.attributes.displayName;
-      }
-      addEmailsToUser(user, [profile.attributes.mail]);
-      user.profiles['datacentral'] = profile;
 
-      return user;
-    })
-    .then(async (user: PouchUser) => {
-      await updateUser(user);
-      return pouch_user_to_express_user(user);
-    })
-    .then((user: Express.User) => cb(null, user, profile))
-    .catch(err => {
-      console.error('User saving error', err);
-      cb(new Error('Failed to save user'), undefined);
-    });
+  const user_id = get_user_id(profile);
+  // three cases:
+  //   - we have a user with this user_id from a previous google login
+  //   - we already have a user with the email address in this profile, add the profile if not there
+  //   - we don't, create a new user record and add the profile
+
+  let user = await getUserFromEmailOrUsername(user_id);
+  if (user) {
+    // TODO: do we need to validate further? could check that the profiles match???
+    done(null, user, profile);
+  }
+
+  user = await getUserFromEmailOrUsername(profile.attributes.mail);
+  if (user) {
+    done(null, user, profile);
+  }
+
+  let errorMsg = '';
+  // otherwise, we make a new user
+  [user, errorMsg] = await createUser(profile.attributes.mail, user_id);
+
+  if (user) {
+    user.name = profile.displayName;
+    user.profiles['datacentral'] = profile;
+    if (HAVE_DATACENTRAL_MANAGE_ROLES) {
+      addDCRoles(
+        user,
+        dc_groups_to_couchdb_roles(
+          ensure_string_array(profile.attributes.groups)
+        )
+      );
+    }
+
+    await updateUser(user);
+    done(null, user, profile);
+  } else {
+    throw Error(errorMsg);
+  }
 }
 
 function auth_profile(oauth2: OAuth2, accessToken: string, done: DoneFunction) {
