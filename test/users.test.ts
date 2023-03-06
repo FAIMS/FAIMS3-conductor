@@ -105,6 +105,12 @@ test('user roles', async () => {
     // add some roles
     addOtherRoleToUser(newUser, 'cluster-admin');
     addOtherRoleToUser(newUser, 'chief-bobalooba');
+
+    // check that 'roles' has been updated
+    expect(newUser.roles.length).toBe(2);
+    expect(newUser.roles).toContain('cluster-admin');
+    expect(newUser.roles).toContain('chief-bobalooba');
+
     addProjectRoleToUser(newUser, 'important-project', 'admin');
 
     expect(newUser.other_roles.length).toBe(2);
@@ -113,10 +119,7 @@ test('user roles', async () => {
     expect(Object.keys(newUser.project_roles)).toContain('important-project');
     expect(newUser.project_roles['important-project']).toContain('admin');
 
-    // check that 'roles' has been updated
     expect(newUser.roles.length).toBe(3);
-    expect(newUser.roles).toContain('cluster-admin');
-    expect(newUser.roles).toContain('chief-bobalooba');
     expect(newUser.roles).toContain('important-project||admin');
 
     // add more project roles

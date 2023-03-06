@@ -19,6 +19,7 @@
  */
 import PouchDB from 'pouchdb';
 PouchDB.plugin(require('pouchdb-adapter-memory')); // enable memory adapter for testing
+PouchDB.plugin(require('pouchdb-find'));
 
 import {
   getDirectoryDB,

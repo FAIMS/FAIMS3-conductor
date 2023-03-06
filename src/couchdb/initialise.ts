@@ -124,6 +124,7 @@ export const initialiseUserDB = async (db: PouchDB.Database | undefined) => {
     );
     if (user) {
       addOtherRoleToUser(user, 'cluster-admin');
+      console.log('new user', user);
       updateUser(user);
     } else {
       console.error(error);

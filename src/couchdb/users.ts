@@ -171,6 +171,7 @@ export function addOtherRoleToUser(user: Express.User, role: string) {
   if (user.other_roles.indexOf(role) < 0) {
     user.other_roles.push(role);
   }
+  user.roles = compactRoles(user.project_roles, user.other_roles);
 }
 
 export function addProjectRoleToUser(
