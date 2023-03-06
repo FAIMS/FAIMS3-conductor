@@ -22,49 +22,12 @@
 import {getUsersDB} from '.';
 import {NonUniqueProjectID} from '../datamodel/core';
 import {
-  PouchUser,
   AllProjectRoles,
   ConductorRole,
   OtherRoles,
   CouchDBUsername,
   CouchDBUserRoles,
 } from '../datamodel/users';
-
-/**
- * getOrCreatePouchUser - retrieve a user record from the database or if it is
- * not present, create one (but don't save it in the database)
- * @param user_id User identifier
- * @returns A PouchUser record
- */
-export async function getOrCreatePouchUser(
-  user_id: string
-): Promise<PouchUser> {
-  try {
-    const users_db = getUsersDB();
-    if (users_db) {
-      const user = (await users_db.get(user_id)) as PouchUser;
-      return user;
-    } else {
-      console.log('Failed to connect to user db');
-      throw Error('Failed to connect to user database');
-    }
-  } catch (err: any) {
-    if (err.status === 404) {
-      return {
-        _id: user_id,
-        name: '',
-        emails: [],
-        type: 'user',
-        roles: [],
-        profiles: {},
-        owned: [],
-      };
-    } else {
-      //console.error('Failed to get user', err);
-      throw Error(`Failed to get user ${user_id}`);
-    }
-  }
-}
 
 /**
  * createUser - create a new user record ensuring that the username or password
@@ -87,7 +50,7 @@ export async function createUser(
       return [null, `user with email '${email}' already exists`];
     }
     if (username && (await getUserFromUsername(username))) {
-      return [null, `user with username ${username} already exists`];
+      return [null, `user with username '${username}' already exists`];
     }
     if (!username) {
       username = email.toLowerCase();
@@ -99,7 +62,7 @@ export async function createUser(
         _id: username,
         user_id: username,
         name: '',
-        emails: [email.toLowerCase()],
+        emails: email ? [email.toLowerCase()] : [],
         roles: [],
         project_roles: [] as unknown as AllProjectRoles,
         other_roles: [],
@@ -188,7 +151,6 @@ export async function updateUser(user: Express.User): Promise<void> {
         try {
           const existing_user = await users_db.get(user.user_id);
           user._rev = existing_user._rev;
-          console.log('updating user', user);
           await users_db.put(user);
         } catch (err) {
           console.error('Failed to update user in conflict', err);

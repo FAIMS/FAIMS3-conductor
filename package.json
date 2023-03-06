@@ -12,6 +12,7 @@
     "start": "node .",
     "watch": "nodemon --ignore build --ext ts --exec 'tsc --incremental && node .'",
     "test": "env-cmd jest --silent=false test/*.test.ts",
+    "coverage": "env-cmd jest --coverage test/*.test.ts",
     "initdb": "env-cmd node scripts/initialise.js",
     "load-notebooks": "env-cmd node scripts/loadNotebook.js"
   },

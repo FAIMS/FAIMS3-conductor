@@ -20,7 +20,11 @@
 
 import {pbkdf2} from 'crypto';
 import {Strategy} from 'passport-local';
-import {createUser, getUserFromEmailOrUsername, updateUser} from '../couchdb/users';
+import {
+  createUser,
+  getUserFromEmailOrUsername,
+  updateUser,
+} from '../couchdb/users';
 
 const SALT = 'someNiceSaltForYourPassword';
 
@@ -87,7 +91,6 @@ export const addLocalPasswordForUser = async (
     user.profiles['local'] = {
       password: hashedPassword.toString(),
     };
-    console.log('new local user', user);
     updateUser(user);
   });
 };

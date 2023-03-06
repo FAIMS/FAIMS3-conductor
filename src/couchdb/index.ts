@@ -31,12 +31,13 @@ import {
 
 const DIRECTORY_DB_NAME = 'directory';
 const PROJECTS_DB_NAME = 'projects';
-// const PEOPLE_DB_NAME = 'people';  // TODO: move this in here from users.ts
-// const INVITE_DB_NAME = 'invites'; // TODO: move here from invites.ts
+const PEOPLE_DB_NAME = 'people';
+const INVITE_DB_NAME = 'invites';
 
 let _directoryDB: PouchDB.Database | undefined;
 let _projectsDB: PouchDB.Database | undefined;
 let _usersDB: PouchDB.Database | undefined;
+let _invitesDB: PouchDB.Database | undefined;
 
 const pouchOptions = () => {
   const options: PouchDB.Configuration.RemoteDatabaseConfiguration = {};
@@ -68,7 +69,7 @@ export const getDirectoryDB = (): PouchDB.Database | undefined => {
 export const getUsersDB = (): PouchDB.Database | undefined => {
   if (!_usersDB) {
     const pouch_options = pouchOptions();
-    const dbName = COUCHDB_URL + 'people';
+    const dbName = COUCHDB_URL + PEOPLE_DB_NAME;
     _usersDB = new PouchDB(dbName, pouch_options);
   }
 
@@ -86,6 +87,19 @@ export const getProjectsDB = (): PouchDB.Database | undefined => {
     }
   }
   return _projectsDB;
+};
+
+export const getInvitesDB = (): PouchDB.Database | undefined => {
+  if (!_invitesDB) {
+    const pouch_options = pouchOptions();
+    const dbName = COUCHDB_URL + INVITE_DB_NAME;
+    try {
+      _invitesDB = new PouchDB(dbName, pouch_options);
+    } catch (error) {
+      console.log('bad thing happened', error);
+    }
+  }
+  return _invitesDB;
 };
 
 export const createProjectDB = (
