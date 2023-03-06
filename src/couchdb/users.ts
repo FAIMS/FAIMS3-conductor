@@ -19,8 +19,9 @@
  * for handling users.
  */
 
+import { ProjectRole } from 'faims3-datamodel/build/src/types';
 import {getUsersDB} from '.';
-import {NonUniqueProjectID} from '../datamodel/core';
+import {NonUniqueProjectID, ProjectID} from '../datamodel/core';
 import {
   AllProjectRoles,
   ConductorRole,
@@ -166,33 +167,78 @@ export async function updateUser(user: Express.User): Promise<void> {
   }
 }
 
-function projectRoleToCouchRole(
+export function addOtherRoleToUser(user: Express.User, role: string) {
+  if (user.other_roles.indexOf(role) < 0) {
+    user.other_roles.push(role);
+  }
+}
+
+export function addProjectRoleToUser(
+  user: Express.User,
+  project_id: ProjectID,
+  role: ProjectRole
+) {
+  if (project_id in user.project_roles) {
+    if (user.project_roles[project_id].indexOf(role) >= 0) {
+      return; // already there
+    } else {
+      user.project_roles[project_id].push(role);
+    }
+  } else {
+    user.project_roles[project_id] = [role];
+  }
+  // update the roles property based on this
+  user.roles = compactRoles(user.project_roles, user.other_roles);
+}
+
+/*
+ * The following convert between two representations of roles.
+ * Compact roles are like 'project_identifier||admin'  and stored in the `roles`
+ *  property of a user.
+ * Role structures are objects like: `{project_identifier: ['admin']}` and are
+ * stored in the `project_roles` property.
+ *
+ * We only really need the latter but the compact roles are what is sent to
+ * FAIMS3 front end so until that can be updated we'll maintain both.
+ * (this is a hangover from the dual user representations).
+ */
+
+function compactProjectRole(
   project_id: NonUniqueProjectID,
   role: ConductorRole
 ): string {
   return project_id + '||' + role;
 }
 
-function conductorRolesToCouchDBRoles(
+/**
+ * Turn a project role structure into a compact list of <project_id>||<role>
+ * @param project_roles - project role information - object with project_id as keys, roles as values
+ * @param other_roles - list of other roles
+ * @returns - a list of compacted roles
+ */
+function compactRoles(
   project_roles: AllProjectRoles,
   other_roles: OtherRoles
 ): CouchDBUserRoles {
-  const couch_roles: CouchDBUserRoles = [];
+  const roles: CouchDBUserRoles = [];
   for (const project in project_roles) {
     for (const role of project_roles[project]) {
-      couch_roles.push(projectRoleToCouchRole(project, role));
+      roles.push(compactProjectRole(project, role));
     }
   }
-  return couch_roles.concat(other_roles);
+  return roles.concat(other_roles);
 }
 
-function couchDBRolesToConductorRoles(
-  couch_roles: CouchDBUserRoles
-): [AllProjectRoles, OtherRoles] {
+/**
+ * Turn a compact list of roles into a role structure
+ * @param roles - an array of compact role names
+ * @returns a project role structure object + a list of other roles
+ */
+function expandRoles(roles: CouchDBUserRoles): [AllProjectRoles, OtherRoles] {
   const project_roles: AllProjectRoles = {};
   const other_roles: OtherRoles = [];
 
-  for (const role of couch_roles) {
+  for (const role of roles) {
     const split_role = role.split('||', 2);
     if (split_role.length === 1) {
       other_roles.push(split_role[0]);
@@ -203,44 +249,7 @@ function couchDBRolesToConductorRoles(
       project_roles[project_name] = proj_roles;
     }
   }
-  console.log('ROLES', project_roles, other_roles);
   return [project_roles, other_roles];
-}
-
-// export function express_user_to_pouch_user(user: Express.User): PouchUser {
-//   return {
-//     type: 'user',
-//     _id: user.user_id,
-//     name: user.name,
-//     emails: user.emails,
-//     roles: conductorRolesToCouchDBRoles(user.project_roles, user.other_roles),
-//     owned: user.owned,
-//     profiles: user.profiles,
-//   };
-// }
-
-// export function pouch_user_to_express_user(user: PouchUser): Express.User {
-//   const [project_roles, other_roles] = couchDBRolesToConductorRoles(user.roles);
-//   return {
-//     user_id: user._id,
-//     name: user.name,
-//     emails: user.emails,
-//     roles: user.roles,             // copied over so that we can get rid of PouchUser eventually
-//     project_roles: project_roles,
-//     other_roles: other_roles,
-//     owned: user.owned,
-//     profiles: user.profiles,
-//   };
-// }
-
-/**
- * addEmailsToUser - modify the 'emails' property of this record (but don't save it to the db)
- * @param user an Express.User record
- * @param emails an array of email addresses
- */
-export function addEmailsToUser(user: Express.User, emails: string[]) {
-  const all_emails = new Set(user.emails.concat(emails));
-  user.emails = Array.from(all_emails).map(e => e.toLowerCase());
 }
 
 export function removeProjectRoleFromUser(
@@ -254,6 +263,8 @@ export function removeProjectRoleFromUser(
   } else {
     user.project_roles[project_id] = project_roles.filter(r => r !== role);
   }
+  // update the roles property based on this
+  user.roles = compactRoles(user.project_roles, user.other_roles);
 }
 
 export function removeOtherRoleFromUser(
@@ -266,35 +277,48 @@ export function removeOtherRoleFromUser(
   } else {
     user.other_roles = other_roles.filter(r => r !== role);
   }
+  // update the roles property based on this
+  user.roles = compactRoles(user.project_roles, user.other_roles);
 }
 
 /**
- * removeRoleFromEmail - modify the roles of a user in the database, removing some permissions
+ * removeProjectRoleFromEmail - modify the roles of a user in the database, removing some permissions
  *   will update the database
  * @param email user email address
  * @param project_id Project identifier to remove permissions from
  * @param role role to remove permissions for
  */
-export async function removeRoleFromEmail(
+export async function removeProjectRoleFromEmail(
   email: string,
   project_id: NonUniqueProjectID,
   role: ConductorRole
 ) {
   const users_db = getUsersDB();
   if (users_db) {
-    const couch_role = projectRoleToCouchRole(project_id, role);
-    const users: Express.User[] = [];
-    const res = await users_db.find({
-      selector: {emails: {$elemMatch: {$eq: email}}},
-    });
-    for (const user of res.docs) {
-      const u = user as Express.User;
-      const roles = u.roles;
-      u.roles = roles.filter(r => r !== couch_role);
-      users.push(u);
+    const user = await getUserFromEmail(email);
+    if (user) {
+      removeProjectRoleFromUser(user, project_id, role);
+      updateUser(user);
     }
-    await users_db.bulkDocs(users);
   } else {
     throw Error('Failed to connect to user database');
+  }
+}
+
+/**
+ * addEmailsToUser - modify the 'emails' property of this record (but don't save it to the db)
+ * @param user an Express.User record
+ * @param emails an array of email addresses
+ */
+export async function addEmailsToUser(user: Express.User, emails: string[]) {
+  const all_emails = Array.from(new Set(user.emails.concat(emails)));
+  // check that no other user has any of these emails
+  for (let i = 0; i < all_emails.length; i++) {
+    const existing = await getUserFromEmail(emails[i]);
+    if (existing) {
+      throw Error(`email address ${emails[i]} exists for another user`);
+    } else {
+      user.emails.push(emails[i].toLowerCase());
+    }
   }
 }

@@ -24,6 +24,7 @@ import {
   EMAIL_FROM_ADDRESS,
   LOCAL_COUCHDB_AUTH,
 } from '../buildconfig';
+import { addOtherRoleToUser, getUserFromEmailOrUsername, updateUser } from './users';
 
 export const initialiseProjectsDB = async (
   db: PouchDB.Database | undefined
@@ -106,14 +107,26 @@ export const initialiseDirectoryDB = async (
 };
 
 export const initialiseUserDB = async (db: PouchDB.Database | undefined) => {
-  // register a local admin user with the same password as couchdb
+  // register a local admin user with the same password as couchdb 
+  // if there isn't already one there
   if (db && LOCAL_COUCHDB_AUTH) {
-    await registerLocalUser(
+    const adminUser = await getUserFromEmailOrUsername('admin');
+
+    if (adminUser) {
+      return;
+    }
+
+    const [user, error] = await registerLocalUser(
       'admin',
       '', // no email address
       'Admin User',
-      LOCAL_COUCHDB_AUTH.password,
-      ['cluster-admin']
+      LOCAL_COUCHDB_AUTH.password
     );
+    if (user) {
+      addOtherRoleToUser(user, 'cluster-admin');
+      updateUser(user);
+    } else {
+      console.error(error);
+    }
   }
 };

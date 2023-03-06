@@ -19,9 +19,29 @@
  */
 
 import PouchDB from 'pouchdb';
-import {createUser, updateUser} from '../src/couchdb/users';
+import {getUsersDB} from '../src/couchdb';
+import {
+  addProjectRoleToUser,
+  addOtherRoleToUser,
+  createUser,
+  removeOtherRoleFromUser,
+  removeProjectRoleFromUser,
+  updateUser,
+} from '../src/couchdb/users';
 PouchDB.plugin(require('pouchdb-adapter-memory')); // enable memory adapter for testing
 PouchDB.plugin(require('pouchdb-find'));
+
+const clearUsers = async () => {
+  const usersDB = getUsersDB();
+  if (usersDB) {
+    const docs = await usersDB.allDocs();
+    for (let i = 0; i < docs.rows.length; i++) {
+      await usersDB.remove(docs.rows[i].id, docs.rows[i].value.rev);
+    }
+  }
+};
+
+beforeEach(clearUsers);
 
 test('create user - good', async () => {
   const email = 'BOB@Here.com';
@@ -73,4 +93,78 @@ test('create user - duplicates and missing', async () => {
   const [newUserM, errorM] = await createUser('', '');
   expect(errorM).toBe('at least one of username and email is required');
   expect(newUserM).toBe(null);
+});
+
+test('user roles', async () => {
+  const email = 'BOBBY@here.com';
+  const username = 'bobalooba';
+
+  const [newUser, error] = await createUser(email, username);
+  expect(error).toBe('');
+  if (newUser) {
+    // add some roles
+    addOtherRoleToUser(newUser, 'cluster-admin');
+    addOtherRoleToUser(newUser, 'chief-bobalooba');
+    addProjectRoleToUser(newUser, 'important-project', 'admin');
+
+    expect(newUser.other_roles.length).toBe(2);
+    expect(newUser.other_roles).toContain('cluster-admin');
+    expect(newUser.other_roles).toContain('chief-bobalooba');
+    expect(Object.keys(newUser.project_roles)).toContain('important-project');
+    expect(newUser.project_roles['important-project']).toContain('admin');
+
+    // check that 'roles' has been updated
+    expect(newUser.roles.length).toBe(3);
+    expect(newUser.roles).toContain('cluster-admin');
+    expect(newUser.roles).toContain('chief-bobalooba');
+    expect(newUser.roles).toContain('important-project||admin');
+
+    // add more project roles
+    addProjectRoleToUser(newUser, 'important-project', 'team');
+    expect(newUser.project_roles['important-project']).toContain('admin');
+    expect(newUser.project_roles['important-project']).toContain('team');
+    expect(newUser.project_roles['important-project'].length).toBe(2);
+
+    expect(newUser.roles.length).toBe(4);
+    expect(newUser.roles).toContain('cluster-admin');
+    expect(newUser.roles).toContain('chief-bobalooba');
+    expect(newUser.roles).toContain('important-project||admin');
+    expect(newUser.roles).toContain('important-project||team');
+
+    // doing it again should be a no-op
+    addProjectRoleToUser(newUser, 'important-project', 'team');
+    expect(newUser.project_roles['important-project'].length).toBe(2);
+
+    addOtherRoleToUser(newUser, 'cluster-admin');
+    expect(newUser.other_roles.length).toBe(2);
+
+    expect(newUser.roles.length).toBe(4);
+    expect(newUser.roles).toContain('cluster-admin');
+    expect(newUser.roles).toContain('chief-bobalooba');
+    expect(newUser.roles).toContain('important-project||admin');
+    expect(newUser.roles).toContain('important-project||team');
+
+    // remove one
+    removeProjectRoleFromUser(newUser, 'important-project', 'admin');
+    expect(newUser.project_roles['important-project']).not.toContain('admin');
+    expect(newUser.project_roles['important-project']).toContain('team');
+
+    removeOtherRoleFromUser(newUser, 'cluster-admin');
+    expect(newUser.other_roles.length).toBe(1);
+    expect(newUser.other_roles).toContain('chief-bobalooba');
+    expect(newUser.other_roles).not.toContain('cluster-admin');
+
+    expect(newUser.roles.length).toBe(2);
+    expect(newUser.roles).not.toContain('cluster-admin');
+    expect(newUser.roles).toContain('chief-bobalooba');
+    expect(newUser.roles).not.toContain('important-project||admin');
+    expect(newUser.roles).toContain('important-project||team');
+
+    // remove roles that aren't there should be harmless
+    removeProjectRoleFromUser(newUser, 'important-project', 'not-there');
+    expect(newUser.project_roles['important-project'].length).toBe(1);
+    removeOtherRoleFromUser(newUser, 'non-existant');
+    expect(newUser.other_roles.length).toBe(1);
+    expect(newUser.other_roles).toContain('chief-bobalooba');
+  }
 });
