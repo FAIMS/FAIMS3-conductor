@@ -18,40 +18,50 @@
  *   Provides local authentication for Conductor
  */
 
-import {pbkdf2} from 'crypto';
+import {pbkdf2, pbkdf2Sync, randomBytes} from 'crypto';
 import {Strategy} from 'passport-local';
 import {
   createUser,
   getUserFromEmailOrUsername,
-  updateUser,
+  saveUser,
 } from '../couchdb/users';
-
-const SALT = 'someNiceSaltForYourPassword';
 
 type LocalProfile = {
   password: string;
+  salt: string;
 };
 
-export const get_strategy = () => {
-  return new Strategy(
-    async (username: string, password: string, done: CallableFunction) => {
-      const user = await getUserFromEmailOrUsername(username);
-      if (user) {
-        // check the password...
-        pbkdf2(password, SALT, 100000, 64, 'sha256', (err, hashedPassword) => {
-          const storedPassword = (user.profiles['local'] as LocalProfile)
-            .password as string;
-          if (hashedPassword.toString() === storedPassword) {
-            return done(null, user);
-          } else {
-            return done(null, false);
-          }
-        });
+// Export so that we can test
+export const validateLocalUser = async (
+  username: string,
+  password: string,
+  done: CallableFunction
+) => {
+  const user = await getUserFromEmailOrUsername(username);
+  if (user) {
+    // check the password...
+    const profile = user.profiles['local'] as LocalProfile;
+    if (profile.salt) {
+      const hashedPassword = pbkdf2Sync(
+        password,
+        profile.salt,
+        100000,
+        64,
+        'sha256'
+      );
+      if (hashedPassword.toString('hex') === profile.password) {
+        return done(null, user);
       } else {
         return done(null, false);
       }
     }
-  );
+  }
+  // fallback to failure
+  return done(null, false);
+};
+
+export const get_strategy = () => {
+  return new Strategy(validateLocalUser);
 };
 
 /**
@@ -82,13 +92,15 @@ export const addLocalPasswordForUser = async (
   user: Express.User,
   password: string
 ) => {
-  pbkdf2(password, SALT, 100000, 64, 'sha256', (err, hashedPassword) => {
-    if (err) {
-      throw Error('error hashing password');
-    }
+  const salt = randomBytes(64).toString('hex');
+  try {
+    const hashedPassword = pbkdf2Sync(password, salt, 100000, 64, 'sha256');
     user.profiles['local'] = {
-      password: hashedPassword.toString(),
+      password: hashedPassword.toString('hex'),
+      salt: salt,
     };
-    updateUser(user);
-  });
+    await saveUser(user);
+  } catch {
+    throw Error('error hashing password');
+  }
 };

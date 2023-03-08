@@ -19,6 +19,10 @@
  */
 
 import PouchDB from 'pouchdb';
+import {
+  addLocalPasswordForUser,
+  validateLocalUser,
+} from '../src/auth_providers/local';
 import {getUsersDB} from '../src/couchdb';
 import {
   addProjectRoleToUser,
@@ -26,7 +30,7 @@ import {
   createUser,
   removeOtherRoleFromUser,
   removeProjectRoleFromUser,
-  updateUser,
+  saveUser,
 } from '../src/couchdb/users';
 PouchDB.plugin(require('pouchdb-adapter-memory')); // enable memory adapter for testing
 PouchDB.plugin(require('pouchdb-find'));
@@ -72,7 +76,7 @@ test('create user - duplicates and missing', async () => {
   const [newUser, errorFirst] = await createUser(email, '');
   expect(errorFirst).toBe('');
   if (newUser) {
-    await updateUser(newUser);
+    await saveUser(newUser);
     // now make another user with the same email
     const [anotherUser, errorSecond] = await createUser(email, '');
     expect(errorSecond).toBe(`user with email '${email}' already exists`);
@@ -81,7 +85,7 @@ test('create user - duplicates and missing', async () => {
   const [newUserU, errorFirstU] = await createUser('', username);
   expect(errorFirstU).toBe('');
   if (newUserU) {
-    await updateUser(newUserU);
+    await saveUser(newUserU);
     // now make another user with the same email
     const [anotherUserU, errorSecondU] = await createUser('', username);
     expect(errorSecondU).toBe(
@@ -169,5 +173,42 @@ test('user roles', async () => {
     removeOtherRoleFromUser(newUser, 'non-existant');
     expect(newUser.other_roles.length).toBe(1);
     expect(newUser.other_roles).toContain('chief-bobalooba');
+  }
+});
+
+test('add local password', async () => {
+  const username = 'bobalooba';
+  const password = 'verysecret';
+  const [user, error] = await createUser('', username);
+  expect(error).toBe('');
+  if (user) {
+    await addLocalPasswordForUser(user, password);
+    const profile = user.profiles['local'] as any; // really LocalProfile
+    expect(profile).not.toBe(undefined);
+    expect(profile.salt).not.toBe(null);
+    expect(profile.password).not.toBe(null);
+
+    await validateLocalUser(
+      username,
+      password,
+      (error: string, validUser: Express.User | false) => {
+        expect(validUser).not.toBe(false);
+        if (validUser) {
+          expect(validUser.user_id).toBe(username);
+          expect(error).toBe(null);
+        }
+      }
+    );
+
+    await validateLocalUser(
+      username,
+      'not the password',
+      (error: string, validUser: Express.User | false) => {
+        expect(validUser).toBe(false);
+        expect(error).toBe(null);
+      }
+    );
+  } else {
+    fail('user is null after createUser with valid username');
   }
 });

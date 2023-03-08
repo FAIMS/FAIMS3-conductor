@@ -19,7 +19,7 @@
  * for handling users.
  */
 
-import { ProjectRole } from 'faims3-datamodel/build/src/types';
+import {ProjectRole} from 'faims3-datamodel/build/src/types';
 import {getUsersDB} from '.';
 import {NonUniqueProjectID, ProjectID} from '../datamodel/core';
 import {
@@ -138,10 +138,10 @@ async function getUserFromUsername(
 }
 
 /**
- * updateUser - update a user record
+ * saveUser - save a user record to the database as a new record or new revision
  * @param user An Express.User record to be written to the database
  */
-export async function updateUser(user: Express.User): Promise<void> {
+export async function saveUser(user: Express.User): Promise<void> {
   const users_db = getUsersDB();
   if (users_db) {
     try {
@@ -280,30 +280,6 @@ export function removeOtherRoleFromUser(
   }
   // update the roles property based on this
   user.roles = compactRoles(user.project_roles, user.other_roles);
-}
-
-/**
- * removeProjectRoleFromEmail - modify the roles of a user in the database, removing some permissions
- *   will update the database
- * @param email user email address
- * @param project_id Project identifier to remove permissions from
- * @param role role to remove permissions for
- */
-export async function removeProjectRoleFromEmail(
-  email: string,
-  project_id: NonUniqueProjectID,
-  role: ConductorRole
-) {
-  const users_db = getUsersDB();
-  if (users_db) {
-    const user = await getUserFromEmail(email);
-    if (user) {
-      removeProjectRoleFromUser(user, project_id, role);
-      updateUser(user);
-    }
-  } else {
-    throw Error('Failed to connect to user database');
-  }
 }
 
 /**
