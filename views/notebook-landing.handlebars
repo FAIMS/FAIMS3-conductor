@@ -1,8 +1,18 @@
-<h1>Notebook "{{ notebook_name }}" ({{ notebook_id }})</h1>
-<p>{{ notebook_description }}</p>
+<h1>{{ notebook.name }}</h1>
+<h3>{{ notebook.project_id }}</h3>
+
+<dl>
+    <dt>Project Lead</dt><dd>{{notebook.project_lead}}</dd>
+    <dt>Description</dt><dd>{{ notebook.pre_description }}</dd>
+</dl>
+
 {{#if isAdmin}}
 <p>
 Roles can be removed <a href="./remove_role">here</a>. Users can be invited to
 roles <a href="/invite">here</a>.
 </p>
+
+<p><a href="/notebooks/{{notebook.project_id}}/users/">Edit User Roles</a></p>
 {{/if}}
+
+

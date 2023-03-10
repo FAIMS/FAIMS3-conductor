@@ -31,8 +31,10 @@ import {
   getNotebookMetadata,
   getNotebooks,
   getNotebookUISpec,
+  getRolesForNotebook,
 } from '../src/couchdb/notebooks';
 import * as fs from 'fs';
+import {getUserFromEmailOrUsername} from '../src/couchdb/users';
 
 test('check initialise', async () => {
   await initialiseDatabases();
@@ -52,12 +54,17 @@ test('check initialise', async () => {
 
 test('getNotebooks', async () => {
   await initialiseDatabases();
-  const notebooks = await getNotebooks();
-  expect(notebooks).not.toBeNull();
+  const user = await getUserFromEmailOrUsername('admin');
+  expect(user).not.toBeNull();
+  if (user) {
+    const notebooks = await getNotebooks(user);
+    expect(notebooks).not.toBeNull();
+  }
 });
 
 test('createNotebook', async () => {
   await initialiseDatabases();
+  const user = await getUserFromEmailOrUsername('admin');
 
   const jsonText = fs.readFileSync('./notebooks/sample_notebook.json', 'utf-8');
   const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
@@ -65,11 +72,12 @@ test('createNotebook', async () => {
   const projectID = await createNotebook(' Test   Nõtebõõk', uiSpec, metadata);
 
   expect(projectID).not.toBe(undefined);
+  expect(user).not.toBeNull();
 
-  if (projectID) {
+  if (projectID && user) {
     expect(projectID.substring(13)).toBe('-test-notebook');
 
-    const notebooks = await getNotebooks();
+    const notebooks = await getNotebooks(user);
     expect(notebooks.length).toBe(1);
     const db = await getProjectMetaDB(projectID);
     if (db) {
@@ -118,5 +126,23 @@ test('getNotebookUISpec', async () => {
       expect(retrieved['fviews'].length).toBe(uiSpec.fviews.length);
       expect(retrieved['fields']).not.toBe(undefined);
     }
+  }
+});
+
+test('get notebook roles', async () => {
+  await initialiseDatabases();
+
+  const jsonText = fs.readFileSync('./notebooks/sample_notebook.json', 'utf-8');
+  const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
+  const name = 'Test Notebook';
+  const projectID = await createNotebook(name, uiSpec, metadata);
+
+  expect(projectID).not.toBe(undefined);
+  if (projectID) {
+    const roles = await getRolesForNotebook(projectID);
+    expect(roles.length).toBe(3);
+    expect(roles).toContain('admin');
+    expect(roles).toContain('team');
+    expect(roles).toContain('moderator');
   }
 });

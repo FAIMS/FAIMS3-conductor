@@ -24,6 +24,7 @@ import passport from 'passport';
 import {CONDUCTOR_PUBLIC_URL} from './buildconfig';
 import {DoneFunction} from './types';
 import {getUserFromEmailOrUsername} from './couchdb/users';
+import {getInvite} from './couchdb/invites';
 
 const AVAILABLE_AUTH_PROVIDER_DISPLAY_INFO: {[name: string]: any} = {
   datacentral: {
@@ -85,6 +86,22 @@ export function add_auth_routes(app: any, handlers: any) {
       failureRedirect: '/auth',
     })
   );
+
+  // registration page
+  app.get('/auth/register', async (req: any, res: any) => {
+    const key = req.query?.key;
+    // try to get an invite for this key, will return null if there isn't one
+    const invite = await getInvite(key);
+    res.render('register', {
+      key: key,
+      invite: invite,
+    });
+  });
+
+  app.post('/auth/register', (req: any, res: any) => {
+    // handle a user registration request
+    console.log(res, req);
+  });
 
   // set up handlers for OAuth providers
   for (const handler of handlers) {

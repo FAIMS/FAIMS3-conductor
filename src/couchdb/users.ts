@@ -21,6 +21,7 @@
 
 import {ProjectRole} from 'faims3-datamodel/build/src/types';
 import {getUsersDB} from '.';
+import {CLUSTER_ADMIN_GROUP_NAME} from '../buildconfig';
 import {NonUniqueProjectID, ProjectID} from '../datamodel/core';
 import {
   AllProjectRoles,
@@ -75,6 +76,17 @@ export async function createUser(
   } else {
     console.log('Failed to connect to user db');
     throw Error('Failed to connect to user database');
+  }
+}
+
+export async function getUsers() {
+  const users_db = getUsersDB();
+
+  if (users_db) {
+    const result = await users_db.allDocs({include_docs: true});
+    return result.rows.map(row => row.doc);
+  } else {
+    return [];
   }
 }
 
@@ -298,4 +310,57 @@ export async function addEmailsToUser(user: Express.User, emails: string[]) {
       user.emails.push(emails[i].toLowerCase());
     }
   }
+}
+
+export type ProjectPermission = 'read' | 'modify';
+
+/**
+ * Determine whether we should return this project
+ *  based on user permissions I guess (copied from FAIMS3)
+ * @param user - a user
+ * @param project_id - project identifier
+ * @param permission - 'read' or 'modify'
+ * @returns true if the user has the given permission to access to this project
+ */
+export function userHasPermission(
+  user: Express.User | undefined | null,
+  project_id: string,
+  permission: ProjectPermission
+): boolean {
+  if (!user) {
+    return false;
+  }
+
+  // cluster admin can do anything
+  if (user.other_roles.indexOf(CLUSTER_ADMIN_GROUP_NAME) >= 0) {
+    return true;
+  }
+
+  if (project_id in user.project_roles) {
+    if (permission === 'read') {
+      // any permission allows read
+      return user.project_roles[project_id].length > 0;
+    } else if (permission === 'modify') {
+      return user.project_roles[project_id].indexOf('admin') >= 0;
+    }
+  }
+  return false;
+}
+
+/**
+ * Check whether a user has cluster admin permissions
+ * @param user a user to check
+ * @returns true if this user has the role of cluster admin
+ */
+export function userIsClusterAdmin(user: Express.User | undefined | null) {
+  if (!user) {
+    return false;
+  }
+
+  // cluster admin can do anything
+  if (user.other_roles.indexOf(CLUSTER_ADMIN_GROUP_NAME) >= 0) {
+    return true;
+  }
+
+  return false;
 }

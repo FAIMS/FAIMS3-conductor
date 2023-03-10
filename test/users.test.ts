@@ -23,6 +23,7 @@ import {
   addLocalPasswordForUser,
   validateLocalUser,
 } from '../src/auth_providers/local';
+import {CLUSTER_ADMIN_GROUP_NAME} from '../src/buildconfig';
 import {getUsersDB} from '../src/couchdb';
 import {
   addProjectRoleToUser,
@@ -31,6 +32,7 @@ import {
   removeOtherRoleFromUser,
   removeProjectRoleFromUser,
   saveUser,
+  userHasPermission,
 } from '../src/couchdb/users';
 PouchDB.plugin(require('pouchdb-adapter-memory')); // enable memory adapter for testing
 PouchDB.plugin(require('pouchdb-find'));
@@ -173,6 +175,42 @@ test('user roles', async () => {
     removeOtherRoleFromUser(newUser, 'non-existant');
     expect(newUser.other_roles.length).toBe(1);
     expect(newUser.other_roles).toContain('chief-bobalooba');
+  }
+});
+
+test('checking permissions', async () => {
+  const email = 'BOBBY@here.com';
+  const username = 'bobalooba';
+  const project_id = 'myProject';
+
+  const [user, error] = await createUser(email, username);
+  expect(error).toBe('');
+  if (user) {
+    expect(userHasPermission(user, project_id, 'read')).toBe(false);
+    expect(userHasPermission(user, project_id, 'modify')).toBe(false);
+
+    // add some roles
+    addOtherRoleToUser(user, CLUSTER_ADMIN_GROUP_NAME);
+
+    expect(userHasPermission(user, project_id, 'read')).toBe(true);
+    expect(userHasPermission(user, project_id, 'modify')).toBe(true);
+
+    removeOtherRoleFromUser(user, CLUSTER_ADMIN_GROUP_NAME);
+
+    // test permissions for user role
+    addProjectRoleToUser(user, project_id, 'user');
+    expect(userHasPermission(user, project_id, 'read')).toBe(true);
+    expect(userHasPermission(user, project_id, 'modify')).toBe(false);
+
+    // but can't access another project
+    expect(userHasPermission(user, 'anotherProject', 'read')).toBe(false);
+    expect(userHasPermission(user, 'anotherProject', 'modify')).toBe(false);
+
+    // give them admin permission
+    addProjectRoleToUser(user, project_id, 'admin');
+
+    expect(userHasPermission(user, project_id, 'read')).toBe(true);
+    expect(userHasPermission(user, project_id, 'modify')).toBe(true);
   }
 });
 

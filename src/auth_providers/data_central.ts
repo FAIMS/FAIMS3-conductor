@@ -31,7 +31,7 @@ import {
   HAVE_DATACENTRAL_MANAGE_ROLES,
 } from '../buildconfig';
 import {
-  updateUser,
+  saveUser,
   getUserFromEmailOrUsername,
   createUser,
 } from '../couchdb/users';
@@ -138,7 +138,7 @@ async function oauth_verify(
       );
     }
 
-    await updateUser(user);
+    await saveUser(user);
     done(null, user, profile);
   } else {
     throw Error(errorMsg);

@@ -22,7 +22,6 @@ import handlebars from 'handlebars';
 import {body, validationResult} from 'express-validator';
 
 import {app} from './core';
-import {get_user_auth_token} from './authkeys/user';
 import {NonUniqueProjectID} from './datamodel/core';
 import {AllProjectRoles} from './datamodel/users';
 
@@ -33,24 +32,31 @@ import {
   IOS_APP_URL,
   ANDROID_APP_URL,
 } from './buildconfig';
-import {requireAuthentication, requireNotebookMembership} from './middleware';
-import {
-  userCanInviteToProject,
-  userCanRemoveProjectRole,
-  userEquivalentToProjectAdmin,
-  inviteEmailToProject,
-  acceptInvite,
-  rejectInvite,
-} from './registration';
+import {requireAuthentication, requireClusterAdmin, requireNotebookMembership} from './middleware';
+import {inviteEmailToProject, acceptInvite, rejectInvite} from './registration';
 import {getInvite, getInvitesForEmails} from './couchdb/invites';
-import {removeRoleFromEmail} from './couchdb/users';
-import {getNotebookMetadata} from './couchdb/notebooks';
+import {
+  getUserFromEmailOrUsername,
+  getUsers,
+  removeProjectRoleFromUser,
+  saveUser,
+  userHasPermission,
+} from './couchdb/users';
+import {getNotebookMetadata, getNotebooks, getRolesForNotebook} from './couchdb/notebooks';
 import {getSigningKey} from './authkeys/signing_keys';
+import {createAuthKey} from './authkeys/create';
 
 export {app};
 
 app.get('/invite/', requireAuthentication, async (req, res) => {
-  res.render('invite');
+  let notebooks = [];
+  if (req.user) {
+    notebooks = await getNotebooks(req.user);
+  }
+  res.render('invite', {
+    notebooks: notebooks,
+    roles: ['user', 'team', 'admin'], // TODO: should be per notebook
+  });
 });
 
 app.post(
@@ -68,12 +74,11 @@ app.post(
     const project_id: NonUniqueProjectID = req.body.project_id;
     const role: string = req.body.role;
 
-    const can_invite = await userCanInviteToProject(req.user, project_id);
-    if (!can_invite) {
+    if (!userHasPermission(req.user, project_id, 'modify')) {
       res.render('invite-error', {
         errors: [
           {
-            msg: `You cannot invite email ${email} to project ${project_id}`,
+            msg: `You do not have permission to invite users to project ${project_id}`,
             location: 'header',
             param: 'user',
           },
@@ -102,6 +107,10 @@ app.get(
     const user = req.user as Express.User; // requireAuthentication ensures user
     const invite_id = req.params.invite_id;
     const invite = await getInvite(invite_id);
+    if (!invite) {
+      res.sendStatus(404);
+      return;
+    }
     if (user.emails.includes(invite.email)) {
       await acceptInvite(user, invite);
     }
@@ -116,6 +125,10 @@ app.get(
     const user = req.user as Express.User; // requireAuthentication ensures user
     const invite_id = req.params.invite_id;
     const invite = await getInvite(invite_id);
+    if (!invite) {
+      res.sendStatus(404);
+      return;
+    }
     if (user.emails.includes(invite.email)) {
       await rejectInvite(invite);
     }
@@ -130,23 +143,34 @@ app.get('/my-invites/', requireAuthentication, async (req, res) => {
   res.render('my-invites', {invites: invites});
 });
 
+app.get('/notebooks/', requireAuthentication, async (req, res) => {
+  const user = req.user;
+  if (user) {
+    const notebooks = await getNotebooks(user);
+    res.render('notebooks', {
+      user: user,
+      notebooks: notebooks,
+    });
+  } else {
+    res.status(401).end();
+  }
+});
+
 app.get(
   '/notebooks/:notebook_id/',
   requireNotebookMembership,
   async (req, res) => {
     const user = req.user as Express.User; // requireAuthentication ensures user
     const project_id = req.params.notebook_id;
-    const project = await getNotebookMetadata(project_id);
-    if (project) {
-      const isAdmin = userEquivalentToProjectAdmin(user, project_id);
+    const notebook = await getNotebookMetadata(project_id);
+    if (notebook) {
+      const isAdmin = userHasPermission(user, project_id, 'modify');
       res.render('notebook-landing', {
         isAdmin: isAdmin,
-        notebook_id: project.project_id,
-        notebook_name: project.name,
-        notebook_description: 'TODO',
+        notebook: notebook,
       });
     } else {
-      res.status(404).end();
+      res.sendStatus(404);
     }
   }
 );
@@ -173,28 +197,37 @@ app.post(
     const project_id: NonUniqueProjectID = req.body.notebook_id;
     const role: string = req.body.role;
 
-    const can_remove = await userCanRemoveProjectRole(
-      req.user,
-      project_id,
-      role
-    );
-    if (!can_remove) {
+    if (!userHasPermission(req.user, project_id, 'modify')) {
       res.render('remove-role-error', {
         errors: [
           {
-            msg: `You cannot remove email ${email} from role ${role} in project ${project_id}`,
+            msg: `You do not have permission to remove email ${email} from role ${role} in project ${project_id}`,
             location: 'header',
             param: 'user',
           },
         ],
       });
     } else {
-      await removeRoleFromEmail(email, project_id, role);
-      res.render('role-remove-success', {
-        email,
-        project_id,
-        role,
-      });
+      const user = await getUserFromEmailOrUsername(email);
+      if (user) {
+        removeProjectRoleFromUser(user, project_id, role);
+        await saveUser(user);
+        res.render('role-remove-success', {
+          email,
+          project_id,
+          role,
+        });
+      } else {
+        res.render('remove-role-error', {
+          errors: [
+            {
+              msg: `No user with email ${email} found.`,
+              location: 'header',
+              param: 'user',
+            },
+          ],
+        });
+      }
     }
   }
 );
@@ -233,7 +266,7 @@ app.get('/', async (req, res) => {
     const provider = Object.keys(req.user.profiles)[0];
     // BBS 20221101 Adding token to here so we can support copy from conductor
     const signing_key = await getSigningKey();
-    const jwt_token = await get_user_auth_token(req.user.user_id, signing_key);
+    const jwt_token = await createAuthKey(req.user, signing_key);
     const token = {
       jwt_token: jwt_token,
       public_key: signing_key.public_key_string,
@@ -285,9 +318,10 @@ app.get('/get-token/', async (req, res) => {
     if (signing_key === null || signing_key === undefined) {
       res.status(500).send('Signing key not set up');
     } else {
-      console.log('req user is', req.user);
+      const token = await createAuthKey(req.user, signing_key);
+
       res.send({
-        token: await get_user_auth_token(req.user.user_id, signing_key),
+        token: token,
         pubkey: signing_key.public_key_string,
         pubalg: signing_key.alg,
       });
@@ -296,6 +330,20 @@ app.get('/get-token/', async (req, res) => {
     res.status(403).end();
   }
   return;
+});
+
+app.get('/notebooks/:id/users', requireClusterAdmin, async (req, res) => {
+  if (req.user) {
+    const users = await getUsers();
+    const notebook = await getNotebookMetadata(req.params.id);
+    console.log(notebook);
+    res.render('users', {
+      users: users,
+      notebook: notebook,
+    });
+  } else {
+    res.status(401).end();
+  }
 });
 
 app.get('/up/', (req, res) => {

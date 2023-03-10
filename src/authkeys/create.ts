@@ -21,24 +21,21 @@
 
 import {SignJWT} from 'jose';
 
-import type {CouchDBUsername, CouchDBUserRoles} from '../datamodel/users';
 import type {SigningKey} from './types';
 
-export async function create_auth_key(
-  username: CouchDBUsername,
-  roles: CouchDBUserRoles,
-  signing_key: SigningKey,
-  name: string
+export async function createAuthKey(
+  user: Express.User,
+  signing_key: SigningKey
 ) {
   const jwt = await new SignJWT({
-    '_couchdb.roles': roles,
-    name: name,
+    '_couchdb.roles': user.roles ?? [],
+    name: user.name,
   })
     .setProtectedHeader({
       alg: signing_key.alg,
       kid: signing_key.kid,
     })
-    .setSubject(username)
+    .setSubject(user.user_id)
     .setIssuedAt()
     .setIssuer(signing_key.instance_name)
     //.setExpirationTime('2h')

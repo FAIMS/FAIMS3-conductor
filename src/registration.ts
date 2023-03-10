@@ -15,71 +15,16 @@
  *
  * Filename: src/registration.ts
  * Description:
- *   This module exports the configuration of the build, including things like
- *   which server to use and whether to include test data
+ *   Handle registration of new users via invites
  */
 import {v4 as uuidv4} from 'uuid';
 
 import {NonUniqueProjectID} from './datamodel/core';
 import {RoleInvite, Email, ConductorRole} from './datamodel/users';
-import {updateUser} from './couchdb/users';
+import {saveUser} from './couchdb/users';
 import {saveInvite, deleteInvite} from './couchdb/invites';
 import {CONDUCTOR_PUBLIC_URL, CLUSTER_ADMIN_GROUP_NAME} from './buildconfig';
 import {sendEmail} from './email';
-
-const ADMIN_ROLE = 'admin';
-
-export function userEquivalentToProjectAdmin(
-  user: Express.User | undefined,
-  project_id: NonUniqueProjectID
-): boolean {
-  if (user === undefined) {
-    return false;
-  }
-  const project_roles = user.project_roles[project_id] ?? [];
-  if (project_roles.includes(ADMIN_ROLE)) {
-    return true;
-  }
-  if (user.other_roles.includes(CLUSTER_ADMIN_GROUP_NAME)) {
-    return true;
-  }
-  return false;
-}
-
-export function userCanInviteToProject(
-  user: Express.User | undefined,
-  project_id: NonUniqueProjectID
-): boolean {
-  if (user === undefined) {
-    return false;
-  }
-  const project_roles = user.project_roles[project_id] ?? [];
-  if (project_roles.includes(ADMIN_ROLE)) {
-    return true;
-  }
-  if (user.other_roles.includes(CLUSTER_ADMIN_GROUP_NAME)) {
-    return true;
-  }
-  return false;
-}
-
-export function userCanRemoveProjectRole(
-  user: Express.User | undefined,
-  project_id: NonUniqueProjectID,
-  role: ConductorRole
-): boolean {
-  if (user === undefined) {
-    return false;
-  }
-  const project_roles = user.project_roles[project_id] ?? [];
-  if (project_roles.includes(ADMIN_ROLE) && role !== ADMIN_ROLE) {
-    return true;
-  }
-  if (user.other_roles.includes(CLUSTER_ADMIN_GROUP_NAME)) {
-    return true;
-  }
-  return false;
-}
 
 export function userCanAddOtherRole(user: Express.User | undefined): boolean {
   if (user === undefined) {
@@ -153,7 +98,7 @@ export async function acceptInvite(user: Express.User, invite: RoleInvite) {
   const project_roles = new Set(user.project_roles[invite.project_id] ?? []);
   project_roles.add(invite.role);
   user.project_roles[invite.project_id] = Array.from(project_roles);
-  await updateUser(user);
+  await saveUser(user);
   await deleteInvite(invite);
 }
 

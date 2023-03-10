@@ -13,48 +13,57 @@
  * See, the License, for the specific language governing permissions and
  * limitations under the License.
  *
- * Filename:
+ * Filename: invites.ts
  * Description:
- *   This module exports the configuration of the build, including things like
- *   which server to use and whether to include test data
+ *   Provide an interface for manipulating invites to the system
  */
 
-import PouchDB from 'pouchdb';
-
-import {CONDUCTOR_INVITE_DB, LOCAL_COUCHDB_AUTH} from '../buildconfig';
+import {getInvitesDB} from '.';
 import {RoleInvite, Email} from '../datamodel/users';
 
-function createInviteDB(): PouchDB.Database<RoleInvite> {
-  const pouch_options: PouchDB.Configuration.RemoteDatabaseConfiguration = {};
-
-  if (LOCAL_COUCHDB_AUTH !== undefined) {
-    pouch_options.auth = LOCAL_COUCHDB_AUTH;
-  }
-  return new PouchDB(CONDUCTOR_INVITE_DB, pouch_options);
-}
-
-const invite_db = createInviteDB();
-
 export async function saveInvite(invite: RoleInvite) {
-  await invite_db.put(invite);
+  const invite_db = getInvitesDB();
+  if (invite_db) {
+    await invite_db.put(invite);
+  } else {
+    throw Error('Unable to connect to invites database');
+  }
 }
 
 export async function deleteInvite(invite: RoleInvite) {
-  invite._deleted = true;
-  await invite_db.put(invite);
+  const invite_db = getInvitesDB();
+  if (invite_db) {
+    invite._deleted = true;
+    await invite_db.put(invite);
+  } else {
+    throw Error('Unable to connect to invites database');
+  }
 }
 
-export async function getInvite(invite_id: string): Promise<RoleInvite> {
-  return await invite_db.get(invite_id);
+export async function getInvite(invite_id: string): Promise<null | RoleInvite> {
+  const invite_db = getInvitesDB();
+  if (invite_db) {
+    try {
+      return await invite_db.get(invite_id);
+    } catch {
+      // invite not found
+      return null;
+    }
+  } else {
+    throw Error('Unable to connect to invites database');
+  }
 }
 
 export async function getInvitesForEmail(email: Email): Promise<RoleInvite[]> {
-  const result = await invite_db.find({
-    selector: {email: {$eq: email}},
-  });
-  console.log(email);
-  console.log(result);
-  return result.docs;
+  const invite_db = getInvitesDB();
+  if (invite_db) {
+    const result = await invite_db.find({
+      selector: {email: {$eq: email}},
+    });
+    return result.docs as RoleInvite[];
+  } else {
+    throw Error('Unable to connect to invites database');
+  }
 }
 
 export async function getInvitesForEmails(

@@ -22,6 +22,7 @@
 import Express from 'express';
 import {validateToken} from './authkeys/read';
 import {CLUSTER_ADMIN_GROUP_NAME} from './buildconfig';
+import { userHasPermission, userIsClusterAdmin } from './couchdb/users';
 
 /*
  * Middleware to ensure that the route is only accessible to logged in users
@@ -47,8 +48,6 @@ export async function requireAuthenticationAPI(
   res: Express.Response,
   next: Express.NextFunction
 ) {
-  // For testing...just check for an Auth header
-  // but also accept a regular user login
   if (req.user) {
     next();
     return;
@@ -57,8 +56,10 @@ export async function requireAuthenticationAPI(
     req.headers.authorization.startsWith('Bearer ')
   ) {
     const token = req.headers.authorization.substring(7);
-    if (await validateToken(token)) {
-      // could we set req.user here?
+    const user = await validateToken(token);
+    if (user) {
+      // insert user into the request
+      req.user = user;
       next();
       return;
     }
@@ -73,13 +74,26 @@ export function requireNotebookMembership(
 ) {
   if (req.user) {
     const project_id = req.params.notebook_id;
-    if (
-      (req.user.project_roles[project_id] ?? []).length !== 0 ||
-      req.user.other_roles.includes(CLUSTER_ADMIN_GROUP_NAME)
-    ) {
+    if (userHasPermission(req.user, project_id, 'read')) {
       next();
     } else {
-      res.status(404);
+      res.status(404).end();
+    }
+  } else {
+    res.redirect('/auth/');
+  }
+}
+
+export function requireClusterAdmin(
+  req: Express.Request,
+  res: Express.Response,
+  next: Express.NextFunction
+) {
+  if (req.user) {
+    if (userIsClusterAdmin(req.user)) {
+      next();
+    } else {
+      res.status(401).end();
     }
   } else {
     res.redirect('/auth/');

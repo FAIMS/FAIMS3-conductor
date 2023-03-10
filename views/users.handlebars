@@ -1,0 +1,17 @@
+<h1>User Roles for {{notebook.name}}</h1>
+
+<form>
+    {{#each users}}
+        <div class="row">
+            <div class="col"><strong>{{this.name}}</strong></div>
+            {{#each ../notebook.accesses}}
+              <div class="col input-group mb-3">
+                <label class="form-check-label" for="role-{{this}}">{{this}}</label>
+                <input type="checkbox" class="form-check-input" value="{{this}}" id="role-{{this}}">
+              </div>
+            {{/each}}
+        </div>
+    {{/each}}
+    <button class="button" type="submit">
+</form>
+

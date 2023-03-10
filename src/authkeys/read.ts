@@ -19,6 +19,7 @@
  */
 
 import {jwtVerify} from 'jose';
+import {getUserFromEmailOrUsername} from '../couchdb/users';
 import {getSigningKey} from './signing_keys';
 
 /**
@@ -31,22 +32,18 @@ export const validateToken = async (token: string) => {
 
   //console.log(`verifying token: '${token}'`);
   try {
-    const {payload, protectedHeader} = await jwtVerify(
-      token,
-      signingKey.public_key,
-      {
-        algorithms: [signingKey.alg],
-      }
-    );
+    const {payload} = await jwtVerify(token, signingKey.public_key, {
+      algorithms: [signingKey.alg],
+    });
 
-    return {
-      username: payload.sub,
-      roles: payload['_couchdb.roles'],
-      name: payload['name'],
-      instance_name: payload.iss,
-      issued_at: payload.iat,
-      key_id: protectedHeader.kid,
-    };
+    //console.log('Token Payload', payload);
+
+    if (payload.sub) {
+      const user = getUserFromEmailOrUsername(payload.sub);
+      return user;
+    } else {
+      return undefined;
+    }
   } catch (error) {
     console.error(error);
     return undefined;

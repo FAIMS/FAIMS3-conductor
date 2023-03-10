@@ -23,7 +23,7 @@ import {Strategy, VerifyCallback} from 'passport-google-oauth20';
 import {GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET} from '../buildconfig';
 import {
   addEmailsToUser,
-  updateUser,
+  saveUser,
   getUserFromEmailOrUsername,
   createUser,
 } from '../couchdb/users';
@@ -59,7 +59,7 @@ async function oauth_verify(
       // add the profile if not already there
       if (!('google' in user.profiles)) {
         user.profiles['google'] = profile;
-        await updateUser(user);
+        await saveUser(user);
       }
       done(null, user, profile);
       break;
@@ -74,7 +74,7 @@ async function oauth_verify(
       user.name = profile.displayName;
       user.profiles['google'] = profile;
       addEmailsToUser(user, emails);
-      await updateUser(user);
+      await saveUser(user);
       done(null, user, profile);
     } else {
       throw Error(errorMsg);

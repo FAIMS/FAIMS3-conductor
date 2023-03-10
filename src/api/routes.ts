@@ -28,6 +28,7 @@ import {
 } from '../couchdb/notebooks';
 import {requireAuthenticationAPI} from '../middleware';
 import {initialiseDatabases} from '../couchdb';
+import { userHasPermission } from '../couchdb/users';
 
 export const api = express.Router();
 
@@ -46,8 +47,12 @@ api.post('/initialise/', requireAuthenticationAPI, async (req, res) => {
 
 api.get('/notebooks/', requireAuthenticationAPI, async (req, res) => {
   // get a list of notebooks from the db
-  const notebooks = await getNotebooks();
-  res.json(notebooks);
+  if (req.user) {
+    const notebooks = await getNotebooks(req.user);
+    res.json(notebooks);
+  } else {
+    res.json([]);
+  }
 });
 
 /**
@@ -60,9 +65,7 @@ api.post('/notebooks/', requireAuthenticationAPI, async (req, res) => {
   const metadata = req.body.metadata;
 
   try {
-    console.log('creating notebook', projectName);
     const projectID = await createNotebook(projectName, uiSpec, metadata);
-    console.log('projectID', projectID);
     res.json({notebook: projectID});
   } catch {
     res.json({error: 'there was an error creating the notebook'});
@@ -72,13 +75,19 @@ api.post('/notebooks/', requireAuthenticationAPI, async (req, res) => {
 
 api.get('/notebooks/:id', requireAuthenticationAPI, async (req, res) => {
   // get full details of a single notebook
-  const metadata = await getNotebookMetadata(req.params.id);
-  const uiSpec = await getNotebookUISpec(req.params.id);
-  if (metadata && uiSpec) {
-    res.json({metadata, 'ui-specification': uiSpec});
+  const project_id = req.params.id;
+  if (req.user && userHasPermission(req.user, project_id, 'read')) {
+    const metadata = await getNotebookMetadata(project_id);
+    const uiSpec = await getNotebookUISpec(project_id);
+    if (metadata && uiSpec) {
+      res.json({metadata, 'ui-specification': uiSpec});
+    } else {
+      res.json({error: 'not found'});
+      res.status(404).end();
+    }
   } else {
-    res.json({error: 'not found'});
-    res.status(404).end();
+    // unauthorised response
+    res.status(401).end();
   }
 });
 
@@ -87,7 +96,10 @@ api.get(
   '/notebooks/:id/records/',
   requireAuthenticationAPI,
   async (req, res) => {
-    const records = await getNotebookRecords(req.params.id);
+    let records = [];
+    if (req.user && userHasPermission(req.user, req.params.id, 'read')) {
+      records = await getNotebookRecords(req.params.id);
+    }
     if (records) {
       res.json({records});
     } else {
