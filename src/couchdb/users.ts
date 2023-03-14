@@ -30,6 +30,7 @@ import {
   CouchDBUsername,
   CouchDBUserRoles,
 } from '../datamodel/users';
+import { getRolesForNotebook } from './notebooks';
 
 /**
  * createUser - create a new user record ensuring that the username or password
@@ -66,7 +67,7 @@ export async function createUser(
         name: '',
         emails: email ? [email.toLowerCase()] : [],
         roles: [],
-        project_roles: [] as unknown as AllProjectRoles,
+        project_roles: {} as unknown as AllProjectRoles,
         other_roles: [],
         owned: [],
         profiles: {},
@@ -84,11 +85,49 @@ export async function getUsers() {
 
   if (users_db) {
     const result = await users_db.allDocs({include_docs: true});
-    return result.rows.map(row => row.doc);
+    return result.rows.map(row => row.doc) as Express.User[];
   } else {
-    return [];
+    return [] as Express.User[];
   }
 }
+
+export type NotebookUsersInfo = {
+  roles: string[];
+  users: {
+    name: string;
+    username: string;
+    roles: {name: string; value: boolean}[];
+  }[];
+};
+
+export async function getUserInfoForNotebook(project_id: ProjectID) {
+  const users = await getUsers();
+
+  const userList = {
+    roles: await getRolesForNotebook(project_id),
+    users: [] as any[],
+  };
+  for (let i = 0; i < users.length; i++) {
+    const user = users[i];
+    // only include those users who can at least read the notebook
+    if (userHasPermission(user, project_id, 'read')) {
+      const userData = {
+        name: user.name,
+        username: user.user_id,
+        roles: [] as any[],
+      };
+      for (let j = 0; j < userList.roles.length; j++) {
+        const role = userList.roles[j];
+        userData.roles.push({
+          name: role,
+          value: userHasProjectRole(user, project_id, role),
+        });
+      }
+      userList.users.push(userData);
+    }
+  }
+  return userList;
+};
 
 /**
  * getUserFromEmailOrUsername - find a user based on an identifier that could be either an email or username
@@ -203,6 +242,27 @@ export function addProjectRoleToUser(
   // update the roles property based on this
   user.roles = compactRoles(user.project_roles, user.other_roles);
 }
+
+/**
+ * Test for a user role on a project
+ * @param user - a user object
+ * @param project_id - a project identifier
+ * @param role - a role name
+ * @returns true if this user has this role on this project, false otherwise
+ */
+export function userHasProjectRole(
+  user: Express.User,
+  project_id: ProjectID,
+  role: ProjectRole
+): boolean {
+  if (project_id in user.project_roles) {
+    if (user.project_roles[project_id].indexOf(role) >= 0) {
+      return true;
+    }
+  }
+  return false;
+};
+
 
 /*
  * The following convert between two representations of roles.

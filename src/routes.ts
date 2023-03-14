@@ -32,17 +32,27 @@ import {
   IOS_APP_URL,
   ANDROID_APP_URL,
 } from './buildconfig';
-import {requireAuthentication, requireClusterAdmin, requireNotebookMembership} from './middleware';
+import {
+  requireAuthentication,
+  requireClusterAdmin,
+  requireNotebookMembership,
+} from './middleware';
 import {inviteEmailToProject, acceptInvite, rejectInvite} from './registration';
 import {getInvite, getInvitesForEmails} from './couchdb/invites';
 import {
   getUserFromEmailOrUsername,
+  getUserInfoForNotebook,
   getUsers,
   removeProjectRoleFromUser,
   saveUser,
   userHasPermission,
+  userHasProjectRole,
 } from './couchdb/users';
-import {getNotebookMetadata, getNotebooks, getRolesForNotebook} from './couchdb/notebooks';
+import {
+  getNotebookMetadata,
+  getNotebooks,
+  getRolesForNotebook,
+} from './couchdb/notebooks';
 import {getSigningKey} from './authkeys/signing_keys';
 import {createAuthKey} from './authkeys/create';
 
@@ -332,13 +342,33 @@ app.get('/get-token/', async (req, res) => {
   return;
 });
 
+// make something like this to pass in to the view
+// const user_data = {
+//   roles: ['admin', 'moderator', 'team', 'user'],
+//   users: [
+//     {
+//       name: 'Steve Cassidy',
+//       username = 'stevecassidy',
+//       roles: [
+//         {name: 'admin', value: false},
+//         {name: 'moderator', value: false},
+//         {name: 'team', value: false},
+//         {name: 'user', value: false},
+//       ],
+//     },
+//   ],
+// };
+
 app.get('/notebooks/:id/users', requireClusterAdmin, async (req, res) => {
   if (req.user) {
-    const users = await getUsers();
-    const notebook = await getNotebookMetadata(req.params.id);
-    console.log(notebook);
+    const project_id = req.params.id;
+
+    const notebook = await getNotebookMetadata(project_id);
+
+    const userList = await getUserInfoForNotebook(project_id);
     res.render('users', {
-      users: users,
+      roles: userList.roles,
+      users: userList.users,
       notebook: notebook,
     });
   } else {

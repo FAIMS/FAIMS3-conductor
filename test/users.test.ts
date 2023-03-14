@@ -24,7 +24,7 @@ import {
   validateLocalUser,
 } from '../src/auth_providers/local';
 import {CLUSTER_ADMIN_GROUP_NAME} from '../src/buildconfig';
-import {getUsersDB} from '../src/couchdb';
+import {getUsersDB, initialiseDatabases} from '../src/couchdb';
 import {
   addProjectRoleToUser,
   addOtherRoleToUser,
@@ -33,9 +33,13 @@ import {
   removeProjectRoleFromUser,
   saveUser,
   userHasPermission,
+  getUserInfoForNotebook,
 } from '../src/couchdb/users';
 PouchDB.plugin(require('pouchdb-adapter-memory')); // enable memory adapter for testing
 PouchDB.plugin(require('pouchdb-find'));
+
+import * as fs from 'fs';
+import { createNotebook } from '../src/couchdb/notebooks';
 
 const clearUsers = async () => {
   const usersDB = getUsersDB();
@@ -248,5 +252,32 @@ test('add local password', async () => {
     );
   } else {
     fail('user is null after createUser with valid username');
+  }
+});
+
+test('listing users for notebooks', async () => {
+  await initialiseDatabases();
+
+  const jsonText = fs.readFileSync('./notebooks/sample_notebook.json', 'utf-8');
+  const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
+  const name = 'Test Notebook';
+  const project_id = await createNotebook(name, uiSpec, metadata);
+  const username = 'bobalooba';
+
+  const [user, error] = await createUser('', username);
+  if (user && project_id) {
+    addProjectRoleToUser(user, project_id, 'team');
+    addProjectRoleToUser(user, project_id, 'moderator');
+    await saveUser(user);
+
+    const userInfo = await getUserInfoForNotebook(project_id);
+
+    expect(userInfo.roles).toContain('admin');
+    expect(userInfo.roles).toContain('moderator');
+    expect(userInfo.roles).toContain('team');
+    // should have the admin user and this new one
+    expect(userInfo.users.length).toBe(2);
+    expect(userInfo.users[1].username).toBe(username);
+    expect(userInfo.users[1].roles[0].value).toBe(false);
   }
 });

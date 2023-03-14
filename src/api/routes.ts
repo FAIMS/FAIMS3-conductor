@@ -28,7 +28,7 @@ import {
 } from '../couchdb/notebooks';
 import {requireAuthenticationAPI} from '../middleware';
 import {initialiseDatabases} from '../couchdb';
-import { userHasPermission } from '../couchdb/users';
+import {userHasPermission} from '../couchdb/users';
 
 export const api = express.Router();
 
