@@ -185,63 +185,6 @@ app.get(
   }
 );
 
-app.get(
-  '/notebooks/:notebook_id/remove_role/',
-  requireNotebookMembership,
-  async (req, res) => {
-    res.render('remove-role');
-  }
-);
-
-app.post(
-  '/notebooks/:notebook_id/remove_role/',
-  requireNotebookMembership,
-  body('email').isEmail(),
-  body('role').trim(),
-  async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.render('remove-role-error', {errors: errors.array()});
-    }
-    const email: string = req.body.email;
-    const project_id: NonUniqueProjectID = req.body.notebook_id;
-    const role: string = req.body.role;
-
-    if (!userHasPermission(req.user, project_id, 'modify')) {
-      res.render('remove-role-error', {
-        errors: [
-          {
-            msg: `You do not have permission to remove email ${email} from role ${role} in project ${project_id}`,
-            location: 'header',
-            param: 'user',
-          },
-        ],
-      });
-    } else {
-      const user = await getUserFromEmailOrUsername(email);
-      if (user) {
-        removeProjectRoleFromUser(user, project_id, role);
-        await saveUser(user);
-        res.render('role-remove-success', {
-          email,
-          project_id,
-          role,
-        });
-      } else {
-        res.render('remove-role-error', {
-          errors: [
-            {
-              msg: `No user with email ${email} found.`,
-              location: 'header',
-              param: 'user',
-            },
-          ],
-        });
-      }
-    }
-  }
-);
-
 function make_html_safe(s: string): string {
   return handlebars.escapeExpression(s);
 }
@@ -341,23 +284,6 @@ app.get('/get-token/', async (req, res) => {
   }
   return;
 });
-
-// make something like this to pass in to the view
-// const user_data = {
-//   roles: ['admin', 'moderator', 'team', 'user'],
-//   users: [
-//     {
-//       name: 'Steve Cassidy',
-//       username = 'stevecassidy',
-//       roles: [
-//         {name: 'admin', value: false},
-//         {name: 'moderator', value: false},
-//         {name: 'team', value: false},
-//         {name: 'user', value: false},
-//       ],
-//     },
-//   ],
-// };
 
 app.get('/notebooks/:id/users', requireClusterAdmin, async (req, res) => {
   if (req.user) {

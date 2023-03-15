@@ -1,3 +1,15 @@
+
+
+
+<div class="container">
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/">Home</a></li>
+    <li class="breadcrumb-item"><a href="/notebooks/">Notebooks</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{notebook.name}}</li>
+  </ol>
+</nav>
+
 <h1>{{ notebook.name }}</h1>
 <h3>{{ notebook.project_id }}</h3>
 
@@ -8,11 +20,11 @@
 
 {{#if isAdmin}}
 <p>
-Roles can be removed <a href="./remove_role">here</a>. Users can be invited to
-roles <a href="/invite">here</a>.
+Users can be invited to roles <a href="/invite">here</a>.
 </p>
 
 <p><a href="/notebooks/{{notebook.project_id}}/users/">Edit User Roles</a></p>
 {{/if}}
 
+</div>
 
