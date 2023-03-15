@@ -32,6 +32,7 @@ services:
 
 
       - PROFILE_NAME
+      - CONDUCTOR_INSTANCE_NAME
       
       # COUCHDB_USER and COUCHDB_PASSWORD used by conductor as well
       - COUCHDB_USER=admin

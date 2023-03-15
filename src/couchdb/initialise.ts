@@ -57,7 +57,7 @@ export const initialiseDirectoryDB = async (
 ) => {
   const directoryDoc = {
     _id: 'default',
-    name: 'Default instance',
+    name: ${CONDUCTOR_INSTANCE_NAME},
     description: `FAIMS instance on ${CONDUCTOR_PUBLIC_URL}`,
     people_db: {
       db_name: 'people',

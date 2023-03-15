@@ -179,10 +179,12 @@ function public_key_path(): string {
 }
 
 function instance_name(): string {
-  const name = process.env.PROFILE_NAME;
+  const name = process.env.CONDUCTOR_INSTANCE_NAME;
   if (name === '' || name === undefined) {
-    console.log('PROFILE_NAME not set, using default for instance name');
-    return 'test';
+    console.log(
+      'CONDUCTOR_INSTANCE_NAME not set, using PROFILE_NAME for instance name'
+    );
+    return signing_key_id();
   } else {
     return name;
   }

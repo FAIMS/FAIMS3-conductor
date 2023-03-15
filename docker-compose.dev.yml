@@ -33,6 +33,7 @@ services:
       #  docker-compose setup
 
       - PROFILE_NAME
+      - CONDUCTOR_INSTANCE_NAME
       
       - COUCHDB_USER=admin
       - COUCHDB_PASSWORD
