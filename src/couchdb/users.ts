@@ -30,7 +30,7 @@ import {
   CouchDBUsername,
   CouchDBUserRoles,
 } from '../datamodel/users';
-import { getRolesForNotebook } from './notebooks';
+import {getRolesForNotebook} from './notebooks';
 
 /**
  * createUser - create a new user record ensuring that the username or password

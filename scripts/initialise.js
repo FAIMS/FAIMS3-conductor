@@ -25,18 +25,12 @@ const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch
 
 const CONDUCTOR_URL = process.env.CONDUCTOR_PUBLIC_URL;
 
-if (!process.env.USER_TOKEN) {
-    console.log('USER_TOKEN not set in .env - login to Conductor and copy your user token');
-    process.exit();
-}
-
 const token = process.env.USER_TOKEN;
 
 const main = async () => {
 
   fetch(CONDUCTOR_URL + '/api/initialise/', {
-    method: 'POST',
-    headers: {'Authorization': `Bearer ${token}`}
+    method: 'POST'
   })
   .then(response => response.json())
   .then(data => {
