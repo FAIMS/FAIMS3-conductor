@@ -1,7 +1,17 @@
+<div class="container">
+
 <h1>User Roles for {{notebook.name}}</h1>
 
-<table class="table">
+<div class="container">
+  <form id="add-user-form">
+    <input type="text" name="username" class="form-input" placeholder="Username or Email">
+    <input type="submit" value="Add User to Notebook">
+  </form>
+  <div id="message"></div>
+</div>
 
+
+<table class="table">
     <thead>
       <th>Name</th>
       {{#each roles}}
@@ -26,13 +36,43 @@
     {{/each}}
     </tbody>
 </table>
- 
+
+</div>
 
 <script>
+function formHandler(event) {
+  event.preventDefault();
+  const url = '/api/notebooks/{{notebook.project_id}}/users/';
+  const form = event.target;
+  const username = form.querySelector('[name="username"]').value;
+  if (username) {
+      const data = {
+        username: username,
+        role: "user",
+        addrole: true
+      }
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          window.location.reload();
+        } else {
+          document.getElementById('message').innerText = data.error;
+        }
+      });
+  }
+}
+document.getElementById('add-user-form').onsubmit = formHandler;
+
 function handleRoleChange(event) {
   const url = '/api/notebooks/{{notebook.project_id}}/users/';
   const target = event.target;
-  console.log(target.value, target.checked, target.dataset.username);
   const data = {
     username: target.dataset.username,
     role: target.value,
@@ -46,7 +86,12 @@ function handleRoleChange(event) {
     body: JSON.stringify(data)
   })
   .then(response => response.json())
-  .then(data => console.log(data));
+  .then(data => {
+    if (data.status !== 'success') {
+      target.checked = !target.checked;
+      document.getElementById('message').innerText = data.error;
+    }
+  });
 }
 
 const inputs = document.getElementsByClassName('form-check-input')

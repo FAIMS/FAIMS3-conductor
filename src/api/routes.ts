@@ -154,16 +154,16 @@ api.post(
           res.json({status: 'success'});
           return;
         } else {
-          error = 'unknown user';
+          error = 'Unknown user ' + username;
         }
       } else {
-        error = 'unknow role';
+        error = 'Unknow role';
       }
     } else {
-      error = 'unknown notebook';
+      error = 'Unknown notebook';
     }
     // user or project not found or bad role
-    res.json({error});
+    res.json({status: 'error', error});
     res.status(404).end();
   }
 );
