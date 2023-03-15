@@ -198,7 +198,7 @@ export async function saveUser(user: Express.User): Promise<void> {
     try {
       user._id = user.user_id;
       await users_db.put(user);
-    } catch (err: any) {
+    } catch (err: any) { 
       if (err.status === 409) {
         try {
           const existing_user = await users_db.get(user.user_id);
@@ -234,9 +234,10 @@ export function addProjectRoleToUser(
     if (user.project_roles[project_id].indexOf(role) >= 0) {
       return; // already there
     } else {
-      user.project_roles[project_id].push(role);
+      user.project_roles[project_id].push(role); 
     }
   } else {
+    user.project_roles = {};
     user.project_roles[project_id] = [role];
   }
   // update the roles property based on this

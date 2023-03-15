@@ -369,7 +369,14 @@ export const getNotebookRecords = async (
 export const getRolesForNotebook = async (project_id: ProjectID) => {
   const meta = await getNotebookMetadata(project_id);
   if (meta) {
-    return meta.accesses;
+    const roles = meta.accesses;
+    if (roles.indexOf('admin') < 0) {
+      roles.push('admin');
+    }
+    if (roles.indexOf('user') < 0) {
+      roles.push('user');
+    }
+    return roles;
   } else {
     return [];
   }

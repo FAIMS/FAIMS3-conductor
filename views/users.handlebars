@@ -18,13 +18,40 @@
             class="form-check-input" 
             value="{{this.name}}"
             id="role-{{../this.username}}-{{this}}"
+            data-username="{{../this.username}}"
             {{#if this.value}}checked{{/if}}>
         </td>
       {{/each}}
       </tr>
     {{/each}}
     </tbody>
-
-
 </table>
  
+
+<script>
+function handleRoleChange(event) {
+  const url = '/api/notebooks/{{notebook.project_id}}/users/';
+  const target = event.target;
+  console.log(target.value, target.checked, target.dataset.username);
+  const data = {
+    username: target.dataset.username,
+    role: target.value,
+    addrole: target.checked  // true/false
+  }
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data)
+  })
+  .then(response => response.json())
+  .then(data => console.log(data));
+}
+
+const inputs = document.getElementsByClassName('form-check-input')
+
+for(let i=0; i<inputs.length; i++) {
+  inputs[i].onclick = handleRoleChange;
+}
+</script>

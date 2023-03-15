@@ -25,10 +25,18 @@ import {
   getNotebookMetadata,
   getNotebookUISpec,
   getNotebookRecords,
+  getRolesForNotebook,
 } from '../couchdb/notebooks';
 import {requireAuthenticationAPI} from '../middleware';
 import {initialiseDatabases} from '../couchdb';
-import {userHasPermission} from '../couchdb/users';
+import {
+  addProjectRoleToUser,
+  getUserFromEmailOrUsername,
+  getUserInfoForNotebook,
+  removeProjectRoleFromUser,
+  saveUser,
+  userHasPermission,
+} from '../couchdb/users';
 
 export const api = express.Router();
 
@@ -106,5 +114,56 @@ api.get(
       res.json({error: 'notebook not found'});
       res.status(404).end();
     }
+  }
+);
+
+api.get('/notebooks/:id/users/', requireAuthenticationAPI, async (req, res) => {
+  const userInfo = await getUserInfoForNotebook(req.params.id);
+  res.json(userInfo);
+});
+
+// POST to give a user permissions on this notebook
+// body includes: 
+//   {
+//     username: 'a username or email',
+//     role: a valid role for this notebook,
+//     addrole: boolean, true to add, false to delete
+//   }
+api.post(
+  '/notebooks/:id/users/',
+  requireAuthenticationAPI,
+  async (req, res) => {
+    let error = '';
+    const notebook = await getNotebookMetadata(req.params.id);
+    if (notebook) {
+      const username = req.body.username;
+      const role = req.body.role;
+      const addrole = req.body.addrole;
+
+      // check that this is a legitimate role for this notebook
+      const notebookRoles = await getRolesForNotebook(notebook.project_id);
+      if (notebookRoles.indexOf(role) >= 0) {
+        const user = await getUserFromEmailOrUsername(username);
+        if (user) {
+          if (addrole) {
+            await addProjectRoleToUser(user, notebook.project_id, role);
+          } else {
+            await removeProjectRoleFromUser(user, notebook.project_id, role);
+          }
+          await saveUser(user);
+          res.json({status: 'success'});
+          return;
+        } else {
+          error = 'unknown user';
+        }
+      } else {
+        error = 'unknow role';
+      }
+    } else {
+      error = 'unknown notebook';
+    }
+    // user or project not found or bad role
+    res.json({error});
+    res.status(404).end();
   }
 );

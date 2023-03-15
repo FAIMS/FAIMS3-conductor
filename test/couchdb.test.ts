@@ -140,9 +140,10 @@ test('get notebook roles', async () => {
   expect(projectID).not.toBe(undefined);
   if (projectID) {
     const roles = await getRolesForNotebook(projectID);
-    expect(roles.length).toBe(3);
-    expect(roles).toContain('admin');
-    expect(roles).toContain('team');
-    expect(roles).toContain('moderator');
+    expect(roles.length).toBe(4);
+    expect(roles).toContain('admin'); // admin role should always be present
+    expect(roles).toContain('team'); // specified in the UISpec
+    expect(roles).toContain('moderator'); // specified in the UISpec
+    expect(roles).toContain('user'); // user role should always be present
   }
 });
