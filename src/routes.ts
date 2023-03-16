@@ -231,7 +231,7 @@ app.get('/', async (req, res) => {
     } else {
       res.render('home', {
         user: req.user,
-        token: btoa(JSON.stringify(token)),
+        token: Buffer.from(JSON.stringify(token)).toString('base64'),
         project_roles: rendered_project_roles,
         other_roles: req.user.other_roles,
         provider: provider,

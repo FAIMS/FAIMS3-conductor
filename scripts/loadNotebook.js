@@ -31,7 +31,8 @@ if (!process.env.USER_TOKEN) {
     process.exit();
 }
 
-const token = JSON.parse(atob(process.env.USER_TOKEN));
+const token = JSON.parse(Buffer.from(process.env.USER_TOKEN, 'base64').toString());
+console.log(token);
 
 const main = async filename => {
   console.log(filename);
