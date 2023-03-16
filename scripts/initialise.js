@@ -25,8 +25,6 @@ const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch
 
 const CONDUCTOR_URL = process.env.CONDUCTOR_PUBLIC_URL;
 
-const token = process.env.USER_TOKEN;
-
 const main = async () => {
 
   fetch(CONDUCTOR_URL + '/api/initialise/', {

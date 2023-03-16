@@ -73,7 +73,7 @@ api.post('/notebooks/', requireAuthenticationAPI, async (req, res) => {
   // post a new notebook
   // user must be cluster admin
 
-  if (userIsClusterAdmin(user)) {
+  if (userIsClusterAdmin(req.user)) {
     const uiSpec = req.body['ui-specification'];
     const projectName = req.body.name;
     const metadata = req.body.metadata;
@@ -194,4 +194,5 @@ api.post(
       });
       res.status(401).end();
     }
+  }
 );

@@ -19,7 +19,11 @@
  */
 
 import {registerLocalUser} from '../auth_providers/local';
-import {CONDUCTOR_PUBLIC_URL, LOCAL_COUCHDB_AUTH} from '../buildconfig';
+import {
+  CONDUCTOR_INSTANCE_NAME,
+  CONDUCTOR_PUBLIC_URL,
+  LOCAL_COUCHDB_AUTH,
+} from '../buildconfig';
 import {
   addOtherRoleToUser,
   getUserFromEmailOrUsername,
@@ -57,7 +61,7 @@ export const initialiseDirectoryDB = async (
 ) => {
   const directoryDoc = {
     _id: 'default',
-    name: ${CONDUCTOR_INSTANCE_NAME},
+    name: CONDUCTOR_INSTANCE_NAME,
     description: `FAIMS instance on ${CONDUCTOR_PUBLIC_URL}`,
     people_db: {
       db_name: 'people',
