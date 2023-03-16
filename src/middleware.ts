@@ -21,8 +21,7 @@
 
 import Express from 'express';
 import {validateToken} from './authkeys/read';
-import {CLUSTER_ADMIN_GROUP_NAME} from './buildconfig';
-import { userHasPermission, userIsClusterAdmin } from './couchdb/users';
+import {userHasPermission, userIsClusterAdmin} from './couchdb/users';
 
 /*
  * Middleware to ensure that the route is only accessible to logged in users

@@ -127,7 +127,7 @@ export async function getUserInfoForNotebook(project_id: ProjectID) {
     }
   }
   return userList;
-};
+}
 
 /**
  * getUserFromEmailOrUsername - find a user based on an identifier that could be either an email or username
@@ -198,7 +198,7 @@ export async function saveUser(user: Express.User): Promise<void> {
     try {
       user._id = user.user_id;
       await users_db.put(user);
-    } catch (err: any) { 
+    } catch (err: any) {
       if (err.status === 409) {
         try {
           const existing_user = await users_db.get(user.user_id);
@@ -234,7 +234,7 @@ export function addProjectRoleToUser(
     if (user.project_roles[project_id].indexOf(role) >= 0) {
       return; // already there
     } else {
-      user.project_roles[project_id].push(role); 
+      user.project_roles[project_id].push(role);
     }
   } else {
     user.project_roles = {};
@@ -262,8 +262,7 @@ export function userHasProjectRole(
     }
   }
   return false;
-};
-
+}
 
 /*
  * The following convert between two representations of roles.
@@ -308,23 +307,23 @@ function compactRoles(
  * @param roles - an array of compact role names
  * @returns a project role structure object + a list of other roles
  */
-function expandRoles(roles: CouchDBUserRoles): [AllProjectRoles, OtherRoles] {
-  const project_roles: AllProjectRoles = {};
-  const other_roles: OtherRoles = [];
+// function expandRoles(roles: CouchDBUserRoles): [AllProjectRoles, OtherRoles] {
+//   const project_roles: AllProjectRoles = {};
+//   const other_roles: OtherRoles = [];
 
-  for (const role of roles) {
-    const split_role = role.split('||', 2);
-    if (split_role.length === 1) {
-      other_roles.push(split_role[0]);
-    } else {
-      const project_name = split_role[0];
-      const proj_roles = project_roles[project_name] ?? [];
-      proj_roles.push(split_role[1]);
-      project_roles[project_name] = proj_roles;
-    }
-  }
-  return [project_roles, other_roles];
-}
+//   for (const role of roles) {
+//     const split_role = role.split('||', 2);
+//     if (split_role.length === 1) {
+//       other_roles.push(split_role[0]);
+//     } else {
+//       const project_name = split_role[0];
+//       const proj_roles = project_roles[project_name] ?? [];
+//       proj_roles.push(split_role[1]);
+//       project_roles[project_name] = proj_roles;
+//     }
+//   }
+//   return [project_roles, other_roles];
+// }
 
 export function removeProjectRoleFromUser(
   user: Express.User,

@@ -154,7 +154,6 @@ api.post(
   '/notebooks/:id/users/',
   requireAuthenticationAPI,
   async (req, res) => {
-
     if (userHasPermission(req.user, req.params.id, 'modify')) {
       let error = '';
       const notebook = await getNotebookMetadata(req.params.id);

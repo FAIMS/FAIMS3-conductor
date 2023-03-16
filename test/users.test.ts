@@ -39,7 +39,7 @@ PouchDB.plugin(require('pouchdb-adapter-memory')); // enable memory adapter for 
 PouchDB.plugin(require('pouchdb-find'));
 
 import * as fs from 'fs';
-import { createNotebook } from '../src/couchdb/notebooks';
+import {createNotebook} from '../src/couchdb/notebooks';
 
 const clearUsers = async () => {
   const usersDB = getUsersDB();
@@ -264,6 +264,7 @@ test('listing users for notebooks', async () => {
   const project_id = await createNotebook(name, uiSpec, metadata);
   const username = 'bobalooba';
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [user, error] = await createUser('', username);
   if (user && project_id) {
     addProjectRoleToUser(user, project_id, 'team');

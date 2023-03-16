@@ -18,7 +18,7 @@
  *   Provides local authentication for Conductor
  */
 
-import {pbkdf2, pbkdf2Sync, randomBytes} from 'crypto';
+import {pbkdf2Sync, randomBytes} from 'crypto';
 import {Strategy} from 'passport-local';
 import {
   createUser,
