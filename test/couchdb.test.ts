@@ -35,6 +35,7 @@ import {
 } from '../src/couchdb/notebooks';
 import * as fs from 'fs';
 import {getUserFromEmailOrUsername} from '../src/couchdb/users';
+import {CONDUCTOR_INSTANCE_NAME} from '../src/buildconfig';
 
 test('check initialise', async () => {
   await initialiseDatabases();
@@ -43,7 +44,7 @@ test('check initialise', async () => {
   expect(directoryDB).not.toBe(undefined);
   if (directoryDB) {
     const default_document = (await directoryDB.get('default')) as any;
-    expect(default_document.name).toBe('Default instance');
+    expect(default_document.name).toBe(CONDUCTOR_INSTANCE_NAME);
 
     const permissions_document = (await directoryDB.get(
       '_design/permissions'

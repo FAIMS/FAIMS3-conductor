@@ -39,20 +39,8 @@ import {
 } from './middleware';
 import {inviteEmailToProject, acceptInvite, rejectInvite} from './registration';
 import {getInvite, getInvitesForEmails} from './couchdb/invites';
-import {
-  getUserFromEmailOrUsername,
-  getUserInfoForNotebook,
-  getUsers,
-  removeProjectRoleFromUser,
-  saveUser,
-  userHasPermission,
-  userHasProjectRole,
-} from './couchdb/users';
-import {
-  getNotebookMetadata,
-  getNotebooks,
-  getRolesForNotebook,
-} from './couchdb/notebooks';
+import {getUserInfoForNotebook, userHasPermission} from './couchdb/users';
+import {getNotebookMetadata, getNotebooks} from './couchdb/notebooks';
 import {getSigningKey} from './authkeys/signing_keys';
 import {createAuthKey} from './authkeys/create';
 
