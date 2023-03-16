@@ -25,6 +25,7 @@ import cookieSession from 'cookie-session';
 import cors from 'cors';
 import passport from 'passport';
 import {engine as express_handlebars} from 'express-handlebars';
+import RateLimit from 'express-rate-limit';
 
 // use swaggerUI to display the UI documentation
 // need this workaround to have the swagger-ui-dist package
@@ -47,6 +48,13 @@ import {COOKIE_SECRET} from './buildconfig';
 import {api} from './api/routes';
 
 export const app = express();
+
+// set up rate limiter: maximum of five requests per minute
+const limiter = RateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 30,
+});
+app.use(limiter);
 
 // Only parse query parameters into strings, not objects
 app.set('query parser', 'simple');
