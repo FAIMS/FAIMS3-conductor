@@ -23,7 +23,7 @@ import {body, validationResult} from 'express-validator';
 
 import {app} from './core';
 import {NonUniqueProjectID} from './datamodel/core';
-import {AllProjectRoles} from './datamodel/users';
+import {AllProjectRoles, RoleInvite} from './datamodel/users';
 
 // BBS 20221101 Adding this as a proxy for the pouch db url
 import {
@@ -37,40 +37,50 @@ import {
   requireClusterAdmin,
   requireNotebookMembership,
 } from './middleware';
-import {inviteEmailToProject, acceptInvite, rejectInvite} from './registration';
-import {getInvite, getInvitesForEmails} from './couchdb/invites';
+import {createInvite} from './registration';
+import {getInvitesForNotebook} from './couchdb/invites';
 import {getUserInfoForNotebook, userHasPermission} from './couchdb/users';
-import {getNotebookMetadata, getNotebooks} from './couchdb/notebooks';
+import {
+  getNotebookMetadata,
+  getNotebooks,
+  getRolesForNotebook,
+} from './couchdb/notebooks';
 import {getSigningKey} from './authkeys/signing_keys';
 import {createAuthKey} from './authkeys/create';
 
 export {app};
 
-app.get('/invite/', requireAuthentication, async (req, res) => {
-  let notebooks = [];
-  if (req.user) {
-    notebooks = await getNotebooks(req.user);
+app.get('/notebooks/:id/invite/', requireAuthentication, async (req, res) => {
+  if (await userHasPermission(req.user, req.params.id, 'modify')) {
+    const notebook = await getNotebookMetadata(req.params.id);
+    if (notebook) {
+      res.render('invite', {
+        notebook: notebook,
+        roles: await getRolesForNotebook(req.params.id),
+      });
+    } else {
+      res.status(404).end();
+    }
+  } else {
+    res.status(401).end();
   }
-  res.render('invite', {
-    notebooks: notebooks,
-    roles: ['user', 'team', 'admin'], // TODO: should be per notebook
-  });
 });
 
 app.post(
-  '/invite/',
+  '/notebooks/:id/invite/',
   requireAuthentication,
   body('email').isEmail(),
-  body('role').trim(),
-  body('project_id').trim(),
+  body('number').not().isEmpty().isInt(),
+  body('role').not().isEmpty(),
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.render('invite-error', {errors: errors.array()});
     }
     const email: string = req.body.email;
-    const project_id: NonUniqueProjectID = req.body.project_id;
+    const project_id: NonUniqueProjectID = req.params.id;
     const role: string = req.body.role;
+    const number: number = req.body.number;
 
     if (!userHasPermission(req.user, project_id, 'modify')) {
       res.render('invite-error', {
@@ -83,63 +93,42 @@ app.post(
         ],
       });
     } else {
-      await inviteEmailToProject(
+      await createInvite(
         req.user as Express.User,
         email,
         project_id,
-        role
+        role,
+        number
       );
       res.render('invite-success', {
         email,
         project_id,
         role,
+        number,
       });
     }
   }
 );
 
-app.get(
-  '/accept-invite/:invite_id/',
-  requireAuthentication,
-  async (req, res) => {
-    const user = req.user as Express.User; // requireAuthentication ensures user
-    const invite_id = req.params.invite_id;
-    const invite = await getInvite(invite_id);
-    if (!invite) {
-      res.sendStatus(404);
-      return;
-    }
-    if (user.emails.includes(invite.email)) {
-      await acceptInvite(user, invite);
-    }
-    res.redirect('/my-invites/');
-  }
-);
 
-app.get(
-  '/reject-invite/:invite_id/',
-  requireAuthentication,
-  async (req, res) => {
-    const user = req.user as Express.User; // requireAuthentication ensures user
-    const invite_id = req.params.invite_id;
-    const invite = await getInvite(invite_id);
-    if (!invite) {
-      res.sendStatus(404);
-      return;
-    }
-    if (user.emails.includes(invite.email)) {
-      await rejectInvite(invite);
-    }
-    res.redirect('/my-invites/');
-  }
-);
+// app.get(
+//   '/reject-invite/:invite_id/',
+//   requireAuthentication,
+//   async (req, res) => {
+//     const user = req.user as Express.User; // requireAuthentication ensures user
+//     const invite_id = req.params.invite_id;
+//     const invite = await getInvite(invite_id);
+//     if (!invite) {
+//       res.sendStatus(404);
+//       return;
+//     }
+//     if (user.emails.includes(invite.email)) {
+//       await rejectInvite(invite);
+//     }
+//     res.redirect('/my-invites/');
+//   }
+// );
 
-app.get('/my-invites/', requireAuthentication, async (req, res) => {
-  const user = req.user as Express.User; // requireAuthentication ensures user
-  const invites = await getInvitesForEmails(user.emails);
-  console.log('my invites', invites);
-  res.render('my-invites', {invites: invites});
-});
 
 app.get('/notebooks/', requireAuthentication, async (req, res) => {
   const user = req.user;
@@ -161,11 +150,16 @@ app.get(
     const user = req.user as Express.User; // requireAuthentication ensures user
     const project_id = req.params.notebook_id;
     const notebook = await getNotebookMetadata(project_id);
+    let invites: RoleInvite[] = [];
     if (notebook) {
       const isAdmin = userHasPermission(user, project_id, 'modify');
+      if (isAdmin) {
+        invites = await getInvitesForNotebook(project_id);
+      }
       res.render('notebook-landing', {
         isAdmin: isAdmin,
         notebook: notebook,
+        invites: invites,
       });
     } else {
       res.sendStatus(404);
@@ -249,6 +243,7 @@ app.get('/send-token/', (req, res) => {
       ios_url: IOS_APP_URL,
     });
   } else {
+    console.log('send-token no user');
     res.redirect('/');
   }
 });

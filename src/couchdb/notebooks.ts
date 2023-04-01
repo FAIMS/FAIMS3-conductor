@@ -344,6 +344,26 @@ export const getNotebookUISpec = async (
 };
 
 /**
+ * validateNotebookID - check that a project_id is a real notebook
+ * @param project_id - a project identifier
+ * @returns true if this is a valid project identifier
+ */
+export const validateNotebookID = async (
+  project_id: string
+): Promise<boolean> => {
+  try {
+    const projectDB = await getProjectMetaDB(project_id);
+    if (projectDB) {
+      return true;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    return false;
+  }
+};
+
+/**
  * getNotebookRecords - retrieve all data records for this notebook
  * including record metadata, data fields and annotations
  * @param project_id project identifier

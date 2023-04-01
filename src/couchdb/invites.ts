@@ -18,6 +18,7 @@
  *   Provide an interface for manipulating invites to the system
  */
 
+import { ProjectID } from 'faims3-datamodel';
 import {getInvitesDB} from '.';
 import {RoleInvite, Email} from '../datamodel/users';
 
@@ -54,27 +55,16 @@ export async function getInvite(invite_id: string): Promise<null | RoleInvite> {
   }
 }
 
-export async function getInvitesForEmail(email: Email): Promise<RoleInvite[]> {
+export async function getInvitesForNotebook(
+  project_id: ProjectID
+): Promise<RoleInvite[]> {
   const invite_db = getInvitesDB();
   if (invite_db) {
     const result = await invite_db.find({
-      selector: {email: {$eq: email}},
+      selector: {project_id: {$eq: project_id}},
     });
     return result.docs as RoleInvite[];
   } else {
     throw Error('Unable to connect to invites database');
   }
-}
-
-export async function getInvitesForEmails(
-  emails: Email[]
-): Promise<RoleInvite[]> {
-  const invites: RoleInvite[] = [];
-  console.log(emails);
-  for (const email of emails) {
-    const new_invites = await getInvitesForEmail(email);
-    invites.push(...new_invites);
-  }
-  console.log(invites);
-  return invites;
 }

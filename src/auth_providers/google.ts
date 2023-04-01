@@ -34,13 +34,57 @@ async function oauth_verify(
   refreshToken: string,
   results: any,
   profile: any,
-  done: VerifyCallback
+  done: CallableFunction // VerifyCallback doesn't allow user to be false
 ) {
-  console.debug('google oauth', accessToken, refreshToken, results, profile);
+  console.debug('google verify');
 
   // three cases:
   //   - we have a user with this user_id from a previous google login
-  //   - we already have a user with the email address in this profile, add the profile if not there
+  //   - we already have a user with the email address in this profile,
+  //     add the profile if not there
+
+  let user = await getUserFromEmailOrUsername(profile.id);
+  if (user) {
+    // TODO: do we need to validate further? could check that the profiles match???
+    done(null, user, profile);
+  }
+
+  const emails = profile.emails
+    .filter((o: any) => o.verified)
+    .map((o: any) => o.value);
+
+  for (let i = 0; i < emails.length; i++) {
+    user = await getUserFromEmailOrUsername(emails[i]);
+    if (user) {
+      // add the profile if not already there
+      if (!('google' in user.profiles)) {
+        user.profiles['google'] = profile;
+        console.log('adding google profile for user');
+        await saveUser(user);
+      }
+      console.log('valid google user');
+      return done(null, user, profile);
+    }
+  }
+  if (!user) {
+    return done(null, false);
+  }
+}
+
+async function oauth_register(
+  req: Request,
+  accessToken: string,
+  refreshToken: string,
+  results: any,
+  profile: any,
+  done: VerifyCallback
+) {
+  console.debug('google register');
+
+  // three cases:
+  //   - we have a user with this user_id from a previous google login
+  //   - we already have a user with the email address in this profile,
+  //     add the profile if not there
   //   - we don't, create a new user record and add the profile
 
   let user = await getUserFromEmailOrUsername(profile.id);
@@ -59,8 +103,10 @@ async function oauth_verify(
       // add the profile if not already there
       if (!('google' in user.profiles)) {
         user.profiles['google'] = profile;
+        console.log('adding google profile for user');
         await saveUser(user);
       }
+      console.log('valid google user');
       done(null, user, profile);
       break;
     }
@@ -71,6 +117,7 @@ async function oauth_verify(
     [user, errorMsg] = await createUser(emails[0], profile.id);
 
     if (user) {
+      console.log('created new user');
       user.name = profile.displayName;
       user.profiles['google'] = profile;
       addEmailsToUser(user, emails);
@@ -82,23 +129,38 @@ async function oauth_verify(
   }
 }
 
-export function get_strategy(callback_url: string): Strategy {
+export function get_strategies(
+  login_callback: string,
+  register_callback: string
+): Array<Strategy> {
   if (GOOGLE_CLIENT_ID === '') {
     throw Error('GOOGLE_CLIENT_ID must be set to use Google');
   }
   if (GOOGLE_CLIENT_SECRET === '') {
     throw Error('GOOGLE_CLIENT_SECRET must be set to use Google');
   }
-  const st = new Strategy(
+  const verifyStrategy = new Strategy(
     {
       clientID: GOOGLE_CLIENT_ID,
       clientSecret: GOOGLE_CLIENT_SECRET,
-      callbackURL: callback_url,
+      callbackURL: login_callback,
       passReqToCallback: true,
       scope: ['profile', 'email', 'https://www.googleapis.com/auth/plus.login'],
       state: true,
     },
     oauth_verify as any
   );
-  return st;
+
+  const registerStrategy = new Strategy(
+    {
+      clientID: GOOGLE_CLIENT_ID,
+      clientSecret: GOOGLE_CLIENT_SECRET,
+      callbackURL: register_callback,
+      passReqToCallback: true,
+      scope: ['profile', 'email', 'https://www.googleapis.com/auth/plus.login'],
+      state: true,
+    },
+    oauth_register as any
+  );
+  return [verifyStrategy, registerStrategy];
 }

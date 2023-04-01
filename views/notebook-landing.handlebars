@@ -1,6 +1,4 @@
 
-
-
 <div class="container">
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
@@ -20,8 +18,15 @@
 
 {{#if isAdmin}}
 <p>
-Users can be invited to roles <a href="/invite">here</a>.
+Users can be invited to roles <a href="/notebooks/{{notebook.project_id}}/invite/">here</a>.
 </p>
+
+<ul>
+  {{#each invites}}
+  <li><a href="/register/{{this._id}}/">Invite for {{this.number}} users for role "{{this.role}}"</a></li>
+  {{/each}}
+</ul>
+
 
 <p><a href="/notebooks/{{notebook.project_id}}/users/">Edit User Roles</a></p>
 {{/if}}

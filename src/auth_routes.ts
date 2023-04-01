@@ -21,10 +21,13 @@
 
 import passport from 'passport';
 
-import {CONDUCTOR_PUBLIC_URL} from './buildconfig';
+import {CONDUCTOR_AUTH_PROVIDERS, CONDUCTOR_PUBLIC_URL} from './buildconfig';
 import {DoneFunction} from './types';
 import {getUserFromEmailOrUsername} from './couchdb/users';
+import {registerLocalUser} from './auth_providers/local';
+import {body} from 'express-validator';
 import {getInvite} from './couchdb/invites';
+import {acceptInvite} from './registration';
 
 const AVAILABLE_AUTH_PROVIDER_DISPLAY_INFO: {[name: string]: any} = {
   datacentral: {
@@ -55,8 +58,14 @@ passport.deserializeUser((id: string, done: DoneFunction) => {
     .catch(err => done(err, null));
 });
 
-export function determine_callback_url(provider_name: string): string {
-  return `${CONDUCTOR_PUBLIC_URL}/auth-return/${provider_name}`;
+export function determine_callback_urls(provider_name: string): {
+  login_callback: string;
+  register_callback: string;
+} {
+  return {
+    login_callback: `${CONDUCTOR_PUBLIC_URL}/auth-return/${provider_name}`,
+    register_callback: `${CONDUCTOR_PUBLIC_URL}/register-return/${provider_name}`,
+  };
 }
 
 export function add_auth_routes(app: any, handlers: any) {
@@ -64,7 +73,6 @@ export function add_auth_routes(app: any, handlers: any) {
 
   app.get('/auth/', (req: any, res: any) => {
     // Allow the user to decide what auth mechanism to use
-    console.log('XXXXXX', handlers);
     const available_provider_info = [];
     for (const handler of handlers) {
       available_provider_info.push({
@@ -87,21 +95,72 @@ export function add_auth_routes(app: any, handlers: any) {
     })
   );
 
-  // registration page
-  app.get('/auth/register', async (req: any, res: any) => {
-    const key = req.query?.key;
-    // try to get an invite for this key, will return null if there isn't one
-    const invite = await getInvite(key);
-    res.render('register', {
-      key: key,
-      invite: invite,
-    });
+  // accept an invite, auth not required, we invite them to
+  // register if they aren't already
+  app.get('/register/:invite_id/', async (req: any, res: any) => {
+    const invite_id = req.params.invite_id;
+    const invite = await getInvite(invite_id);
+    if (!invite) {
+      res.sendStatus(404);
+      return;
+    }
+    if (req.user) {
+      // user already registered, sign them up for this notebook
+      // should there be conditions on this? Eg. check the email.
+      await acceptInvite(req.user, invite);
+      res.redirect('/');
+    } else {
+      // need to sign up the user, show the registration page
+      const available_provider_info = [];
+      for (const handler of CONDUCTOR_AUTH_PROVIDERS) {
+        available_provider_info.push({
+          label: handler,
+          name: AVAILABLE_AUTH_PROVIDER_DISPLAY_INFO[handler].name,
+        });
+      }
+      res.render('register', {
+        invite: invite_id,
+        providers: available_provider_info,
+        localAuth: true, // maybe make this configurable?
+      });
+    }
   });
 
-  app.post('/auth/register', (req: any, res: any) => {
-    // handle a user registration request
-    console.log(res, req);
-  });
+  app.post(
+    '/register/local',
+    body('username').trim(),
+    body('password').isLength({min: 10}),
+    body('repeat').isLength({min: 10}),
+    body('email').isEmail(),
+    async (res: any, req: any) => {
+      // create a new local account
+      const username = req.body.username;
+      const password = req.body.password;
+      const repeat = req.body.repeat;
+      const name = req.body.name;
+      const email = req.body.email;
+
+      if (password === repeat) {
+        const [user, error] = await registerLocalUser(
+          username,
+          email,
+          name,
+          password
+        );
+        if (user) {
+          res.render('registration-success', {user});
+        } else {
+          res.status(400);
+          res.render('registration-error', {error});
+        }
+      } else {
+        res.status(400);
+        res.render('registration-error', {
+          error: "password and repeat don't match",
+        });
+      }
+    }
+  );
 
   // set up handlers for OAuth providers
   for (const handler of handlers) {
@@ -111,14 +170,14 @@ export function add_auth_routes(app: any, handlers: any) {
         typeof req.query?.state === 'undefined'
       ) {
         console.log('authenticating', handler);
-        passport.authenticate(handler, HANDLER_OPTIONS[handler])(
+        passport.authenticate(handler + '-validate', HANDLER_OPTIONS[handler])(
           req,
           res,
           (err?: {}) => {
             // Hack to avoid users getting caught when they're not in the right
             // groups.
             console.error('Authentication Error', err);
-            res.redirect('https://auth.datacentral.org.au/cas/logout');
+            // res.redirect('https://auth.datacentral.org.au/cas/logout');
             //throw err ?? Error('Authentication failed (next, no error)');
           }
         );
@@ -132,11 +191,27 @@ export function add_auth_routes(app: any, handlers: any) {
     app.get(
       // This should line up with determine_callback_url above
       `/auth-return/${handler}/`,
-      passport.authenticate(handler, {
+      passport.authenticate(handler + '-validate', {
         successRedirect: '/send-token/',
         failureRedirect: '/bad',
-        failureFlash: true,
-        //successFlash: 'Welcome!',
+        // these would require installing req-flash
+        // failureFlash: true,
+        // successFlash: 'Welcome!',
+      })
+    );
+
+    console.log('adding route', `/register/${handler}/`);
+    app.get(
+      `/register/:id/${handler}/`,
+      passport.authenticate(handler + '-register')
+    );
+
+    app.get(
+      // This should line up with determine_callback_url above
+      `/register-return/${handler}/`,
+      passport.authenticate(handler + '-register', {
+        successRedirect: '/',
+        failureRedirect: '/bad-registration',
       })
     );
   }

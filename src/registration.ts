@@ -52,11 +52,12 @@ export function userCanRemoveOtherRole(
   return false;
 }
 
-export async function inviteEmailToProject(
+export async function createInvite(
   user: Express.User,
   email: Email,
   project_id: NonUniqueProjectID,
-  role: ConductorRole
+  role: ConductorRole,
+  number: number
 ) {
   const invite: RoleInvite = {
     _id: uuidv4(),
@@ -64,6 +65,7 @@ export async function inviteEmailToProject(
     email: email,
     project_id: project_id,
     role: role,
+    number: number,
   };
   await saveInvite(invite);
   await emailInvite(invite);
@@ -99,9 +101,9 @@ export async function acceptInvite(user: Express.User, invite: RoleInvite) {
   project_roles.add(invite.role);
   user.project_roles[invite.project_id] = Array.from(project_roles);
   await saveUser(user);
-  await deleteInvite(invite);
+  //await deleteInvite(invite);
 }
 
 export async function rejectInvite(invite: RoleInvite) {
-  await deleteInvite(invite);
+  //await deleteInvite(invite);
 }
