@@ -97,11 +97,19 @@ async function emailInvite(invite: RoleInvite) {
 }
 
 export async function acceptInvite(user: Express.User, invite: RoleInvite) {
-  const project_roles = new Set(user.project_roles[invite.project_id] ?? []);
-  project_roles.add(invite.role);
-  user.project_roles[invite.project_id] = Array.from(project_roles);
-  await saveUser(user);
-  //await deleteInvite(invite);
+  if (invite.number > 0) {
+    const project_roles = new Set(user.project_roles[invite.project_id] ?? []);
+    project_roles.add(invite.role);
+    user.project_roles[invite.project_id] = Array.from(project_roles);
+    await saveUser(user);
+
+    invite.number--;
+    if (invite.number === 0) {
+      await deleteInvite(invite);
+    } else {
+      await saveInvite(invite);
+    }
+  }
 }
 
 export async function rejectInvite(invite: RoleInvite) {

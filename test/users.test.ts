@@ -85,7 +85,7 @@ test('create user - duplicates and missing', async () => {
     await saveUser(newUser);
     // now make another user with the same email
     const [anotherUser, errorSecond] = await createUser(email, '');
-    expect(errorSecond).toBe(`user with email '${email}' already exists`);
+    expect(errorSecond).toBe(`User with email '${email}' already exists`);
     expect(anotherUser).toBe(null);
   }
   const [newUserU, errorFirstU] = await createUser('', username);
@@ -95,13 +95,13 @@ test('create user - duplicates and missing', async () => {
     // now make another user with the same email
     const [anotherUserU, errorSecondU] = await createUser('', username);
     expect(errorSecondU).toBe(
-      `user with username '${username}' already exists`
+      `User with username '${username}' already exists`
     );
     expect(anotherUserU).toBe(null);
   }
 
   const [newUserM, errorM] = await createUser('', '');
-  expect(errorM).toBe('at least one of username and email is required');
+  expect(errorM).toBe('At least one of username and email is required');
   expect(newUserM).toBe(null);
 });
 

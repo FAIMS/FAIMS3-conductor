@@ -21,12 +21,14 @@
 import {Strategy, VerifyCallback} from 'passport-google-oauth20';
 
 import {GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET} from '../buildconfig';
+import { getInvite } from '../couchdb/invites';
 import {
   addEmailsToUser,
   saveUser,
   getUserFromEmailOrUsername,
   createUser,
 } from '../couchdb/users';
+import { acceptInvite } from '../registration';
 
 async function oauth_verify(
   req: Request,
@@ -72,7 +74,7 @@ async function oauth_verify(
 }
 
 async function oauth_register(
-  req: Request,
+  req: any,
   accessToken: string,
   refreshToken: string,
   results: any,
@@ -80,7 +82,7 @@ async function oauth_register(
   done: VerifyCallback
 ) {
   console.debug('google register');
-
+  console.log('state', req.session);
   // three cases:
   //   - we have a user with this user_id from a previous google login
   //   - we already have a user with the email address in this profile,
@@ -113,19 +115,25 @@ async function oauth_register(
   }
   if (!user) {
     let errorMsg = '';
-    // otherwise, we make a new user
-    [user, errorMsg] = await createUser(emails[0], profile.id);
+    const invite = await getInvite(req.session.invite);
+    console.log('invite', invite);
+    if (invite) {
+      [user, errorMsg] = await createUser(emails[0], profile.id);
 
-    if (user) {
-      console.log('created new user');
-      user.name = profile.displayName;
-      user.profiles['google'] = profile;
-      addEmailsToUser(user, emails);
-      await saveUser(user);
-      done(null, user, profile);
-    } else {
-      throw Error(errorMsg);
+      if (user) {
+        console.log('created new user');
+        user.name = profile.displayName;
+        user.profiles['google'] = profile;
+        addEmailsToUser(user, emails);
+        // accepting the invite will add roles and save the user record
+        await acceptInvite(user, invite);
+        done(null, user, profile);
+      } else {
+        throw Error(errorMsg);
+      }
     }
+  } else {
+    throw Error('no valid invite for new registration');
   }
 }
 

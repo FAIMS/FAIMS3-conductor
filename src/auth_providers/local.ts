@@ -101,6 +101,6 @@ export const addLocalPasswordForUser = async (
     };
     await saveUser(user);
   } catch {
-    throw Error('error hashing password');
+    throw Error('Error hashing password');
   }
 };

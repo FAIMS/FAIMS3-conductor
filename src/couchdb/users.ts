@@ -44,16 +44,16 @@ export async function createUser(
   username: string
 ): Promise<[Express.User | null, string]> {
   if (!email && !username) {
-    return [null, 'at least one of username and email is required'];
+    return [null, 'At least one of username and email is required'];
   }
 
   const users_db = getUsersDB();
   if (users_db) {
     if (email && (await getUserFromEmail(email))) {
-      return [null, `user with email '${email}' already exists`];
+      return [null, `User with email '${email}' already exists`];
     }
     if (username && (await getUserFromUsername(username))) {
-      return [null, `user with username '${username}' already exists`];
+      return [null, `User with username '${username}' already exists`];
     }
     if (!username) {
       username = email.toLowerCase();

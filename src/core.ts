@@ -19,13 +19,13 @@
  *   which server to use and whether to include test data
  */
 
-import express from 'express';
-import bodyParser from 'body-parser';
+import express from 'express'; 
 import cookieSession from 'cookie-session';
 import cors from 'cors';
 import passport from 'passport';
 import {engine as express_handlebars} from 'express-handlebars';
 import RateLimit from 'express-rate-limit';
+import flash from 'req-flash';
 
 // use swaggerUI to display the UI documentation
 // need this workaround to have the swagger-ui-dist package
@@ -65,9 +65,10 @@ app.use(
     maxAge: 24 * 60 * 60 * 1000 * 365, // BBS 20220831 changed to 1 year
   })
 );
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(express.urlencoded({extended: true}));
 app.use(express.json());
 app.use(cors());
+app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 app.engine('handlebars', express_handlebars());

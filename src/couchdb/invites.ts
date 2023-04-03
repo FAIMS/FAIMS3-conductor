@@ -18,7 +18,7 @@
  *   Provide an interface for manipulating invites to the system
  */
 
-import { ProjectID } from 'faims3-datamodel';
+import {ProjectID} from 'faims3-datamodel';
 import {getInvitesDB} from '.';
 import {RoleInvite, Email} from '../datamodel/users';
 

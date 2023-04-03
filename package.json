@@ -38,6 +38,8 @@
     "pouchdb": "7.3.0",
     "pouchdb-find": "8.0.1",
     "pouchdb-security-helper": "^2.1.2",
+    "qrcode": "^1.5.1",
+    "req-flash": "^0.0.3",
     "supertest": "6.3.3",
     "swagger-ui-dist": "^4.15.5",
     "ts-jest": "27.1.4",

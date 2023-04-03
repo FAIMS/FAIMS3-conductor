@@ -25,7 +25,7 @@ import {CONDUCTOR_AUTH_PROVIDERS, CONDUCTOR_PUBLIC_URL} from './buildconfig';
 import {DoneFunction} from './types';
 import {getUserFromEmailOrUsername} from './couchdb/users';
 import {registerLocalUser} from './auth_providers/local';
-import {body} from 'express-validator';
+import {body, validationResult} from 'express-validator';
 import {getInvite} from './couchdb/invites';
 import {acceptInvite} from './registration';
 
@@ -118,10 +118,12 @@ export function add_auth_routes(app: any, handlers: any) {
           name: AVAILABLE_AUTH_PROVIDER_DISPLAY_INFO[handler].name,
         });
       }
+      console.log('in /register', req.flash());
       res.render('register', {
         invite: invite_id,
         providers: available_provider_info,
         localAuth: true, // maybe make this configurable?
+        messages: req.flash(),
       });
     }
   });
@@ -129,18 +131,37 @@ export function add_auth_routes(app: any, handlers: any) {
   app.post(
     '/register/local',
     body('username').trim(),
-    body('password').isLength({min: 10}),
-    body('repeat').isLength({min: 10}),
-    body('email').isEmail(),
-    async (res: any, req: any) => {
-      // create a new local account
+    body('password')
+      .isLength({min: 10})
+      .withMessage('Must be at least 10 characters'),
+    body('email').isEmail().withMessage('Must be a valid email address'),
+    async (req: any, res: any) => {
+      // create a new local account if we have a valid invite
       const username = req.body.username;
       const password = req.body.password;
       const repeat = req.body.repeat;
       const name = req.body.name;
       const email = req.body.email;
 
-      if (password === repeat) {
+      const errors = validationResult(req);
+
+      if (!errors.isEmpty()) {
+        req.flash('error', errors.mapped());
+        req.flash('username', username);
+        req.flash('email', email);
+        req.flash('name', name);
+        res.status(400);
+        res.redirect('/register/' + req.session.invite);
+        return;
+      }
+
+      const invite = await getInvite(req.session.invite);
+
+      if (!invite) {
+        res.status(400);
+        req.flash('error', {registration: 'No valid invite for registration.'});
+        res.redirect('/');
+      } else if (password === repeat) {
         const [user, error] = await registerLocalUser(
           username,
           email,
@@ -148,16 +169,24 @@ export function add_auth_routes(app: any, handlers: any) {
           password
         );
         if (user) {
-          res.render('registration-success', {user});
+          await acceptInvite(user, invite);
+          req.flash('message', 'Registration successful. Please login below.')
+          res.redirect('/');
         } else {
+          req.flash('error', {registration: error});
+          req.flash('username', username);
+          req.flash('email', email);
+          req.flash('name', name);
           res.status(400);
-          res.render('registration-error', {error});
+          res.redirect('/register/' + req.session.invite);
         }
       } else {
+        req.flash('error', {repeat: {msg: "Password and repeat don't match."}});
+        req.flash('username', username);
+        req.flash('email', email);
+        req.flash('name', name);
         res.status(400);
-        res.render('registration-error', {
-          error: "password and repeat don't match",
-        });
+        res.redirect('/register/' + req.session.invite);
       }
     }
   );
@@ -194,17 +223,20 @@ export function add_auth_routes(app: any, handlers: any) {
       passport.authenticate(handler + '-validate', {
         successRedirect: '/send-token/',
         failureRedirect: '/bad',
-        // these would require installing req-flash
-        // failureFlash: true,
-        // successFlash: 'Welcome!',
+        failureFlash: true,
+        successFlash: 'Welcome!',
       })
     );
 
     console.log('adding route', `/register/${handler}/`);
-    app.get(
-      `/register/:id/${handler}/`,
-      passport.authenticate(handler + '-register')
-    );
+    app.get(`/register/:id/${handler}/`, (req: any, res: any, next: any) => {
+      req.session['invite'] = req.params.id;
+      return passport.authenticate(handler + '-register', () => next())(
+        req,
+        res,
+        next
+      );
+    });
 
     app.get(
       // This should line up with determine_callback_url above
