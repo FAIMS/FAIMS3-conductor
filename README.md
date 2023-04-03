@@ -1,5 +1,7 @@
 # FAIMS3-conductor
 
+[![codecov](https://codecov.io/gh/FAIMS/FAIMS3-conductor/branch/local-auth-user-management/graph/badge.svg?token=CJ4U0H7AKA)](https://codecov.io/gh/FAIMS/FAIMS3-conductor)
+
 The server-side of FAIMS3 handling authentication and authorization
 
 To get started, first set up the `.env` file as specified in Configuration, and
