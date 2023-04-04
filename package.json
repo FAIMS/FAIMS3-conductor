@@ -23,7 +23,7 @@
     "express": "4.18.2",
     "express-handlebars": "6.0.5",
     "express-rate-limit": "^6.7.0",
-    "express-validator": "6.14.2",
+    "express-validator": "6.15.0",
     "faims3-datamodel": "github:FAIMS/faims3-data-model",
     "fast-check": "2.25.0",
     "gts": "3.1.1",
