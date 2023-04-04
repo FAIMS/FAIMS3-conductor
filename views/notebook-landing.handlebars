@@ -21,10 +21,15 @@
 Users can be invited to roles <a href="/notebooks/{{notebook.project_id}}/invite/">here</a>.
 </p>
 
-<ul>
+<table>
   {{#each invites}}
-  <li>Invite for {{this.invite.number}} users for role "{{this.invite.role}}"
-    <button class="btn btn-primary" onclick="copyToClipboard('{{this.url}}')">Copy URL</button>
+  <tr>
+
+    <td>Invite for {{this.invite.number}} users for role "{{this.invite.role}}"</td>
+    <td>
+      <button class="btn btn-primary" onclick="copyToClipboard('{{this.url}}')">Copy Registration URL</button>
+    </td>
+    <td>
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#qrModal{{this.invite._id}}">Show QRCode</button>
     <div class="modal modal-fade" 
          id="qrModal{{this.invite._id}}"
@@ -32,7 +37,10 @@ Users can be invited to roles <a href="/notebooks/{{notebook.project_id}}/invite
       <div class="modal-dialog">
         <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="qrtitle-{{this.invite._id}}">Scan for Invitation to {{../notebook.name}}</h5>
+          <h5 class="modal-title" id="qrtitle-{{this.invite._id}}">
+            Scan to register for role '{{this.invite.role}}' in <br>
+            the {{../notebook.name}} notebook
+          </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
@@ -42,9 +50,10 @@ Users can be invited to roles <a href="/notebooks/{{notebook.project_id}}/invite
       </div>
       </div>
     </div>
-  </li>
+    </td>
+  </tr>
   {{/each}}
-</ul>
+</table>
 
 
 <p><a href="/notebooks/{{notebook.project_id}}/users/">Edit User Roles</a></p>
