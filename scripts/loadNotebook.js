@@ -31,7 +31,8 @@ if (!process.env.USER_TOKEN) {
     process.exit();
 }
 
-const token = process.env.USER_TOKEN;
+const token = JSON.parse(Buffer.from(process.env.USER_TOKEN, 'base64').toString());
+console.log(token);
 
 const main = async filename => {
   console.log(filename);
@@ -40,7 +41,7 @@ const main = async filename => {
   const name = metadata.name;
   fetch(CONDUCTOR_URL + '/api/notebooks/', {
     method: 'POST',
-    headers: {'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json'},
+    headers: {'Authorization': `Bearer ${token.jwt_token}`, 'Content-Type': 'application/json'},
     body: JSON.stringify({metadata, 'ui-specification': uiSpec, name}),
   })
   .then(response => response.json())

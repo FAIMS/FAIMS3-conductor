@@ -18,7 +18,17 @@
  *   Functions to initialise the databases required for FAIMS in couchdb
  */
 
-import {CONDUCTOR_PUBLIC_URL} from '../buildconfig';
+import {registerLocalUser} from '../auth_providers/local';
+import {
+  CONDUCTOR_INSTANCE_NAME,
+  CONDUCTOR_PUBLIC_URL,
+  LOCAL_COUCHDB_AUTH,
+} from '../buildconfig';
+import {
+  addOtherRoleToUser,
+  getUserFromEmailOrUsername,
+  saveUser,
+} from './users';
 
 export const initialiseProjectsDB = async (
   db: PouchDB.Database | undefined
@@ -51,7 +61,7 @@ export const initialiseDirectoryDB = async (
 ) => {
   const directoryDoc = {
     _id: 'default',
-    name: 'Default instance',
+    name: CONDUCTOR_INSTANCE_NAME,
     description: `FAIMS instance on ${CONDUCTOR_PUBLIC_URL}`,
     people_db: {
       db_name: 'people',
@@ -88,11 +98,39 @@ export const initialiseDirectoryDB = async (
       await db.put(directoryDoc);
       await db.put(permissions);
 
-      // directory needs to be public
-      const security = db.security();
-      security.admins.roles.removeAll();
-      security.members.roles.removeAll();
-      await security.save();
+      // can't save security on an in-memory database so skip if testing
+      if (process.env.NODE_ENV !== 'test') {
+        // directory needs to be public
+        const security = db.security();
+        security.admins.roles.removeAll();
+        security.members.roles.removeAll();
+        await security.save();
+      }
+    }
+  }
+};
+
+export const initialiseUserDB = async (db: PouchDB.Database | undefined) => {
+  // register a local admin user with the same password as couchdb
+  // if there isn't already one there
+  if (db && LOCAL_COUCHDB_AUTH) {
+    const adminUser = await getUserFromEmailOrUsername('admin');
+
+    if (adminUser) {
+      return;
+    }
+
+    const [user, error] = await registerLocalUser(
+      'admin',
+      '', // no email address
+      'Admin User',
+      LOCAL_COUCHDB_AUTH.password
+    );
+    if (user) {
+      addOtherRoleToUser(user, 'cluster-admin');
+      saveUser(user);
+    } else {
+      console.error(error);
     }
   }
 };

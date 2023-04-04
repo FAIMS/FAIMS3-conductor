@@ -1,5 +1,7 @@
 # FAIMS3-conductor
 
+[![codecov](https://codecov.io/gh/FAIMS/FAIMS3-conductor/branch/local-auth-user-management/graph/badge.svg?token=CJ4U0H7AKA)](https://codecov.io/gh/FAIMS/FAIMS3-conductor)
+
 The server-side of FAIMS3 handling authentication and authorization
 
 To get started, first set up the `.env` file as specified in Configuration, and
@@ -14,7 +16,7 @@ variables supported.
 
 Environment variables are documented in comments in `.env.dist`.
 
-## Running
+## Key Generation
 
 ```bash
 ./keymanagement/makeInstanceKeys.sh
@@ -22,6 +24,8 @@ Environment variables are documented in comments in `.env.dist`.
 
 generates new key pair in the `keys` folder and generates the `local.ini` file for couchdb
 that contains the public key and other information.
+
+## Running with Docker
 
 Build the two docker images:
 
@@ -38,15 +42,37 @@ docker compose up -d
 
 will start the couchdb and conductor servers to listen on the configured port.
 
-Once the services are up and running we need to initialise the CouchDB
-database. This is done by sending a request to the API and to do this you need
-to get a valid user token.  First, connect to the conductor instance
-on <http://localhost:8080/> or whatever port you have configured.  Login
-using one of the configured authentication methods.  Now, from the
-Conductor home page (<http://localhost:8080>) scroll down to "Copy Bearer Token
-to Clipboard". Paste this value into your .env file as the value of `USER_TOKEN`. 
+## Running with Node
 
-Once you have this token, you can run the script to initialise the databases:
+If you don't plan to use Docker to run or deploy Conductor, you need to get CouchDB
+running on your host and enter the appropriate addresses in the `.env` file. 
+To run the Conductor server you first need to install dependencies:
+
+```bash
+npm install
+```
+
+You should then be able to run the server with:
+
+```bash
+npm start
+```
+
+If you are developing, you may want to run:
+
+```bash
+npm watch
+```
+
+instead, which will monitor for changes with `nodemon`.
+
+## Initialisation
+
+Once the services are up and running we need to initialise the CouchDB
+database. This is done by sending a request to the API via a short script.
+This operation will create a local user called `admin` with the same password
+as configured for CouchDB (`COUCHDB_PASSWORD` in `.env`).  The script will
+have no effect if the admin user is already set up.  Run the script with:
 
 ```bash
 npm run initdb
@@ -54,8 +80,14 @@ npm run initdb
 
 There is also a script that will populate the database with notebooks that are
 stored in the `notebooks` directory.  There should be two sample notebooks in
-there but you can also create new ones. This script again uses the `USER_TOKEN`
-value from .env and can be run by:
+there but you can also create new ones.
+
+This script requires authentication, so you need to get a user token for the admin
+user. First, connect to the conductor instance on <http://localhost:8080/> or whatever
+port you have configured. Login using the local `admin` user and password.
+Now, from the Conductor home page (<http://localhost:8080/>) scroll down to "Copy
+Bearer Token to Clipboard". Paste this value into your .env file as the
+value of USER_TOKEN.
 
 ```bash
 npm run load-notebooks

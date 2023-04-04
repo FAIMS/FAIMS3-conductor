@@ -1,0 +1,19 @@
+<div class="container">
+    <nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/">Home</a></li>
+    <li class="breadcrumb-item" active aria-current="page">Notebooks</li>
+  </ol>
+</nav>
+
+<h1>Notebooks</h1>
+
+<ul>
+    {{#each notebooks}}
+        <li>
+            <a href="/notebooks/{{this.non_unique_project_id}}">{{this.name}}</a>
+        </li>
+    {{/each}}
+</ul>
+
+</div>

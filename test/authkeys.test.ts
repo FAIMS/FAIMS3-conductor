@@ -18,21 +18,23 @@
  *   Tests for authkeys handling
  */
 
-jest.mock('pouchdb');
+import PouchDB from 'pouchdb';
+PouchDB.plugin(require('pouchdb-adapter-memory')); // enable memory adapter for testing
+PouchDB.plugin(require('pouchdb-find'));
 
 import {testProp, fc} from 'jest-fast-check';
 
-import {create_auth_key} from '../src/authkeys/create';
+import {createAuthKey} from '../src/authkeys/create';
 import {validateToken} from '../src/authkeys/read';
 import type {CouchDBUsername, CouchDBUserRoles} from '../src/datamodel/users';
 import {getSigningKey} from '../src/authkeys/signing_keys';
-import {CONDUCTOR_INSTANCE_NAME, CONDUCTOR_KEY_ID} from '../src/buildconfig';
+import {addOtherRoleToUser, createUser, saveUser} from '../src/couchdb/users';
 
 describe('roundtrip creating and reading token', () => {
   testProp(
     'token roundtrip',
     [
-      fc.fullUnicodeString(), // username name
+      fc.fullUnicodeString(1, 100), // username
       fc.array(fc.fullUnicodeString()), // roles
       fc.fullUnicodeString(), // name
     ],
@@ -43,20 +45,33 @@ describe('roundtrip creating and reading token', () => {
     ) => {
       const signing_key = await getSigningKey();
 
-      return create_auth_key(username, roles, signing_key, name)
-        .then(token => {
-          return validateToken(token);
-        })
-        .then(token_props => {
-          expect(token_props).not.toBe(undefined);
-          if (token_props) {
-            expect(username).toBe(token_props.username);
-            expect(roles).toStrictEqual(token_props.roles);
-            expect(name).toStrictEqual(token_props.name);
-            expect(CONDUCTOR_INSTANCE_NAME).toBe(token_props.instance_name);
-            expect(CONDUCTOR_KEY_ID).toBe(token_props.key_id);
-          }
-        });
+      // need to make a user with these details
+      const [user, err] = await createUser(username, '');
+
+      if (user) {
+        user.name = name;
+        for (let i = 0; i < roles.length; i++) {
+          addOtherRoleToUser(user, roles[i]);
+        }
+        await saveUser(user);
+
+        return createAuthKey(user, signing_key)
+          .then(token => {
+            return validateToken(token);
+          })
+          .then(valid_user => {
+            expect(valid_user).not.toBe(undefined);
+            if (valid_user) {
+              expect(valid_user.user_id).toBe(user.user_id);
+              expect(valid_user.roles).toStrictEqual(user.roles);
+              expect(valid_user.name).toStrictEqual(user.name);
+              // expect(CONDUCTOR_INSTANCE_NAME).toBe(token_props.instance_name);
+              // expect(CONDUCTOR_KEY_ID).toBe(token_props.key_id);
+            }
+          });
+      } else {
+        console.error(err);
+      }
     }
   );
 });

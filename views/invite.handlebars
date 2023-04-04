@@ -1,9 +1,16 @@
-  <div class="form-signin w-100 m-auto text-center">
-    <h3 class="h3 mb-3 fw-normal" style="margin-top:50px">Invite Users to Notebooks </h3>
-    <div class="btn-group mt-2 mb-4" role="group">
-      <a class="w-100 btn btn-outline-primary" href="/">Go Back to User Account<i class="bi bi-arrow-return-left"></i></a>
-    </div>
+  <div class="container">
+    <h3 class="h3 mb-3 fw-normal">Invite Users to {{notebook.name}}</h3>
+
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item"><a href="/notebooks/">Notebooks</a></li>
+        <li class="breadcrumb-item"><a href="/notebooks/{{notebook.project_id}}/">{{notebook.name}}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Create Invite</li>
+      </ol>
+    </nav>
   </div>
+
   <div class="container">
     <div class="row gx-3 gy-3">
       <div class="col-md-3 col-sm-12"></div>
@@ -13,32 +20,44 @@
             Invite Users
           </div>
           <div class="card-body">
-            If you wish to invite users to specific roles in a notebook, fill in the form below. Note that only admins of teams and the system admin can add users to roles.
+            Create an invitation for users to sign up to
+            this notebook. 
             <div class="alert alert-warning mt-3" role="alert">
-              <i class="bi bi-info-circle"></i>&nbsp;&nbsp; Users will need internet access to sign in and accept invites.
+              <i class="bi bi-info-circle"></i>&nbsp;&nbsp; Users will need 
+              internet access to sign in and accept invites.
             </div>
 
             <form class="mb-1 mt-2" method="post">
               <div class="mb-3">
                 <label for="email">Email address</label>
                 <input name="email" type="email" class="form-control" id="email" aria-describedby="emailHelp" placeholder="user@team.com">
-                <div id="emailHelp" class="form-text">Add the email address of the user you wish to invite.</div>
+                <div id="emailHelp" class="form-text">Optional: add the email address of the
+                  user you wish to invite.</div>
               </div>
+
               <div class="mb-3">
-                <label for="project_id">Notebook</label>
-                <input name="project_id" type="text" class="form-control" id="project_id" placeholder="my_notebook">
-                <div id="notebookHelp" class="form-text text-muted">Notebooks names must be formatted as lowercase with underscores, i.e., CSIRO-geochemistry should be entered as <code>csiro_geochemistry</code></div>
+                <label for="number">Invite valid for how many users?</label>
+                <input name="number" type="number" class="form-control" id="number" aria-describedby="numberHelp" value="1">
+                <div id="numberHelp" class="form-text">How many users should be able to
+                  use this invite.  Set to zero (0) for an unlimited number. 
+                </div>
               </div>
+
               <div class="mb-3">
                 <label for="role">Role</label>
-                <input name="role" type="text" class="form-control" id="role" placeholder="e.g., admin">
-                <div id="roleHelp" class="form-text text-muted">Add a single role here. Roles include: admin (user can see all records) and team (user can only see their own records). Check the notebook builder for all available roles and associated permissions set up for your notebook.</div>
+                <select name="role" class="form-control" id="role">
+                  {{#each roles}}
+                  <option value={{this}}>{{this}}</option>
+                  {{/each}}
+                </select>
+                <div id="roleHelp" class="form-text text-muted">
+                  Roles include: admin (user can see all records) and 
+                  team (user can only see their own records).</div>
               </div>
 
               <button type="submit" class="btn btn-primary">Submit</button>
               <button type="reset" class="btn" style="float:right">Reset</button>
             </form>
-
           </div>
         </div>
       </div>

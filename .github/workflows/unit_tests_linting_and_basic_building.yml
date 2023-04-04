@@ -16,7 +16,7 @@ jobs:
     - name: Use Node.js lts/*
       uses: actions/setup-node@v2
       with:
-        node-version: 'lts/*'
+        node-version: '16'
         cache: 'npm'
     - name: "Linting and testing"
       run: |
@@ -27,3 +27,9 @@ jobs:
         npm run compile
         npm run build --if-present
         npm run test
+    - name: Generate coverage report
+      run: npm run coverage
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+          token: ${{ secrets.CODECOV_TOKEN }}

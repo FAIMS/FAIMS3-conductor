@@ -44,8 +44,11 @@ declare global {
   namespace Express {
     interface User {
       user_id: string;
+      _id?: string;
+      _rev?: string;
       name: string;
       emails: Email[];
+      roles: string[];
       project_roles: AllProjectRoles;
       other_roles: OtherRoles;
       profiles: UserServiceProfiles;

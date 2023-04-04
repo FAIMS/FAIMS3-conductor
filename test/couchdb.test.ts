@@ -17,6 +17,9 @@
  * Description:
  *   Tests for the interface to couchDB
  */
+import PouchDB from 'pouchdb';
+PouchDB.plugin(require('pouchdb-adapter-memory')); // enable memory adapter for testing
+PouchDB.plugin(require('pouchdb-find'));
 
 import {
   getDirectoryDB,
@@ -28,39 +31,41 @@ import {
   getNotebookMetadata,
   getNotebooks,
   getNotebookUISpec,
+  getRolesForNotebook,
 } from '../src/couchdb/notebooks';
 import * as fs from 'fs';
+import {getUserFromEmailOrUsername} from '../src/couchdb/users';
+import {CONDUCTOR_INSTANCE_NAME} from '../src/buildconfig';
 
-jest.mock('pouchdb');
-
-test('check initialise', () => {
-  initialiseDatabases();
+test('check initialise', async () => {
+  await initialiseDatabases();
 
   const directoryDB = getDirectoryDB();
   expect(directoryDB).not.toBe(undefined);
   if (directoryDB) {
-    try {
-      const default_document = directoryDB.get('default') as any;
-      expect(default_document.name).toBe('default');
+    const default_document = (await directoryDB.get('default')) as any;
+    expect(default_document.name).toBe(CONDUCTOR_INSTANCE_NAME);
 
-      const permissions_document = directoryDB.get(
-        '_design/permissions'
-      ) as any;
-      expect(permissions_document['_id']).toBe('_design/permissions');
-    } catch (error) {
-      console.log(error);
-    }
+    const permissions_document = (await directoryDB.get(
+      '_design/permissions'
+    )) as any;
+    expect(permissions_document['_id']).toBe('_design/permissions');
   }
 });
 
 test('getNotebooks', async () => {
-  initialiseDatabases();
-  const notebooks = await getNotebooks();
-  expect(notebooks).not.toBeNull();
+  await initialiseDatabases();
+  const user = await getUserFromEmailOrUsername('admin');
+  expect(user).not.toBeNull();
+  if (user) {
+    const notebooks = await getNotebooks(user);
+    expect(notebooks).not.toBeNull();
+  }
 });
 
 test('createNotebook', async () => {
-  initialiseDatabases();
+  await initialiseDatabases();
+  const user = await getUserFromEmailOrUsername('admin');
 
   const jsonText = fs.readFileSync('./notebooks/sample_notebook.json', 'utf-8');
   const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
@@ -68,11 +73,12 @@ test('createNotebook', async () => {
   const projectID = await createNotebook(' Test   Nõtebõõk', uiSpec, metadata);
 
   expect(projectID).not.toBe(undefined);
+  expect(user).not.toBeNull();
 
-  if (projectID) {
+  if (projectID && user) {
     expect(projectID.substring(13)).toBe('-test-notebook');
 
-    const notebooks = await getNotebooks();
+    const notebooks = await getNotebooks(user);
     expect(notebooks.length).toBe(1);
     const db = await getProjectMetaDB(projectID);
     if (db) {
@@ -84,13 +90,12 @@ test('createNotebook', async () => {
 });
 
 test('getNotebookMetadata', async () => {
-  initialiseDatabases();
+  await initialiseDatabases();
 
   const jsonText = fs.readFileSync('./notebooks/sample_notebook.json', 'utf-8');
   const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
   const name = 'Test Notebook';
   const projectID = await createNotebook(name, uiSpec, metadata);
-
   expect(projectID).not.toBe(undefined);
   if (projectID) {
     const retrievedMetadata = await getNotebookMetadata(projectID);
@@ -106,7 +111,7 @@ test('getNotebookMetadata', async () => {
 });
 
 test('getNotebookUISpec', async () => {
-  initialiseDatabases();
+  await initialiseDatabases();
 
   const jsonText = fs.readFileSync('./notebooks/sample_notebook.json', 'utf-8');
   const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
@@ -122,5 +127,24 @@ test('getNotebookUISpec', async () => {
       expect(retrieved['fviews'].length).toBe(uiSpec.fviews.length);
       expect(retrieved['fields']).not.toBe(undefined);
     }
+  }
+});
+
+test('get notebook roles', async () => {
+  await initialiseDatabases();
+
+  const jsonText = fs.readFileSync('./notebooks/sample_notebook.json', 'utf-8');
+  const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
+  const name = 'Test Notebook';
+  const projectID = await createNotebook(name, uiSpec, metadata);
+
+  expect(projectID).not.toBe(undefined);
+  if (projectID) {
+    const roles = await getRolesForNotebook(projectID);
+    expect(roles.length).toBe(4);
+    expect(roles).toContain('admin'); // admin role should always be present
+    expect(roles).toContain('team'); // specified in the UISpec
+    expect(roles).toContain('moderator'); // specified in the UISpec
+    expect(roles).toContain('user'); // user role should always be present
   }
 });

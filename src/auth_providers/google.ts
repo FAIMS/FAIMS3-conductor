@@ -21,65 +21,154 @@
 import {Strategy, VerifyCallback} from 'passport-google-oauth20';
 
 import {GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET} from '../buildconfig';
+import { getInvite } from '../couchdb/invites';
 import {
   addEmailsToUser,
-  updateUser,
-  getOrCreatePouchUser,
-  pouch_user_to_express_user,
+  saveUser,
+  getUserFromEmailOrUsername,
+  createUser,
 } from '../couchdb/users';
-import {PouchUser} from '../datamodel/users';
+import { acceptInvite } from '../registration';
 
-function oauth_verify(
+async function oauth_verify(
   req: Request,
   accessToken: string,
   refreshToken: string,
   results: any,
   profile: any,
-  cb: VerifyCallback
+  done: CallableFunction // VerifyCallback doesn't allow user to be false
 ) {
-  console.debug('google oauth', accessToken, refreshToken, results, profile);
-  const user_id = profile.id;
-  getOrCreatePouchUser(user_id)
-    .then((user: PouchUser) => {
-      if (user.name === '') {
-        user.name = profile.displayName;
-      }
-      addEmailsToUser(
-        user,
-        profile.emails.filter((o: any) => o.verified).map((o: any) => o.value)
-      );
-      user.profiles['google'] = profile;
+  console.debug('google verify');
 
-      return user;
-    })
-    .then(async (user: PouchUser) => {
-      await updateUser(user);
-      return pouch_user_to_express_user(user);
-    })
-    .then((user: Express.User) => cb(null, user, profile))
-    .catch(err => {
-      console.error('User saving error', err);
-      cb(new Error('Failed to save user'), undefined);
-    });
+  // three cases:
+  //   - we have a user with this user_id from a previous google login
+  //   - we already have a user with the email address in this profile,
+  //     add the profile if not there
+
+  let user = await getUserFromEmailOrUsername(profile.id);
+  if (user) {
+    // TODO: do we need to validate further? could check that the profiles match???
+    done(null, user, profile);
+  }
+
+  const emails = profile.emails
+    .filter((o: any) => o.verified)
+    .map((o: any) => o.value);
+
+  for (let i = 0; i < emails.length; i++) {
+    user = await getUserFromEmailOrUsername(emails[i]);
+    if (user) {
+      // add the profile if not already there
+      if (!('google' in user.profiles)) {
+        user.profiles['google'] = profile;
+        console.log('adding google profile for user');
+        await saveUser(user);
+      }
+      console.log('valid google user');
+      return done(null, user, profile);
+    }
+  }
+  if (!user) {
+    return done(null, false);
+  }
 }
 
-export function get_strategy(callback_url: string): Strategy {
+async function oauth_register(
+  req: any,
+  accessToken: string,
+  refreshToken: string,
+  results: any,
+  profile: any,
+  done: VerifyCallback
+) {
+  console.debug('google register');
+  console.log('state', req.session);
+  // three cases:
+  //   - we have a user with this user_id from a previous google login
+  //   - we already have a user with the email address in this profile,
+  //     add the profile if not there
+  //   - we don't, create a new user record and add the profile
+
+  let user = await getUserFromEmailOrUsername(profile.id);
+  if (user) {
+    // TODO: do we need to validate further? could check that the profiles match???
+    done(null, user, profile);
+  }
+
+  const emails = profile.emails
+    .filter((o: any) => o.verified)
+    .map((o: any) => o.value);
+
+  for (let i = 0; i < emails.length; i++) {
+    user = await getUserFromEmailOrUsername(emails[i]);
+    if (user) {
+      // add the profile if not already there
+      if (!('google' in user.profiles)) {
+        user.profiles['google'] = profile;
+        console.log('adding google profile for user');
+        await saveUser(user);
+      }
+      console.log('valid google user');
+      done(null, user, profile);
+      break;
+    }
+  }
+  if (!user) {
+    let errorMsg = '';
+    const invite = await getInvite(req.session.invite);
+    console.log('invite', invite);
+    if (invite) {
+      [user, errorMsg] = await createUser(emails[0], profile.id);
+
+      if (user) {
+        console.log('created new user');
+        user.name = profile.displayName;
+        user.profiles['google'] = profile;
+        addEmailsToUser(user, emails);
+        // accepting the invite will add roles and save the user record
+        await acceptInvite(user, invite);
+        done(null, user, profile);
+      } else {
+        throw Error(errorMsg);
+      }
+    }
+  } else {
+    throw Error('no valid invite for new registration');
+  }
+}
+
+export function get_strategies(
+  login_callback: string,
+  register_callback: string
+): Array<Strategy> {
   if (GOOGLE_CLIENT_ID === '') {
     throw Error('GOOGLE_CLIENT_ID must be set to use Google');
   }
   if (GOOGLE_CLIENT_SECRET === '') {
     throw Error('GOOGLE_CLIENT_SECRET must be set to use Google');
   }
-  const st = new Strategy(
+  const verifyStrategy = new Strategy(
     {
       clientID: GOOGLE_CLIENT_ID,
       clientSecret: GOOGLE_CLIENT_SECRET,
-      callbackURL: callback_url,
+      callbackURL: login_callback,
       passReqToCallback: true,
       scope: ['profile', 'email', 'https://www.googleapis.com/auth/plus.login'],
       state: true,
     },
     oauth_verify as any
   );
-  return st;
+
+  const registerStrategy = new Strategy(
+    {
+      clientID: GOOGLE_CLIENT_ID,
+      clientSecret: GOOGLE_CLIENT_SECRET,
+      callbackURL: register_callback,
+      passReqToCallback: true,
+      scope: ['profile', 'email', 'https://www.googleapis.com/auth/plus.login'],
+      state: true,
+    },
+    oauth_register as any
+  );
+  return [verifyStrategy, registerStrategy];
 }

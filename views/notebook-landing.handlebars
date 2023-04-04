@@ -1,8 +1,76 @@
-<h1>Notebook "{{ notebook_name }}" ({{ notebook_id }})</h1>
-<p>{{ notebook_description }}</p>
+
+<div class="container">
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/">Home</a></li>
+    <li class="breadcrumb-item"><a href="/notebooks/">Notebooks</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{notebook.name}}</li>
+  </ol>
+</nav>
+
+<h1>{{ notebook.name }}</h1>
+<h3>{{ notebook.project_id }}</h3>
+
+<dl>
+    <dt>Project Lead</dt><dd>{{notebook.project_lead}}</dd>
+    <dt>Description</dt><dd>{{ notebook.pre_description }}</dd>
+</dl>
+
 {{#if isAdmin}}
 <p>
-Roles can be removed <a href="./remove_role">here</a>. Users can be invited to
-roles <a href="/invite">here</a>.
+Users can be invited to roles <a href="/notebooks/{{notebook.project_id}}/invite/">here</a>.
 </p>
+
+<table>
+  {{#each invites}}
+  <tr>
+
+    <td>Invite for {{this.invite.number}} users for role "{{this.invite.role}}"</td>
+    <td>
+      <button class="btn btn-primary" onclick="copyToClipboard('{{this.url}}')">Copy Registration URL</button>
+    </td>
+    <td>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#qrModal{{this.invite._id}}">Show QRCode</button>
+    <div class="modal modal-fade" 
+         id="qrModal{{this.invite._id}}"
+          tabindex="-1" aria-labelledby="qrtitle-{{this.invite._id}}" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="qrtitle-{{this.invite._id}}">
+            Scan to register for role '{{this.invite.role}}' in <br>
+            the {{../notebook.name}} notebook
+          </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <img width="100%" src="{{this.qrcode}}" alt="QRCode for {{this.url}}">
+        </div>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+      </div>
+    </div>
+    </td>
+  </tr>
+  {{/each}}
+</table>
+
+
+<p><a href="/notebooks/{{notebook.project_id}}/users/">Edit User Roles</a></p>
 {{/if}}
+
+</div>
+
+  <script>
+const copyToClipboard = (text) => {
+    navigator.permissions.query({name: "clipboard-write"}).then((result) => {
+    if (result.state === "granted" || result.state === "prompt") {
+        navigator.clipboard.writeText(text).then(() => {
+            alert("Copied to clipboard.")
+        }, () => {
+                alert("Could not copy text.")
+        });
+    }
+    });
+}
+</script>

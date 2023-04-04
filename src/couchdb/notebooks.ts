@@ -32,24 +32,15 @@ import {
 
 import securityPlugin from 'pouchdb-security-helper';
 import {getFullRecordData, getRecordsWithRegex} from 'faims3-datamodel';
+import {userHasPermission} from './users';
 PouchDB.plugin(securityPlugin);
 
 /**
- * Determine whether we should return this project
- *  based on user permissions I guess (copied from FAIMS3)
- * @param _project_id - project identifier
- * @returns true if the user has access to this project
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const shouldDisplayProject = async (_project_id: string) => {
-  return true;
-};
-
-/**
  * getNotebooks -- return an array of notebooks from the database
+ * @oaram user - only return notebooks that this user can see
  * @returns an array of ProjectObject objects
  */
-export const getNotebooks = async (): Promise<any[]> => {
+export const getNotebooks = async (user: Express.User): Promise<any[]> => {
   const output: any[] = [];
   const projects: ProjectObject[] = [];
   // in the frontend, the listing_id names the backend instance,
@@ -69,8 +60,7 @@ export const getNotebooks = async (): Promise<any[]> => {
       const project_id = project._id;
       const full_project_id = resolve_project_id(listing_id, project_id);
       const projectMeta = await getNotebookMetadata(project_id);
-      console.log(projectMeta);
-      if (await shouldDisplayProject(full_project_id)) {
+      if (userHasPermission(user, full_project_id, 'read')) {
         output.push({
           name: project.name,
           last_updated: project.last_updated,
@@ -226,11 +216,14 @@ export const createNotebook = async (
     return undefined;
   }
 
-  const metaSecurity = await metaDB.security();
-  metaSecurity.admins.roles.add(CLUSTER_ADMIN_GROUP_NAME);
-  metaSecurity.members.roles.add(`${project_id}||team`);
-  metaSecurity.members.roles.add(`${project_id}||admin`);
-  await metaSecurity.save();
+  // can't save security on a memory database so skip this if we're testing
+  if (process.env.NODE_ENV !== 'test') {
+    const metaSecurity = await metaDB.security();
+    metaSecurity.admins.roles.add(CLUSTER_ADMIN_GROUP_NAME);
+    metaSecurity.members.roles.add(`${project_id}||team`);
+    metaSecurity.members.roles.add(`${project_id}||admin`);
+    await metaSecurity.save();
+  }
 
   // derive autoincrementers from uispec
   const autoIncrementers = getAutoIncrementers(uispec);
@@ -250,11 +243,14 @@ export const createNotebook = async (
     return undefined;
   }
 
-  const dataSecurity = await dataDB.security();
-  dataSecurity.admins.roles.add(CLUSTER_ADMIN_GROUP_NAME);
-  dataSecurity.members.roles.add(`${project_id}||team`);
-  dataSecurity.members.roles.add(`${project_id}||admin`);
-  await dataSecurity.save();
+  // can't save security on a memory database so skip this if we're testing
+  if (process.env.NODE_ENV !== 'test') {
+    const dataSecurity = await dataDB.security();
+    dataSecurity.admins.roles.add(CLUSTER_ADMIN_GROUP_NAME);
+    dataSecurity.members.roles.add(`${project_id}||team`);
+    dataSecurity.members.roles.add(`${project_id}||admin`);
+    await dataSecurity.save();
+  }
 
   try {
     await dataDB.put(attachmentFilterDoc);
@@ -300,26 +296,21 @@ export const getNotebookMetadata = async (
 ): Promise<ProjectMetadata | null> => {
   const result: ProjectMetadata = {};
   try {
-    if (await shouldDisplayProject(project_id)) {
-      // get the metadata from the db
-      const projectDB = await getProjectMetaDB(project_id);
-      if (projectDB) {
-        const metaDocs = await projectDB.allDocs({include_docs: true});
-        metaDocs.rows.forEach((doc: any) => {
-          const id: string = doc['id'];
-          if (id && id.startsWith(PROJECT_METADATA_PREFIX)) {
-            const key: string = id.substring(
-              PROJECT_METADATA_PREFIX.length + 1
-            );
-            result[key] = doc.doc.metadata;
-          }
-        });
-        return result;
-      } else {
-        console.error('no metadata database found for', project_id);
-      }
+    // get the metadata from the db
+    const projectDB = await getProjectMetaDB(project_id);
+    if (projectDB) {
+      const metaDocs = await projectDB.allDocs({include_docs: true});
+      metaDocs.rows.forEach((doc: any) => {
+        const id: string = doc['id'];
+        if (id && id.startsWith(PROJECT_METADATA_PREFIX)) {
+          const key: string = id.substring(PROJECT_METADATA_PREFIX.length + 1);
+          result[key] = doc.doc.metadata;
+        }
+      });
+      result.project_id = project_id;
+      return result;
     } else {
-      console.error('permission denied for project', project_id);
+      console.error('no metadata database found for', project_id);
     }
   } catch (error) {
     console.log('unknown project', project_id);
@@ -336,24 +327,40 @@ export const getNotebookUISpec = async (
   project_id: string
 ): Promise<ProjectMetadata | null> => {
   try {
-    if (await shouldDisplayProject(project_id)) {
-      // get the metadata from the db
-      const projectDB = await getProjectMetaDB(project_id);
-      if (projectDB) {
-        const uiSpec = (await projectDB.get('ui-specification')) as any;
-        delete uiSpec._id;
-        delete uiSpec._rev;
-        return uiSpec;
-      } else {
-        console.error('no metadata database found for', project_id);
-      }
+    // get the metadata from the db
+    const projectDB = await getProjectMetaDB(project_id);
+    if (projectDB) {
+      const uiSpec = (await projectDB.get('ui-specification')) as any;
+      delete uiSpec._id;
+      delete uiSpec._rev;
+      return uiSpec;
     } else {
-      console.error('permission denied for project', project_id);
+      console.error('no metadata database found for', project_id);
     }
   } catch (error) {
     console.log('unknown project', project_id);
   }
   return null;
+};
+
+/**
+ * validateNotebookID - check that a project_id is a real notebook
+ * @param project_id - a project identifier
+ * @returns true if this is a valid project identifier
+ */
+export const validateNotebookID = async (
+  project_id: string
+): Promise<boolean> => {
+  try {
+    const projectDB = await getProjectMetaDB(project_id);
+    if (projectDB) {
+      return true;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    return false;
+  }
 };
 
 /**
@@ -377,4 +384,20 @@ export const getNotebookRecords = async (
     fullRecords.push(data);
   }
   return fullRecords;
+};
+
+export const getRolesForNotebook = async (project_id: ProjectID) => {
+  const meta = await getNotebookMetadata(project_id);
+  if (meta) {
+    const roles = meta.accesses;
+    if (roles.indexOf('admin') < 0) {
+      roles.push('admin');
+    }
+    if (roles.indexOf('user') < 0) {
+      roles.push('user');
+    }
+    return roles;
+  } else {
+    return [];
+  }
 };

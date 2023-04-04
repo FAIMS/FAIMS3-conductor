@@ -179,10 +179,12 @@ function public_key_path(): string {
 }
 
 function instance_name(): string {
-  const name = process.env.PROFILE_NAME;
+  const name = process.env.CONDUCTOR_INSTANCE_NAME;
   if (name === '' || name === undefined) {
-    console.log('PROFILE_NAME not set, using default for instance name');
-    return 'test';
+    console.log(
+      'CONDUCTOR_INSTANCE_NAME not set, using PROFILE_NAME for instance name'
+    );
+    return signing_key_id();
   } else {
     return name;
   }
@@ -334,7 +336,7 @@ export const GOOGLE_CLIENT_ID = google_client_id();
 export const GOOGLE_CLIENT_SECRET = google_client_secret();
 export const CLUSTER_ADMIN_GROUP_NAME = cluster_admin_group_name();
 export const CONDUCTOR_AUTH_PROVIDERS = get_providers_to_use();
-export const EMAIL_FROM_ADDRESSS = email_from_address();
+export const EMAIL_FROM_ADDRESS = email_from_address();
 export const EMAIL_TRANSPORTER = email_transporter();
 export const WEBAPP_PUBLIC_URL = app_url();
 export const ANDROID_APP_URL = android_url();

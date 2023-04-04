@@ -13,19 +13,9 @@
  * See, the License, for the specific language governing permissions and
  * limitations under the License.
  *
- * Filename: src/registration.ts
+ * Filename: req-flash.d.ts
  * Description:
- *   This module contains helpers for sending email within the conductor.
+ *   Type declaration for req-flash.
  */
-import {EMAIL_FROM_ADDRESS, EMAIL_TRANSPORTER} from './buildconfig';
 
-export type ConductorEmail = any; // TODO: find/setup correct type
-
-export async function sendEmail(email: ConductorEmail) {
-  email['from'] = `${EMAIL_FROM_ADDRESS}`;
-  try {
-    await EMAIL_TRANSPORTER.sendMail(email);
-  } catch (err) {
-    console.error(err);
-  }
-}
+declare module 'req-flash';
