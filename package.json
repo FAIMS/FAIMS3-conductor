@@ -72,7 +72,7 @@
     "jest": "^27.5.1",
     "jest-fast-check": "1.0.2",
     "mocha": "^10.1.0",
-    "nano": "^10.1.1",
+    "nano": "^10.1.2",
     "node-fetch": "^3.3.0",
     "nodemon": "^2.0.20",
     "pouchdb-adapter-memory": "^8.0.1",
