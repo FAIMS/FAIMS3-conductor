@@ -23,7 +23,26 @@ Users can be invited to roles <a href="/notebooks/{{notebook.project_id}}/invite
 
 <ul>
   {{#each invites}}
-  <li><a href="/register/{{this._id}}/">Invite for {{this.number}} users for role "{{this.role}}"</a></li>
+  <li>Invite for {{this.invite.number}} users for role "{{this.invite.role}}"
+    <button class="btn btn-primary" onclick="copyToClipboard('{{this.url}}')">Copy URL</button>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#qrModal{{this.invite._id}}">Show QRCode</button>
+    <div class="modal modal-fade" 
+         id="qrModal{{this.invite._id}}"
+          tabindex="-1" aria-labelledby="qrtitle-{{this.invite._id}}" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="qrtitle-{{this.invite._id}}">Scan for Invitation to {{../notebook.name}}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <img width="100%" src="{{this.qrcode}}" alt="QRCode for {{this.url}}">
+        </div>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+      </div>
+    </div>
+  </li>
   {{/each}}
 </ul>
 
@@ -33,3 +52,16 @@ Users can be invited to roles <a href="/notebooks/{{notebook.project_id}}/invite
 
 </div>
 
+  <script>
+const copyToClipboard = (text) => {
+    navigator.permissions.query({name: "clipboard-write"}).then((result) => {
+    if (result.state === "granted" || result.state === "prompt") {
+        navigator.clipboard.writeText(text).then(() => {
+            alert("Copied to clipboard.")
+        }, () => {
+                alert("Could not copy text.")
+        });
+    }
+    });
+}
+</script>

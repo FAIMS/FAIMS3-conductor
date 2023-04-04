@@ -20,7 +20,7 @@
  */
 import handlebars from 'handlebars';
 import {body, validationResult} from 'express-validator';
-
+import QRCode from 'qrcode';
 import {app} from './core';
 import {NonUniqueProjectID} from './datamodel/core';
 import {AllProjectRoles, RoleInvite} from './datamodel/users';
@@ -31,6 +31,7 @@ import {
   WEBAPP_PUBLIC_URL,
   IOS_APP_URL,
   ANDROID_APP_URL,
+  CONDUCTOR_PUBLIC_URL,
 } from './buildconfig';
 import {
   requireAuthentication,
@@ -110,26 +111,6 @@ app.post(
   }
 );
 
-
-// app.get(
-//   '/reject-invite/:invite_id/',
-//   requireAuthentication,
-//   async (req, res) => {
-//     const user = req.user as Express.User; // requireAuthentication ensures user
-//     const invite_id = req.params.invite_id;
-//     const invite = await getInvite(invite_id);
-//     if (!invite) {
-//       res.sendStatus(404);
-//       return;
-//     }
-//     if (user.emails.includes(invite.email)) {
-//       await rejectInvite(invite);
-//     }
-//     res.redirect('/my-invites/');
-//   }
-// );
-
-
 app.get('/notebooks/', requireAuthentication, async (req, res) => {
   const user = req.user;
   if (user) {
@@ -150,16 +131,25 @@ app.get(
     const user = req.user as Express.User; // requireAuthentication ensures user
     const project_id = req.params.notebook_id;
     const notebook = await getNotebookMetadata(project_id);
-    let invites: RoleInvite[] = [];
+    const invitesQR: any[] = [];
     if (notebook) {
       const isAdmin = userHasPermission(user, project_id, 'modify');
       if (isAdmin) {
-        invites = await getInvitesForNotebook(project_id);
+        const invites = await getInvitesForNotebook(project_id);
+        for (let index = 0; index < invites.length; index++) {
+          const invite = invites[index];
+          const url = CONDUCTOR_PUBLIC_URL + '/register/' + invite._id;
+          invitesQR.push({
+            invite: invite,
+            url: url,
+            qrcode: await QRCode.toDataURL(url),
+          });
+        }
       }
       res.render('notebook-landing', {
         isAdmin: isAdmin,
         notebook: notebook,
-        invites: invites,
+        invites: invitesQR,
       });
     } else {
       res.sendStatus(404);

@@ -63,6 +63,7 @@
     "@types/passport-local": "^1.0.35",
     "@types/passport-oauth2": "1.4.11",
     "@types/pouchdb": "6.4.0",
+    "@types/qrcode": "^1.5.0",
     "@types/supertest": "2.0.12",
     "@types/swagger-ui-dist": "^3.30.1",
     "@types/uuid": "8.3.4",
