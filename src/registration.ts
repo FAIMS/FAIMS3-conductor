@@ -21,7 +21,7 @@ import {v4 as uuidv4} from 'uuid';
 
 import {NonUniqueProjectID} from './datamodel/core';
 import {RoleInvite, Email, ConductorRole} from './datamodel/users';
-import {saveUser} from './couchdb/users';
+import {addProjectRoleToUser, saveUser} from './couchdb/users';
 import {saveInvite, deleteInvite} from './couchdb/invites';
 import {CONDUCTOR_PUBLIC_URL, CLUSTER_ADMIN_GROUP_NAME} from './buildconfig';
 import {sendEmail} from './email';
@@ -75,8 +75,10 @@ function renderInviteText(invite: RoleInvite) {
   return `Hi,
   You have been invited with the role ${invite.role} to the project
   ${invite.project_id} on ${CONDUCTOR_PUBLIC_URL}. Head to
-  ${CONDUCTOR_PUBLIC_URL}, login with one of the authentication providers, and
-  accept this invite to join this project.
+  ${CONDUCTOR_PUBLIC_URL}/register/${invite._id} to register an account.
+
+  If you already have an account on ${CONDUCTOR_PUBLIC_URL} then following that
+  link will assign the ${invite.role} role on ${invite.project_id} to your account.
 
   If you do not wish to join this project, feel free to ignore this email.
   `;
@@ -98,9 +100,7 @@ async function emailInvite(invite: RoleInvite) {
 
 export async function acceptInvite(user: Express.User, invite: RoleInvite) {
   if (invite.number > 0) {
-    const project_roles = new Set(user.project_roles[invite.project_id] ?? []);
-    project_roles.add(invite.role);
-    user.project_roles[invite.project_id] = Array.from(project_roles);
+    addProjectRoleToUser(user, invite.project_id, invite.role);
     await saveUser(user);
 
     invite.number--;

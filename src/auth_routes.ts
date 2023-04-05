@@ -198,7 +198,6 @@ export function add_auth_routes(app: any, handlers: any) {
         typeof req.query?.state === 'string' ||
         typeof req.query?.state === 'undefined'
       ) {
-        console.log('authenticating', handler);
         passport.authenticate(handler + '-validate', HANDLER_OPTIONS[handler])(
           req,
           res,
@@ -222,7 +221,7 @@ export function add_auth_routes(app: any, handlers: any) {
       `/auth-return/${handler}/`,
       passport.authenticate(handler + '-validate', {
         successRedirect: '/send-token/',
-        failureRedirect: '/bad',
+        failureRedirect: '/auth',
         failureFlash: true,
         successFlash: 'Welcome!',
       })
@@ -243,7 +242,7 @@ export function add_auth_routes(app: any, handlers: any) {
       `/register-return/${handler}/`,
       passport.authenticate(handler + '-register', {
         successRedirect: '/',
-        failureRedirect: '/bad-registration',
+        failureRedirect: '/auth',
       })
     );
   }

@@ -20,7 +20,7 @@
 
 import {ProjectID} from 'faims3-datamodel';
 import {getInvitesDB} from '.';
-import {RoleInvite, Email} from '../datamodel/users';
+import {RoleInvite} from '../datamodel/users';
 
 export async function saveInvite(invite: RoleInvite) {
   const invite_db = getInvitesDB();

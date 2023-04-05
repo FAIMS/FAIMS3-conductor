@@ -22,10 +22,9 @@
               {{/each}}
             </ul>
           <div class="alert alert-info" role="alert">
-            <i class="bi bi-info-circle"></i>&nbsp;&nbsp; If you can't see a role here you expect, try <a href="">signing out</a> and back in again.
+            <i class="bi bi-info-circle"></i>&nbsp;&nbsp; If you can't see a role here you expect, try <a href="/logout">signing out</a> and back in again.
           </div>
-            <a class="card-link" href="/invite/" class="card-link">Invite users to roles</a>
-            <a class="card-link" href="/my-invites/" class="card-link">Check my invites</a>
+            <a class="card-link" href="/notebooks/" class="card-link">Browse Notebooks</a>
           </div>
         </div>
       </div>
@@ -35,11 +34,8 @@
             Switching User?
           </div>
           <div class="card-body">
-            <p class="card-text">You are currenty signed in to <b>{{{provider}}}</b></p>
-            <p class="card-text">If you are signed in with Data Central, and wish to add <i>another</i> Data Central user, you need to <a href="https://auth.datacentral.org.au/cas/logout">sign out here first</a>. Then, go ahead and <a href="/logout/">sign in</a>with a different user. Don't worry, the FAIMS app will allow you to switch between both users.</p>
-            <p>If you want to sign a Data Central user out of FAIMS permanently, use the blue <b>Log Out of App <i class="bi bi-box-arrow-right"></i></b> button above).</p>
-            <div class="callout"><small>Why? The authentication system Data Central uses only allows for one signed-in user at a time.</small></div>
-            <p class="card-text">If you want to add a Google user, you can immediately <a href="/logout/">add a user here</a>.</p>
+              <p class="card-text">To sign in as a different user, you need to
+                 <a href="/logout/">logout</a> first.</p>
           </div>
         </div>
       </div>
