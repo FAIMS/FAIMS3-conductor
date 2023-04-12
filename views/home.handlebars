@@ -64,7 +64,18 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4"></div>
+    <div class="col-md-4">
+      {{#if cluster_admin}}
+      <div class="card">
+        <div class="card-header">
+          <h2>Cluster Administration</h2>
+        </div>
+        <div class="card-body">
+          <a href="/users/">User Management</a>
+        </div>
+      </div>
+      {{/if}}
+    </div>
   </div>
 </div>
 

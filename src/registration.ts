@@ -81,12 +81,23 @@ function renderInviteText(invite: RoleInvite) {
   link will assign the ${invite.role} role on ${invite.project_id} to your account.
 
   If you do not wish to join this project, feel free to ignore this email.
+
+  The FAIMS Team
   `;
 }
 
 function renderInviteHtml(invite: RoleInvite): string {
-  // TODO: Write actual HTML invite, rather than just sending a text-based one
-  return renderInviteText(invite);
+  return `<p>Hi,<br>
+  <p>You have been invited with the role ${invite.role} to the project
+  ${invite.project_id} on ${CONDUCTOR_PUBLIC_URL}. Head to
+  ${CONDUCTOR_PUBLIC_URL}/register/${invite._id} to register an account.</p>
+
+  <p>If you already have an account on ${CONDUCTOR_PUBLIC_URL} then following that
+  link will assign the ${invite.role} role on ${invite.project_id} to your account.</p>
+
+  <p>If you do not wish to join this project, feel free to ignore this email.</p>
+  
+  <p>The FAIMS Team</p>`;
 }
 
 async function emailInvite(invite: RoleInvite) {

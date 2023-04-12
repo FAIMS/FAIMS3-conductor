@@ -40,7 +40,12 @@ import {
 } from './middleware';
 import {createInvite} from './registration';
 import {getInvitesForNotebook} from './couchdb/invites';
-import {getUserInfoForNotebook, userHasPermission} from './couchdb/users';
+import {
+  getUserInfoForNotebook,
+  getUsers,
+  userHasPermission,
+  userIsClusterAdmin,
+} from './couchdb/users';
 import {
   getNotebookMetadata,
   getNotebooks,
@@ -206,6 +211,7 @@ app.get('/', async (req, res) => {
         token: Buffer.from(JSON.stringify(token)).toString('base64'),
         project_roles: rendered_project_roles,
         other_roles: req.user.other_roles,
+        cluster_admin: userIsClusterAdmin(req.user),
         provider: provider,
         userdb: CONDUCTOR_USER_DB,
         public_key: signing_key.public_key,
@@ -269,6 +275,26 @@ app.get('/notebooks/:id/users', requireClusterAdmin, async (req, res) => {
       roles: userList.roles,
       users: userList.users,
       notebook: notebook,
+    });
+  } else {
+    res.status(401).end();
+  }
+});
+
+app.get('/users', requireClusterAdmin, async (req, res) => {
+  if (req.user) {
+    const id = req.user._id;
+    const userList = await getUsers();
+    res.render('cluster-users', {
+      users: userList
+        .filter(user => user._id !== id)
+        .map(user => {
+          return {
+            username: user._id,
+            name: user.name,
+            is_cluster_admin: userIsClusterAdmin(user),
+          };
+        }),
     });
   } else {
     res.status(401).end();
