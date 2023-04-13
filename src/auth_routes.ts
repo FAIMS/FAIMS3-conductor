@@ -83,6 +83,7 @@ export function add_auth_routes(app: any, handlers: any) {
     res.render('auth', {
       providers: available_provider_info,
       localAuth: true, // maybe make this configurable?
+      messages: req.flash(),
     });
   });
 
@@ -99,6 +100,7 @@ export function add_auth_routes(app: any, handlers: any) {
   // register if they aren't already
   app.get('/register/:invite_id/', async (req: any, res: any) => {
     const invite_id = req.params.invite_id;
+    req.session['invite'] = invite_id;
     const invite = await getInvite(invite_id);
     if (!invite) {
       res.sendStatus(404);
@@ -108,6 +110,10 @@ export function add_auth_routes(app: any, handlers: any) {
       // user already registered, sign them up for this notebook
       // should there be conditions on this? Eg. check the email.
       await acceptInvite(req.user, invite);
+      req.flash(
+        'message',
+        'You will now have access to the ${invite.notebook} notebook.'
+      );
       res.redirect('/');
     } else {
       // need to sign up the user, show the registration page
@@ -118,7 +124,6 @@ export function add_auth_routes(app: any, handlers: any) {
           name: AVAILABLE_AUTH_PROVIDER_DISPLAY_INFO[handler].name,
         });
       }
-      console.log('in /register', req.flash());
       res.render('register', {
         invite: invite_id,
         providers: available_provider_info,
@@ -159,6 +164,7 @@ export function add_auth_routes(app: any, handlers: any) {
 
       if (!invite) {
         res.status(400);
+        console.log('no invite', invite, req.session.invite);
         req.flash('error', {registration: 'No valid invite for registration.'});
         res.redirect('/');
       } else if (password === repeat) {
@@ -170,7 +176,7 @@ export function add_auth_routes(app: any, handlers: any) {
         );
         if (user) {
           await acceptInvite(user, invite);
-          req.flash('message', 'Registration successful. Please login below.')
+          req.flash('message', 'Registration successful. Please login below.');
           res.redirect('/');
         } else {
           req.flash('error', {registration: error});
