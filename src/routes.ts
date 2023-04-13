@@ -27,7 +27,6 @@ import {AllProjectRoles, RoleInvite} from './datamodel/users';
 
 // BBS 20221101 Adding this as a proxy for the pouch db url
 import {
-  CONDUCTOR_USER_DB,
   WEBAPP_PUBLIC_URL,
   IOS_APP_URL,
   ANDROID_APP_URL,
@@ -53,6 +52,7 @@ import {
 } from './couchdb/notebooks';
 import {getSigningKey} from './authkeys/signing_keys';
 import {createAuthKey} from './authkeys/create';
+import { getPublicUserDbURL } from './couchdb';
 
 export {app};
 
@@ -201,7 +201,7 @@ app.get('/', async (req, res) => {
       jwt_token: jwt_token,
       public_key: signing_key.public_key_string,
       alg: signing_key.alg,
-      userdb: CONDUCTOR_USER_DB,
+      userdb: getPublicUserDbURL(), // query: is this actually needed?
     };
     if (signing_key === null || signing_key === undefined) {
       res.status(500).send('Signing key not set up');
@@ -213,7 +213,6 @@ app.get('/', async (req, res) => {
         other_roles: req.user.other_roles,
         cluster_admin: userIsClusterAdmin(req.user),
         provider: provider,
-        userdb: CONDUCTOR_USER_DB,
         public_key: signing_key.public_key,
       });
     }

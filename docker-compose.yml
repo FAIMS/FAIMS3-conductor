@@ -10,9 +10,7 @@ services:
         source: couchdb-data
         target: /opt/couchdb/data
     ports:
-      - "0.0.0.0:${COUCHDB_PORT}:${COUCHDB_INTERNAL_PORT}" 
-      # COUCHDB_PORT is the one visible to local-host-docker. COUCHDB_EXTERNAL_PORT is visible past the proxy server.
-      # COUCHDB_INTERNAL_PORT added because it's called in initCouchDB.js
+      - "0.0.0.0:${COUCHDB_EXTERNAL_PORT}:5984" 
       
     # volumes:
     #   - ./couchdb/local.ini:/opt/couchdb/etc/local.d/local.ini
@@ -24,7 +22,7 @@ services:
       context: .
     command: "npm start" 
     ports:
-      - "0.0.0.0:${CONDUCTOR_EXTERNAL_PORT}:${CONDUCTOR_PORT}"
+      - "0.0.0.0:${CONDUCTOR_EXTERNAL_PORT}:${CONDUCTOR_INTERNAL_PORT}"
     environment:
       #  note that some of these are pulled from the environment (.env) 
       #  while others get values here if the value is known for 
@@ -37,18 +35,11 @@ services:
       # COUCHDB_USER and COUCHDB_PASSWORD used by conductor as well
       - COUCHDB_USER=admin
       - COUCHDB_PASSWORD
-      - COUCHDB_PORT
-      - COUCHDB_CONTAINER_NAME
-      - COUCHDB_EXTERNAL_PORT
-      - COUCHDB_INTERNAL_PORT
-      - COUCHDB_URL=${COUCHDB_PROTOCOL}://${COUCHDB_CONTAINER_NAME}:${COUCHDB_INTERNAL_PORT}/
-
-      # BBS 20230203 readded couchdb_internal_port
+      - COUCHDB_INTERNAL_URL
 
       # Where is this server running
-      - CONDUCTOR_PROTOCOL
       - CONDUCTOR_EXTERNAL_PORT
-      - CONDUCTOR_PORT
+      - CONDUCTOR_INTERNAL_PORT
 
 
       # Needed for conductor to talk to couchDB
@@ -68,9 +59,7 @@ services:
       - CONDUCTOR_AUTH_PROVIDERS
       - CONDUCTOR_EMAIL_HOST_NAME
       - CONDUCTOR_EMAIL_HOST_CONFIG
-      - CONDUCTOR_INVITE_DB=${COUCHDB_URL}${CONDUCTOR_INVITE_DB_NAME:-invites}
-      - FAIMS_USERDB=${COUCHDB_URL}${FAIMS_USERDB_NAME:-people}
-      
+ 
       # https://faimsproject.atlassian.net/wiki/spaces/FAIMS3/pages/151846960/FAIMS3+Conductor+build+run+environment+variables#Authentication-Provider-Specific-environment-variables
       - DATACENTRAL_GROUP_PREFIX
       - DATACENTRAL_CLIENT_ID
