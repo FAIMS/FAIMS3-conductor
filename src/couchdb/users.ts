@@ -399,8 +399,6 @@ export function userHasPermission(
     } else if (permission === 'modify') {
       return user.project_roles[project_id].indexOf('admin') >= 0;
     }
-  } else {
-    console.log(project_id, 'not in', user.project_roles);
   }
   return false;
 }

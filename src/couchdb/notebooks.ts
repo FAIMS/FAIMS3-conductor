@@ -53,7 +53,6 @@ export const getNotebooks = async (user: Express.User): Promise<any[]> => {
     });
     res.rows.forEach(e => {
       if (e.doc !== undefined && !e.id.startsWith('_')) {
-        console.log('notebook doc', e.id);
         projects.push(e.doc as unknown as ProjectObject);
       }
     });
@@ -392,7 +391,7 @@ export const getNotebookRecords = async (
 export const getRolesForNotebook = async (project_id: ProjectID) => {
   const meta = await getNotebookMetadata(project_id);
   if (meta) {
-    const roles = meta.accesses;
+    const roles = meta.accesses || [];
     if (roles.indexOf('admin') < 0) {
       roles.push('admin');
     }

@@ -34,6 +34,14 @@ import {createAuthKey} from '../src/authkeys/create';
 import {getSigningKey} from '../src/authkeys/signing_keys';
 import fs from 'fs';
 import {createNotebook} from '../src/couchdb/notebooks';
+import {ProjectUIModel} from 'faims3-datamodel';
+
+const uispec: ProjectUIModel = {
+  fields: [],
+  views: {},
+  viewsets: {},
+  visible_types: [],
+};
 
 let adminToken = '';
 const username = 'bobalooba';
@@ -145,4 +153,25 @@ test('update admin user - remove role', () => {
     .send({addrole: false})
     .expect(200)
     .expect({status: 'success'});
+});
+
+test('update notebook roles', async () => {
+  // make some notebooks
+  const nb1 = await createNotebook('NB1', uispec, {});
+
+  if (nb1) {
+    return request(app)
+      .post(`/api/notebooks/${nb1}/users/`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .set('Content-Type', 'application/json')
+      .send({
+        username: username,
+        role: 'user',
+        addrole: true,
+      })
+      .expect({status: 'success'})
+      .expect(200);
+  } else {
+    throw new Error('could not make test notebooks');
+  }
 });
