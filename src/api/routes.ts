@@ -30,14 +30,17 @@ import {
 import {requireAuthenticationAPI} from '../middleware';
 import {initialiseDatabases} from '../couchdb';
 import {
+  addOtherRoleToUser,
   addProjectRoleToUser,
   getUserFromEmailOrUsername,
   getUserInfoForNotebook,
+  removeOtherRoleFromUser,
   removeProjectRoleFromUser,
   saveUser,
   userHasPermission,
   userIsClusterAdmin,
 } from '../couchdb/users';
+import {CLUSTER_ADMIN_GROUP_NAME} from '../buildconfig';
 
 export const api = express.Router();
 
@@ -195,3 +198,36 @@ api.post(
     }
   }
 );
+
+// update a user
+api.post('/users/:id/admin', requireAuthenticationAPI, async (req, res) => {
+  if (userIsClusterAdmin(req.user)) {
+    let error = '';
+    const username = req.params.id;
+    const addrole = req.body.addrole;
+
+    const user = await getUserFromEmailOrUsername(username);
+    if (user) {
+      if (addrole) {
+        await addOtherRoleToUser(user, CLUSTER_ADMIN_GROUP_NAME);
+      } else {
+        await removeOtherRoleFromUser(user, CLUSTER_ADMIN_GROUP_NAME);
+      }
+      await saveUser(user);
+      res.json({status: 'success'});
+      return;
+    } else {
+      error = 'Unknown user ' + username;
+    }
+
+    // user or project not found or bad role
+    res.json({status: 'error', error});
+    res.status(404).end();
+  } else {
+    res.json({
+      error:
+        'you do not have permission to modify user permissions for this server',
+    });
+    res.status(401).end();
+  }
+});

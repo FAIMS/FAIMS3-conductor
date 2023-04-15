@@ -86,47 +86,33 @@ function is_testing() {
   return jest_worker_is_running || jest_imported || test_node_env;
 }
 
-function couchdb_url(): string {
-  const couchdb = process.env.COUCHDB_URL;
+function couchdb_internal_url(): string {
+  let couchdb = process.env.COUCHDB_INTERNAL_URL;
   const couchdbDefault = 'http://localhost:5984/';
   if (couchdb === '' || couchdb === undefined) {
-    console.log('COUCHDB_URL not set, using default');
+    console.log('COUCHDB_INTERNAL_URL not set, using default');
     return couchdbDefault;
   } else {
+    if (couchdb.endsWith('/')) {
+      console.log('COUCHDB_URL should not end with / - removing it');
+      couchdb = couchdb.substring(0, couchdb.length - 1);
+    }
     return couchdb;
   }
 }
 
-function conductor_directory_db(): string {
-  const couchdb = process.env.COUCHDB_URL;
+function couchdb_public_url(): string {
+  let couchdb = process.env.COUCHDB_PUBLIC_URL;
   const couchdbDefault = 'http://localhost:5984/';
   if (couchdb === '' || couchdb === undefined) {
-    console.log('COUCHDB_URL not set, using default');
-    return couchdbDefault + 'directory';
+    console.log('COUCHDB_PUBLIC_URL not set, using default');
+    return couchdbDefault;
   } else {
-    return couchdb + 'directory';
-  }
-}
-
-function conductor_user_db(): string {
-  const userdb = process.env.FAIMS_USERDB;
-  const userdb_default = 'http://localhost:5984/people';
-  if (userdb === '' || userdb === undefined) {
-    console.log('FAIMS_USERDB not set, using default');
-    return userdb_default;
-  } else {
-    return userdb;
-  }
-}
-
-function conductor_invite_db(): string {
-  const invite_db = process.env.CONDUCTOR_INVITE_DB;
-  const invite_db_default = 'http://localhost:5984/invites';
-  if (invite_db === '' || invite_db === undefined) {
-    console.log('CONDUCTOR_INVITE_DB not set, using default');
-    return invite_db_default;
-  } else {
-    return invite_db;
+    if (couchdb.endsWith('/')) {
+      console.log('COUCHDB_PUBLIC_URL should not end with / - removing it');
+      couchdb = couchdb.substring(0, couchdb.length - 1);
+    }
+    return couchdb;
   }
 }
 
@@ -279,15 +265,14 @@ function cluster_admin_group_name(): string {
 function get_providers_to_use(): string[] {
   const providers = process.env.CONDUCTOR_AUTH_PROVIDERS;
   if (providers === '' || providers === undefined) {
-    throw Error(
-      'CONDUCTOR_AUTH_PROVIDERS must contain a ; delimited list of authentication providers to use'
-    );
+    console.log('CONDUCTOR_AUTH_PROVIDERS not set, defaulting to empty');
+    return [];
   }
   return providers.split(';');
 }
 
-function conductor_port(): number {
-  const port = process.env.CONDUCTOR_PORT;
+function conductor_internal_port(): number {
+  const port = process.env.CONDUCTOR_INTERNAL_PORT;
   if (port === '' || port === undefined) {
     return 8000;
   }
@@ -314,15 +299,13 @@ function email_transporter(): any {
   return nodemailer.createTransport(config);
 }
 
-export const CONDUCTOR_USER_DB = conductor_user_db();
-export const CONDUCTOR_INVITE_DB = conductor_invite_db();
-export const CONDUCTOR_DIRECTORY_DB = conductor_directory_db();
-export const COUCHDB_URL = couchdb_url();
+export const COUCHDB_INTERNAL_URL = couchdb_internal_url();
+export const COUCHDB_PUBLIC_URL = couchdb_public_url();
 export const LOCAL_COUCHDB_AUTH = local_couchdb_auth();
 export const RUNNING_UNDER_TEST = is_testing();
 export const COMMIT_VERSION = commit_version();
 export const CONDUCTOR_PUBLIC_URL = conductor_url();
-export const CONDUCTOR_PORT = conductor_port();
+export const CONDUCTOR_INTERNAL_PORT = conductor_internal_port();
 export const CONDUCTOR_KEY_ID = signing_key_id();
 export const CONDUCTOR_PRIVATE_KEY_PATH = private_key_path();
 export const CONDUCTOR_PUBLIC_KEY_PATH = public_key_path();

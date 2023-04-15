@@ -17,10 +17,8 @@
  * Description:
  *   Handle registration of new users via invites
  */
-import {v4 as uuidv4} from 'uuid';
 
-import {NonUniqueProjectID} from './datamodel/core';
-import {RoleInvite, Email, ConductorRole} from './datamodel/users';
+import {RoleInvite, ConductorRole} from './datamodel/users';
 import {addProjectRoleToUser, saveUser} from './couchdb/users';
 import {saveInvite, deleteInvite} from './couchdb/invites';
 import {CONDUCTOR_PUBLIC_URL, CLUSTER_ADMIN_GROUP_NAME} from './buildconfig';
@@ -52,25 +50,6 @@ export function userCanRemoveOtherRole(
   return false;
 }
 
-export async function createInvite(
-  user: Express.User,
-  email: Email,
-  project_id: NonUniqueProjectID,
-  role: ConductorRole,
-  number: number
-) {
-  const invite: RoleInvite = {
-    _id: uuidv4(),
-    requesting_user: user.user_id,
-    email: email,
-    project_id: project_id,
-    role: role,
-    number: number,
-  };
-  await saveInvite(invite);
-  await emailInvite(invite);
-}
-
 function renderInviteText(invite: RoleInvite) {
   return `Hi,
   You have been invited with the role ${invite.role} to the project
@@ -81,12 +60,23 @@ function renderInviteText(invite: RoleInvite) {
   link will assign the ${invite.role} role on ${invite.project_id} to your account.
 
   If you do not wish to join this project, feel free to ignore this email.
+
+  The FAIMS Team
   `;
 }
 
 function renderInviteHtml(invite: RoleInvite): string {
-  // TODO: Write actual HTML invite, rather than just sending a text-based one
-  return renderInviteText(invite);
+  return `<p>Hi,<br>
+  <p>You have been invited with the role ${invite.role} to the project
+  ${invite.project_id} on ${CONDUCTOR_PUBLIC_URL}. Head to
+  ${CONDUCTOR_PUBLIC_URL}/register/${invite._id} to register an account.</p>
+
+  <p>If you already have an account on ${CONDUCTOR_PUBLIC_URL} then following that
+  link will assign the ${invite.role} role on ${invite.project_id} to your account.</p>
+
+  <p>If you do not wish to join this project, feel free to ignore this email.</p>
+  
+  <p>The FAIMS Team</p>`;
 }
 
 async function emailInvite(invite: RoleInvite) {

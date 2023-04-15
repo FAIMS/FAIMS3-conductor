@@ -23,7 +23,7 @@ import PouchDB from 'pouchdb';
 import PouchDBFind from 'pouchdb-find';
 
 import {add_auth_providers} from './auth_providers';
-import {CONDUCTOR_PORT, CONDUCTOR_AUTH_PROVIDERS} from './buildconfig';
+import {CONDUCTOR_INTERNAL_PORT, CONDUCTOR_AUTH_PROVIDERS} from './buildconfig';
 
 import {app} from './routes';
 import {add_auth_routes} from './auth_routes';
@@ -48,8 +48,8 @@ PouchDB.plugin(PouchDBFind);
 add_auth_providers(CONDUCTOR_AUTH_PROVIDERS);
 add_auth_routes(app, CONDUCTOR_AUTH_PROVIDERS);
 
-app.listen(CONDUCTOR_PORT, '0.0.0.0', () => {
+app.listen(CONDUCTOR_INTERNAL_PORT, '0.0.0.0', () => {
   console.log(
-    `Conductor is listening on port http://0.0.0.0:${CONDUCTOR_PORT}/`
+    `Conductor is listening on port http://0.0.0.0:${CONDUCTOR_INTERNAL_PORT}/`
   );
 });

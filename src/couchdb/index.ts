@@ -20,7 +20,11 @@
 
 import PouchDB from 'pouchdb';
 
-import {COUCHDB_URL, LOCAL_COUCHDB_AUTH} from '../buildconfig';
+import {
+  COUCHDB_PUBLIC_URL,
+  COUCHDB_INTERNAL_URL,
+  LOCAL_COUCHDB_AUTH,
+} from '../buildconfig';
 import {ProjectID} from '../datamodel/core';
 import {ProjectObject} from '../datamodel/database';
 import {
@@ -56,7 +60,7 @@ export const getDirectoryDB = (): PouchDB.Database | undefined => {
   if (!_directoryDB) {
     const pouch_options = pouchOptions();
 
-    const directorydb = COUCHDB_URL + DIRECTORY_DB_NAME;
+    const directorydb = COUCHDB_INTERNAL_URL + DIRECTORY_DB_NAME;
     try {
       _directoryDB = new PouchDB(directorydb, pouch_options);
     } catch (error) {
@@ -66,10 +70,18 @@ export const getDirectoryDB = (): PouchDB.Database | undefined => {
   return _directoryDB;
 };
 
+/**
+ * getPublicUserDbURL -
+ * @returns a URL that can be used externaly to access the user database
+ */
+export const getPublicUserDbURL = (): string => {
+  return COUCHDB_PUBLIC_URL + PEOPLE_DB_NAME;
+};
+
 export const getUsersDB = (): PouchDB.Database | undefined => {
   if (!_usersDB) {
     const pouch_options = pouchOptions();
-    const dbName = COUCHDB_URL + PEOPLE_DB_NAME;
+    const dbName = COUCHDB_INTERNAL_URL + PEOPLE_DB_NAME;
     _usersDB = new PouchDB(dbName, pouch_options);
   }
 
@@ -79,7 +91,7 @@ export const getUsersDB = (): PouchDB.Database | undefined => {
 export const getProjectsDB = (): PouchDB.Database | undefined => {
   if (!_projectsDB) {
     const pouch_options = pouchOptions();
-    const dbName = COUCHDB_URL + PROJECTS_DB_NAME;
+    const dbName = COUCHDB_INTERNAL_URL + PROJECTS_DB_NAME;
     try {
       _projectsDB = new PouchDB(dbName, pouch_options);
     } catch (error) {
@@ -92,7 +104,7 @@ export const getProjectsDB = (): PouchDB.Database | undefined => {
 export const getInvitesDB = (): PouchDB.Database | undefined => {
   if (!_invitesDB) {
     const pouch_options = pouchOptions();
-    const dbName = COUCHDB_URL + INVITE_DB_NAME;
+    const dbName = COUCHDB_INTERNAL_URL + INVITE_DB_NAME;
     try {
       _invitesDB = new PouchDB(dbName, pouch_options);
     } catch (error) {
@@ -108,7 +120,7 @@ export const createProjectDB = (
   const pouch_options = pouchOptions();
 
   try {
-    const db = new PouchDB(COUCHDB_URL + dbName, pouch_options);
+    const db = new PouchDB(COUCHDB_INTERNAL_URL + dbName, pouch_options);
     return db;
   } catch (error) {
     console.error('error creating project database');
@@ -127,7 +139,7 @@ export const getProjectMetaDB = async (
         projectID
       )) as unknown as ProjectObject;
       if (projectDoc.metadata_db) {
-        const dbname = COUCHDB_URL + projectDoc.metadata_db.db_name;
+        const dbname = COUCHDB_INTERNAL_URL + projectDoc.metadata_db.db_name;
         const pouch_options = pouchOptions();
 
         if (LOCAL_COUCHDB_AUTH !== undefined) {
@@ -155,7 +167,7 @@ export const getProjectDataDB = async (
       )) as unknown as ProjectObject;
       console.log(projectDoc);
       if (projectDoc.data_db) {
-        const dbname = COUCHDB_URL + projectDoc.data_db.db_name;
+        const dbname = COUCHDB_INTERNAL_URL + projectDoc.data_db.db_name;
         const pouch_options = pouchOptions();
 
         if (LOCAL_COUCHDB_AUTH !== undefined) {

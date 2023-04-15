@@ -15,7 +15,7 @@
  *
  * Filename: conductor.test.ts
  * Description:
- *   Implement some basic tests for API functionality of conductor
+ *   Tests of the main routes in conductor
  */
 
 import PouchDB from 'pouchdb';

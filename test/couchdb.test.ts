@@ -24,6 +24,8 @@ PouchDB.plugin(require('pouchdb-find'));
 import {
   getDirectoryDB,
   getProjectMetaDB,
+  getProjectsDB,
+  getUsersDB,
   initialiseDatabases,
 } from '../src/couchdb';
 import {
@@ -34,8 +36,60 @@ import {
   getRolesForNotebook,
 } from '../src/couchdb/notebooks';
 import * as fs from 'fs';
-import {getUserFromEmailOrUsername} from '../src/couchdb/users';
+import {
+  addProjectRoleToUser,
+  createUser,
+  getUserFromEmailOrUsername,
+  removeProjectRoleFromUser,
+  saveUser,
+  userHasPermission,
+} from '../src/couchdb/users';
 import {CONDUCTOR_INSTANCE_NAME} from '../src/buildconfig';
+import {ProjectUIModel} from 'faims3-datamodel';
+
+const uispec: ProjectUIModel = {
+  fields: [],
+  views: {},
+  viewsets: {},
+  visible_types: [],
+};
+
+const clearDB = async (db: PouchDB.Database) => {
+  const docs = await db.allDocs();
+  for (let index = 0; index < docs.rows.length; index++) {
+    const doc = docs.rows[index];
+    await db.remove(doc.id, doc.value.rev);
+  }
+};
+
+const resetDatabases = async () => {
+  const usersDB = getUsersDB();
+  if (usersDB) {
+    await clearDB(usersDB);
+  }
+  const projectsDB = getProjectsDB();
+  if (projectsDB) {
+    await clearDB(projectsDB);
+  }
+  await initialiseDatabases();
+};
+
+const username = 'bobalooba';
+let bobalooba: Express.User;
+
+beforeEach(async () => {
+  await resetDatabases();
+  const adminUser = await getUserFromEmailOrUsername('admin');
+  if (adminUser) {
+    const [user, error] = await createUser('', username);
+    if (user) {
+      await saveUser(user);
+      bobalooba = user;
+    } else {
+      throw new Error(error);
+    }
+  }
+});
 
 test('check initialise', async () => {
   await initialiseDatabases();
@@ -53,13 +107,44 @@ test('check initialise', async () => {
   }
 });
 
+test('project roles', async () => {
+  // make some notebooks
+  const nb1 = await createNotebook('NB1', uispec, {});
+  const nb2 = await createNotebook('NB2', uispec, {});
+
+  if (nb1 && nb2) {
+    // give user access to two of them
+    addProjectRoleToUser(bobalooba, nb1, 'user');
+    expect(userHasPermission(bobalooba, nb1, 'read')).toBe(true);
+    addProjectRoleToUser(bobalooba, nb2, 'admin');
+    expect(userHasPermission(bobalooba, nb2, 'modify')).toBe(true);
+    // and this should still be true
+    expect(userHasPermission(bobalooba, nb1, 'read')).toBe(true);
+
+    removeProjectRoleFromUser(bobalooba, nb1, 'user');
+    expect(userHasPermission(bobalooba, nb1, 'read')).toBe(false);
+    // but still...
+    expect(userHasPermission(bobalooba, nb2, 'modify')).toBe(true);
+  }
+});
+
 test('getNotebooks', async () => {
-  await initialiseDatabases();
-  const user = await getUserFromEmailOrUsername('admin');
-  expect(user).not.toBeNull();
-  if (user) {
-    const notebooks = await getNotebooks(user);
-    expect(notebooks).not.toBeNull();
+  // make some notebooks
+  const nb1 = await createNotebook('NB1', uispec, {});
+  const nb2 = await createNotebook('NB2', uispec, {});
+  const nb3 = await createNotebook('NB3', uispec, {});
+  const nb4 = await createNotebook('NB4', uispec, {});
+
+  if (nb1 && nb2 && nb3 && nb4) {
+    // give user access to two of them
+    addProjectRoleToUser(bobalooba, nb1, 'user');
+    addProjectRoleToUser(bobalooba, nb2, 'user');
+    await saveUser(bobalooba);
+
+    const notebooks = await getNotebooks(bobalooba);
+    expect(notebooks.length).toBe(2);
+  } else {
+    throw new Error('could not make test notebooks');
   }
 });
 

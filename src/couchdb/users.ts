@@ -237,7 +237,6 @@ export function addProjectRoleToUser(
       user.project_roles[project_id].push(role);
     }
   } else {
-    user.project_roles = {};
     user.project_roles[project_id] = [role];
   }
   // update the roles property based on this
@@ -345,11 +344,8 @@ export function removeOtherRoleFromUser(
   role: ConductorRole
 ) {
   const other_roles = user.other_roles ?? [];
-  if (other_roles.length === 0) {
-    console.debug('User has other roles', user, role);
-  } else {
-    user.other_roles = other_roles.filter(r => r !== role);
-  }
+  user.other_roles = other_roles.filter(r => r !== role);
+
   // update the roles property based on this
   user.roles = compactRoles(user.project_roles, user.other_roles);
 }

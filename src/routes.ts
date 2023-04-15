@@ -23,11 +23,10 @@ import {body, validationResult} from 'express-validator';
 import QRCode from 'qrcode';
 import {app} from './core';
 import {NonUniqueProjectID} from './datamodel/core';
-import {AllProjectRoles, RoleInvite} from './datamodel/users';
+import {AllProjectRoles} from './datamodel/users';
 
 // BBS 20221101 Adding this as a proxy for the pouch db url
 import {
-  CONDUCTOR_USER_DB,
   WEBAPP_PUBLIC_URL,
   IOS_APP_URL,
   ANDROID_APP_URL,
@@ -38,9 +37,13 @@ import {
   requireClusterAdmin,
   requireNotebookMembership,
 } from './middleware';
-import {createInvite} from './registration';
-import {getInvitesForNotebook} from './couchdb/invites';
-import {getUserInfoForNotebook, userHasPermission} from './couchdb/users';
+import {createInvite, getInvitesForNotebook} from './couchdb/invites';
+import {
+  getUserInfoForNotebook,
+  getUsers,
+  userHasPermission,
+  userIsClusterAdmin,
+} from './couchdb/users';
 import {
   getNotebookMetadata,
   getNotebooks,
@@ -48,6 +51,7 @@ import {
 } from './couchdb/notebooks';
 import {getSigningKey} from './authkeys/signing_keys';
 import {createAuthKey} from './authkeys/create';
+import {getPublicUserDbURL} from './couchdb';
 
 export {app};
 
@@ -196,7 +200,7 @@ app.get('/', async (req, res) => {
       jwt_token: jwt_token,
       public_key: signing_key.public_key_string,
       alg: signing_key.alg,
-      userdb: CONDUCTOR_USER_DB,
+      userdb: getPublicUserDbURL(), // query: is this actually needed?
     };
     if (signing_key === null || signing_key === undefined) {
       res.status(500).send('Signing key not set up');
@@ -206,8 +210,8 @@ app.get('/', async (req, res) => {
         token: Buffer.from(JSON.stringify(token)).toString('base64'),
         project_roles: rendered_project_roles,
         other_roles: req.user.other_roles,
+        cluster_admin: userIsClusterAdmin(req.user),
         provider: provider,
-        userdb: CONDUCTOR_USER_DB,
         public_key: signing_key.public_key,
       });
     }
@@ -269,6 +273,26 @@ app.get('/notebooks/:id/users', requireClusterAdmin, async (req, res) => {
       roles: userList.roles,
       users: userList.users,
       notebook: notebook,
+    });
+  } else {
+    res.status(401).end();
+  }
+});
+
+app.get('/users', requireClusterAdmin, async (req, res) => {
+  if (req.user) {
+    const id = req.user._id;
+    const userList = await getUsers();
+    res.render('cluster-users', {
+      users: userList
+        .filter(user => user._id !== id)
+        .map(user => {
+          return {
+            username: user._id,
+            name: user.name,
+            is_cluster_admin: userIsClusterAdmin(user),
+          };
+        }),
     });
   } else {
     res.status(401).end();
