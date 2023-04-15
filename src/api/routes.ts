@@ -40,7 +40,7 @@ import {
   userHasPermission,
   userIsClusterAdmin,
 } from '../couchdb/users';
-import { CLUSTER_ADMIN_GROUP_NAME } from '../buildconfig';
+import {CLUSTER_ADMIN_GROUP_NAME} from '../buildconfig';
 
 export const api = express.Router();
 
@@ -225,7 +225,8 @@ api.post('/users/:id/admin', requireAuthenticationAPI, async (req, res) => {
     res.status(404).end();
   } else {
     res.json({
-      error: 'you do not have permission to modify user permissions for this server',
+      error:
+        'you do not have permission to modify user permissions for this server',
     });
     res.status(401).end();
   }

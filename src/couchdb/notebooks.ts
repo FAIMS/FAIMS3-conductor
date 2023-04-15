@@ -53,6 +53,7 @@ export const getNotebooks = async (user: Express.User): Promise<any[]> => {
     });
     res.rows.forEach(e => {
       if (e.doc !== undefined && !e.id.startsWith('_')) {
+        console.log('notebook doc', e.id);
         projects.push(e.doc as unknown as ProjectObject);
       }
     });
@@ -60,7 +61,7 @@ export const getNotebooks = async (user: Express.User): Promise<any[]> => {
       const project_id = project._id;
       const full_project_id = resolve_project_id(listing_id, project_id);
       const projectMeta = await getNotebookMetadata(project_id);
-      if (userHasPermission(user, full_project_id, 'read')) {
+      if (userHasPermission(user, project_id, 'read')) {
         output.push({
           name: project.name,
           last_updated: project.last_updated,
@@ -71,6 +72,8 @@ export const getNotebooks = async (user: Express.User): Promise<any[]> => {
           non_unique_project_id: project_id,
           metadata: projectMeta,
         });
+      } else {
+        console.log('no permission for ', project_id);
       }
     }
   }

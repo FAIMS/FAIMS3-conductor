@@ -25,23 +25,35 @@ PouchDB.plugin(require('pouchdb-find'));
 import request from 'supertest';
 import {app} from '../src/routes';
 import {initialiseDatabases} from '../src/couchdb';
-import {getUserFromEmailOrUsername} from '../src/couchdb/users';
+import {
+  createUser,
+  getUserFromEmailOrUsername,
+  saveUser,
+} from '../src/couchdb/users';
 import {createAuthKey} from '../src/authkeys/create';
 import {getSigningKey} from '../src/authkeys/signing_keys';
 import fs from 'fs';
 import {createNotebook} from '../src/couchdb/notebooks';
 
 let adminToken = '';
+const username = 'bobalooba';
+let bobalooba: Express.User;
 
 beforeAll(async () => {
   await initialiseDatabases();
   const signing_key = await getSigningKey();
   const adminUser = await getUserFromEmailOrUsername('admin');
-  console.log('admin user', adminUser);
   if (adminUser) {
     adminToken = await createAuthKey(adminUser, signing_key);
+
+    const [user, error] = await createUser('', username);
+    if (user) {
+      await saveUser(user);
+      bobalooba = user;
+    } else {
+      throw new Error(error);
+    }
   }
-  console.log('token', adminToken);
 });
 
 test('check is up - not authenticated', async () => {
@@ -105,4 +117,32 @@ test('get notebook', async () => {
   } else {
     fail('unable to create test notebook');
   }
+});
+
+test('update admin user - no auth', async () => {
+  return request(app)
+    .post(`/api/users/${username}/admin`)
+    .send({addrole: true})
+    .set('Content-Type', 'application/json')
+    .expect(401);
+});
+
+test('update admin user - add role', () => {
+  return request(app)
+    .post(`/api/users/${username}/admin`)
+    .set('Authorization', `Bearer ${adminToken}`)
+    .set('Content-Type', 'application/json')
+    .send({addrole: true})
+    .expect(200)
+    .expect({status: 'success'});
+});
+
+test('update admin user - remove role', () => {
+  return request(app)
+    .post(`/api/users/${username}/admin`)
+    .set('Authorization', `Bearer ${adminToken}`)
+    .set('Content-Type', 'application/json')
+    .send({addrole: false})
+    .expect(200)
+    .expect({status: 'success'});
 });
