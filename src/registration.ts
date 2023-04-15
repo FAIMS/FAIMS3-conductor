@@ -17,10 +17,8 @@
  * Description:
  *   Handle registration of new users via invites
  */
-import {v4 as uuidv4} from 'uuid';
 
-import {NonUniqueProjectID} from './datamodel/core';
-import {RoleInvite, Email, ConductorRole} from './datamodel/users';
+import {RoleInvite, ConductorRole} from './datamodel/users';
 import {addProjectRoleToUser, saveUser} from './couchdb/users';
 import {saveInvite, deleteInvite} from './couchdb/invites';
 import {CONDUCTOR_PUBLIC_URL, CLUSTER_ADMIN_GROUP_NAME} from './buildconfig';
@@ -50,25 +48,6 @@ export function userCanRemoveOtherRole(
     return true;
   }
   return false;
-}
-
-export async function createInvite(
-  user: Express.User,
-  email: Email,
-  project_id: NonUniqueProjectID,
-  role: ConductorRole,
-  number: number
-) {
-  const invite: RoleInvite = {
-    _id: uuidv4(),
-    requesting_user: user.user_id,
-    email: email,
-    project_id: project_id,
-    role: role,
-    number: number,
-  };
-  await saveInvite(invite);
-  await emailInvite(invite);
 }
 
 function renderInviteText(invite: RoleInvite) {

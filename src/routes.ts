@@ -23,7 +23,7 @@ import {body, validationResult} from 'express-validator';
 import QRCode from 'qrcode';
 import {app} from './core';
 import {NonUniqueProjectID} from './datamodel/core';
-import {AllProjectRoles, RoleInvite} from './datamodel/users';
+import {AllProjectRoles} from './datamodel/users';
 
 // BBS 20221101 Adding this as a proxy for the pouch db url
 import {
@@ -37,8 +37,7 @@ import {
   requireClusterAdmin,
   requireNotebookMembership,
 } from './middleware';
-import {createInvite} from './registration';
-import {getInvitesForNotebook} from './couchdb/invites';
+import {createInvite, getInvitesForNotebook} from './couchdb/invites';
 import {
   getUserInfoForNotebook,
   getUsers,
@@ -52,7 +51,7 @@ import {
 } from './couchdb/notebooks';
 import {getSigningKey} from './authkeys/signing_keys';
 import {createAuthKey} from './authkeys/create';
-import { getPublicUserDbURL } from './couchdb';
+import {getPublicUserDbURL} from './couchdb';
 
 export {app};
 

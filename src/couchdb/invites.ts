@@ -18,9 +18,29 @@
  *   Provide an interface for manipulating invites to the system
  */
 
-import {ProjectID} from 'faims3-datamodel';
+import {NonUniqueProjectID, ProjectID} from 'faims3-datamodel';
 import {getInvitesDB} from '.';
-import {RoleInvite} from '../datamodel/users';
+import {ConductorRole, Email, RoleInvite} from '../datamodel/users';
+import {v4 as uuidv4} from 'uuid';
+
+export async function createInvite(
+  user: Express.User,
+  email: Email,
+  project_id: NonUniqueProjectID,
+  role: ConductorRole,
+  number: number
+) {
+  const invite: RoleInvite = {
+    _id: uuidv4(),
+    requesting_user: user.user_id,
+    email: email,
+    project_id: project_id,
+    role: role,
+    number: number,
+  };
+  await saveInvite(invite);
+  return invite;
+}
 
 export async function saveInvite(invite: RoleInvite) {
   const invite_db = getInvitesDB();
@@ -34,8 +54,15 @@ export async function saveInvite(invite: RoleInvite) {
 export async function deleteInvite(invite: RoleInvite) {
   const invite_db = getInvitesDB();
   if (invite_db) {
-    invite._deleted = true;
-    await invite_db.put(invite);
+    // get the invite from the db to ensure we have the most recent revision
+    const fetched = await getInvite(invite._id);
+    if (fetched) {
+      fetched._deleted = true;
+      await invite_db.put(fetched);
+      return fetched;
+    } else {
+      throw Error('Unable to find invite in database to delete');
+    }
   } else {
     throw Error('Unable to connect to invites database');
   }
