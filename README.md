@@ -1,6 +1,6 @@
 # FAIMS3-conductor
 
-[![codecov](https://codecov.io/gh/FAIMS/FAIMS3-conductor/branch/local-auth-user-management/graph/badge.svg?token=CJ4U0H7AKA)](https://codecov.io/gh/FAIMS/FAIMS3-conductor)
+[![codecov](https://codecov.io/gh/FAIMS/FAIMS3-conductor/branch/main/graph/badge.svg?token=CJ4U0H7AKA)](https://codecov.io/gh/FAIMS/FAIMS3-conductor)
 
 The server-side of FAIMS3 handling authentication and authorization
 
