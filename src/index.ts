@@ -35,7 +35,6 @@ import {getProjectDataDB, getProjectMetaDB} from './couchdb';
 registerClient({
   getDataDB: getProjectDataDB,
   getProjectDB: getProjectMetaDB,
-  getLocalStateDB: () => {},
   shouldDisplayRecord: () => true,
 });
 

@@ -133,6 +133,8 @@ type AutoIncrementObject = {
  *          undefined if there are no such fields
  */
 const getAutoIncrementers = (uiSpec: ProjectUIModel) => {
+  // Note that this relies on the name 'local-autoincrementers' being the same as that
+  // used in the front-end code (LOCAL_AUTOINCREMENTERS_NAME in src/local-data/autoincrementers.ts)
   const autoinc: AutoIncrementObject = {
     _id: 'local-autoincrementers',
     references: [],
