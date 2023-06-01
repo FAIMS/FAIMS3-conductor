@@ -61,7 +61,7 @@ npm start
 If you are developing, you may want to run:
 
 ```bash
-npm watch
+npm run watch
 ```
 
 instead, which will monitor for changes with `nodemon`.
