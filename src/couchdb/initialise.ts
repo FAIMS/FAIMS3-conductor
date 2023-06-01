@@ -23,6 +23,7 @@ import {
   CONDUCTOR_INSTANCE_NAME,
   CONDUCTOR_PUBLIC_URL,
   LOCAL_COUCHDB_AUTH,
+  CLUSTER_ADMIN_GROUP_NAME,
 } from '../buildconfig';
 import {
   addOtherRoleToUser,
@@ -52,6 +53,15 @@ export const initialiseProjectsDB = async (
       await db.get(projectPermissionsDoc._id);
     } catch {
       await db.put(projectPermissionsDoc);
+    }
+
+    // can't save security on an in-memory database so skip if testing
+    if (process.env.NODE_ENV !== 'test') {
+      const security = db.security();
+      security.admins.roles.add(CLUSTER_ADMIN_GROUP_NAME);
+      security.admins.roles.add('_admin');
+      security.members.roles.removeAll();
+      await security.save();
     }
   }
 };
@@ -118,6 +128,14 @@ export const initialiseUserDB = async (db: PouchDB.Database | undefined) => {
 
     if (adminUser) {
       return;
+    }
+
+    // can't save security on an in-memory database so skip if testing
+    if (process.env.NODE_ENV !== 'test') {
+      const security = db.security();
+      security.admins.roles.add(CLUSTER_ADMIN_GROUP_NAME);
+      security.members.roles.removeAll();
+      await security.save();
     }
 
     const [user, error] = await registerLocalUser(
