@@ -61,7 +61,7 @@ function renderInviteText(invite: RoleInvite) {
 
   If you do not wish to join this project, feel free to ignore this email.
 
-  The FAIMS Team
+  The Fieldmark Team
   `;
 }
 
@@ -76,7 +76,7 @@ function renderInviteHtml(invite: RoleInvite): string {
 
   <p>If you do not wish to join this project, feel free to ignore this email.</p>
   
-  <p>The FAIMS Team</p>`;
+  <p>The Fieldmark Team</p>`;
 }
 
 async function emailInvite(invite: RoleInvite) {
