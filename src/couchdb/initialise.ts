@@ -43,7 +43,7 @@ export const initialiseProjectsDB = async (
       if (userCtx.roles.indexOf('_admin') < 0) {
         throw {
           unauthorized:
-            \`Access denied for \${userCtx.roles}. Only the FAIMS server may modify projects\`,
+            \`Access denied for \${userCtx.roles}. Only the Fieldmark server may modify projects\`,
         };
       }
     }`,
@@ -72,7 +72,7 @@ export const initialiseDirectoryDB = async (
   const directoryDoc = {
     _id: 'default',
     name: CONDUCTOR_INSTANCE_NAME,
-    description: `FAIMS instance on ${CONDUCTOR_PUBLIC_URL}`,
+    description: `Fieldmark instance on ${CONDUCTOR_PUBLIC_URL}`,
     people_db: {
       db_name: 'people',
     },
@@ -88,7 +88,7 @@ export const initialiseDirectoryDB = async (
       if (userCtx.roles.indexOf('_admin') >= 0) {
         return;
       }
-      throw({forbidden: "Access denied. Only the FAIMS admin can modify the directory."});
+      throw({forbidden: "Access denied. Only the Fieldmark admin can modify the directory."});
     }`,
   };
 
