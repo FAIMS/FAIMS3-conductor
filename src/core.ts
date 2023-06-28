@@ -66,7 +66,8 @@ app.use(
   })
 );
 app.use(express.urlencoded({extended: true}));
-app.use(express.json());
+// allow large JSON objects to be posted
+app.use(express.json({limit: '200mb'}));
 app.use(cors());
 app.use(flash());
 app.use(passport.initialize());
