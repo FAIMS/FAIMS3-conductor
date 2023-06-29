@@ -14,7 +14,7 @@
     "test": "env-cmd jest --silent=false test/*.test.ts",
     "coverage": "env-cmd jest --coverage test/*.test.ts",
     "initdb": "env-cmd node scripts/initialise.js",
-    "load-notebooks": "env-cmd node scripts/loadNotebook.js"
+    "load-notebooks": "env-cmd node scripts/loadNotebook.js ./notebooks/*.json"
   },
   "dependencies": {
     "body-parser": "1.20.2",

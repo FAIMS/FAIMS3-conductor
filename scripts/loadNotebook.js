@@ -15,8 +15,9 @@
  *
  * Filename: loadNotebooks.js
  * Description:
- *   Load notebooks into the running couchdb instance from the ./notebooks folder
- *    any .json file in that folder is treated as a notebook and uploaded.
+ *   Load notebooks into the running couchdb instance. 
+ *   All json files named on the command line will be loa`ded.
+ *   eg. `node scripts/loadNotebooks.js notebooks/*.json`
  */
 
 const fs = require('fs');
@@ -51,7 +52,6 @@ const main = async filename => {
   .catch(error => {
     console.log(error);
   })
-
 };
 
 
@@ -59,11 +59,11 @@ const extension = (filename) => {
     return filename.substring(filename.lastIndexOf('.')+1, filename.length) || filename;
 }
 
-const dirname = './notebooks/';
-fs.readdir(dirname, (err, files) => {
+if (process.argv.length > 2) {
+    files = process.argv.slice(2);
     files.forEach(filename => {
-        if (extension(filename) === 'json') {
-            main(dirname + filename);
-        }
-    });
-});
+      if (extension(filename) === 'json') {
+          main(filename);
+      }
+  });
+}
