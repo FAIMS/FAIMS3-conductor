@@ -229,7 +229,6 @@ app.get('/logout/', (req, res) => {
 
 app.get('/send-token/', (req, res) => {
   if (req.user) {
-    console.log('hello send-token');
     res.render('send-token', {
       user: req.user,
       web_url: WEBAPP_PUBLIC_URL,
@@ -237,7 +236,6 @@ app.get('/send-token/', (req, res) => {
       ios_url: IOS_APP_URL,
     });
   } else {
-    console.log('send-token no user');
     res.redirect('/');
   }
 });

@@ -39,8 +39,9 @@ registerClient({
 });
 
 process.on('unhandledRejection', error => {
+  console.error('unhandledRejection'); 
   console.error(error); // This prints error with stack included (as for normal errors)
-  throw error; // Following best practices re-throw error and let the process exit with error code
+  // don't re-throw the error since we don't want to crash the server
 });
 
 PouchDB.plugin(PouchDBFind);
