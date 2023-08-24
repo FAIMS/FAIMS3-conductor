@@ -76,7 +76,6 @@ app.get('/notebooks/:id/invite/', requireAuthentication, async (req, res) => {
 app.post(
   '/notebooks/:id/invite/',
   requireAuthentication,
-  body('email').isEmail(),
   body('number').not().isEmpty().isInt(),
   body('role').not().isEmpty(),
   async (req, res) => {
@@ -84,7 +83,6 @@ app.post(
     if (!errors.isEmpty()) {
       return res.render('invite-error', {errors: errors.array()});
     }
-    const email: string = req.body.email;
     const project_id: NonUniqueProjectID = req.params.id;
     const role: string = req.body.role;
     const number: number = req.body.number;
@@ -100,19 +98,8 @@ app.post(
         ],
       });
     } else {
-      await createInvite(
-        req.user as Express.User,
-        email,
-        project_id,
-        role,
-        number
-      );
-      res.render('invite-success', {
-        email,
-        project_id,
-        role,
-        number,
-      });
+      await createInvite(req.user as Express.User, project_id, role, number);
+      res.redirect('/notebooks/' + project_id);
     }
   }
 );

@@ -21,8 +21,7 @@
 import {RoleInvite, ConductorRole} from './datamodel/users';
 import {addProjectRoleToUser, saveUser} from './couchdb/users';
 import {saveInvite, deleteInvite} from './couchdb/invites';
-import {CONDUCTOR_PUBLIC_URL, CLUSTER_ADMIN_GROUP_NAME} from './buildconfig';
-import {sendEmail} from './email';
+import {CLUSTER_ADMIN_GROUP_NAME} from './buildconfig';
 
 export function userCanAddOtherRole(user: Express.User | undefined): boolean {
   if (user === undefined) {
@@ -50,49 +49,11 @@ export function userCanRemoveOtherRole(
   return false;
 }
 
-function renderInviteText(invite: RoleInvite) {
-  return `Hi,
-  You have been invited with the role ${invite.role} to the project
-  ${invite.project_id} on ${CONDUCTOR_PUBLIC_URL}. Head to
-  ${CONDUCTOR_PUBLIC_URL}/register/${invite._id} to register an account.
-
-  If you already have an account on ${CONDUCTOR_PUBLIC_URL} then following that
-  link will assign the ${invite.role} role on ${invite.project_id} to your account.
-
-  If you do not wish to join this project, feel free to ignore this email.
-
-  The FAIMS Team
-  `;
-}
-
-function renderInviteHtml(invite: RoleInvite): string {
-  return `<p>Hi,<br>
-  <p>You have been invited with the role ${invite.role} to the project
-  ${invite.project_id} on ${CONDUCTOR_PUBLIC_URL}. Head to
-  ${CONDUCTOR_PUBLIC_URL}/register/${invite._id} to register an account.</p>
-
-  <p>If you already have an account on ${CONDUCTOR_PUBLIC_URL} then following that
-  link will assign the ${invite.role} role on ${invite.project_id} to your account.</p>
-
-  <p>If you do not wish to join this project, feel free to ignore this email.</p>
-  
-  <p>The FAIMS Team</p>`;
-}
-
-async function emailInvite(invite: RoleInvite) {
-  await sendEmail({
-    to: invite.email,
-    subject: `You have been added to ${invite.project_id} with role ${invite.role}`,
-    text: renderInviteText(invite),
-    html: renderInviteHtml(invite),
-  });
-}
-
 export async function acceptInvite(user: Express.User, invite: RoleInvite) {
-  if (invite.number > 0) {
-    addProjectRoleToUser(user, invite.project_id, invite.role);
-    await saveUser(user);
+  addProjectRoleToUser(user, invite.project_id, invite.role);
+  await saveUser(user);
 
+  if (!invite.unlimited) {
     invite.number--;
     if (invite.number === 0) {
       await deleteInvite(invite);

@@ -234,14 +234,11 @@ api.post('/users/:id/admin', requireAuthenticationAPI, async (req, res) => {
   }
 });
 
-console.log('DEVELOPER_MODE', DEVELOPER_MODE);
-
 if (DEVELOPER_MODE) {
   api.post('/notebooks/:notebook_id/delete',
     requireAuthenticationAPI,
     async (req, res) => {
       if (userIsClusterAdmin(req.user)) {
-
         const project_id = req.params.notebook_id;
         const notebook = await getNotebookMetadata(project_id);
         if (notebook) {
@@ -261,7 +258,6 @@ if (DEVELOPER_MODE) {
     async (req, res) => {
       if (userIsClusterAdmin(req.user)) {
         const project_id = req.params.notebook_id;
-        console.log('BODY', req.body);
         const count = req.body.count || 1;
         const record_ids = await createManyRandomRecords(project_id, count);
         res.json({record_ids});
