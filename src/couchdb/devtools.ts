@@ -54,6 +54,9 @@ export const createRandomRecord = async (project_id: ProjectID) => {
   const uiSpec = await getNotebookUISpec(project_id);
   if (uiSpec) {
     const forms = Object.keys(uiSpec.viewsets);
+    if (forms.length === 0) {
+      return;
+    }
     const formName = forms[randomInt(forms.length)];
     const form = uiSpec.viewsets[formName];
     const views = form.views;
@@ -93,9 +96,7 @@ export const createRandomRecord = async (project_id: ProjectID) => {
       revision_id: null,
       annotations: annotations,
     };
-    console.log(newRecord);
     const result = await upsertFAIMSData(project_id, newRecord);
-    console.log(result);
     return result;
   } else {
     throw new Error(`notebook not found with id ${project_id}`);
