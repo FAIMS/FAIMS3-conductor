@@ -27,7 +27,6 @@ import {get_strategies as google_get_strategy} from './google';
 import {get_strategy as local_get_strategy} from './local';
 
 const AVAILABLE_AUTH_PROVIDERS: {[name: string]: any} = {
-  // datacentral: dc_get_strategy,
   google: google_get_strategy,
 };
 
