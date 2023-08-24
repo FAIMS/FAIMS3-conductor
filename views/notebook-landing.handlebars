@@ -14,9 +14,33 @@
 <dl>
     <dt>Project Lead</dt><dd>{{notebook.project_lead}}</dd>
     <dt>Description</dt><dd>{{ notebook.pre_description }}</dd>
+    <dt>Records</dt><dd>{{ records }}</dd>
 </dl>
 
 {{#if isAdmin}}
+
+{{#if developer}}
+<script>
+const addRecords = (e) => {
+  e.preventDefault();
+  const count = document.querySelector('input[name="number"]').value;
+  console.log('count', count);
+  fetch('/api/notebooks/{{notebook.project_id}}/generate', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({count})
+  });
+}
+</script>
+
+<form>
+  <input type="number" value="10" name="number" id="number">
+  <button onClick="addRecords(event)">Add Random Records</button>
+</form>
+{{/if}}
+
 <p>
 Users can be invited to roles <a href="/notebooks/{{notebook.project_id}}/invite/">here</a>.
 </p>

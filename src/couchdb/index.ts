@@ -158,14 +158,12 @@ export const getProjectMetaDB = async (
 export const getProjectDataDB = async (
   projectID: ProjectID
 ): Promise<PouchDB.Database | undefined> => {
-  console.log('getting project data db for ', projectID);
   const projectsDB = getProjectsDB();
   if (projectsDB) {
     try {
       const projectDoc = (await projectsDB.get(
         projectID
       )) as unknown as ProjectObject;
-      console.log(projectDoc);
       if (projectDoc.data_db) {
         const dbname = COUCHDB_INTERNAL_URL + projectDoc.data_db.db_name;
         const pouch_options = pouchOptions();
@@ -173,7 +171,6 @@ export const getProjectDataDB = async (
         if (LOCAL_COUCHDB_AUTH !== undefined) {
           pouch_options.auth = LOCAL_COUCHDB_AUTH;
         }
-        console.log('returning a db connection');
         return new PouchDB(dbname, pouch_options);
       }
     } catch (error) {

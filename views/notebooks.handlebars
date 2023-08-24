@@ -1,19 +1,37 @@
 <div class="container">
     <nav aria-label="breadcrumb">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="/">Home</a></li>
-    <li class="breadcrumb-item" active aria-current="page">Notebooks</li>
-  </ol>
-</nav>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item" active aria-current="page">Notebooks</li>
+      </ol>
+    </nav>
+
+<script>
+  const deleteNotebook = (project_id) => {
+    fetch(`/api/notebooks/${project_id}/delete`, {
+      method: 'POST',
+    })
+    .then(response => {
+      window.location.reload();
+    });
+  }
+</script>
 
 <h1>Notebooks</h1>
 
-<ul>
+<table class="table">
     {{#each notebooks}}
-        <li>
+        <tr>
+          <td>
             <a href="/notebooks/{{this.non_unique_project_id}}">{{this.name}}</a>
-        </li>
+          </td>
+          {{#if ../developer}}
+          <td>
+            <button class="btn btn-danger btn-sm" onclick="deleteNotebook('{{this.non_unique_project_id}}')">Delete</button>
+          </td>
+          {{/if}}
+        </tr>
     {{/each}}
-</ul>
+</table>
 
 </div>

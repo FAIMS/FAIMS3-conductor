@@ -299,6 +299,13 @@ function email_transporter(): any {
   return nodemailer.createTransport(config);
 }
 
+function developer_mode(): any {
+  const develop = process.env.DEVELOPER_MODE;
+  console.log('DEVELOPER_MODE', develop);
+  return develop === 'true';
+}
+
+export const DEVELOPER_MODE = developer_mode();
 export const COUCHDB_INTERNAL_URL = couchdb_internal_url();
 export const COUCHDB_PUBLIC_URL = couchdb_public_url();
 export const LOCAL_COUCHDB_AUTH = local_couchdb_auth();

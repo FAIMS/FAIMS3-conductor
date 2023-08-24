@@ -70,6 +70,8 @@ services:
       - CONDUCTOR_EMAIL_FROM_ADDRESS
       - CONDUCTOR_EMAIL_TRANSPORTER
 
+      - DEVELOPER_MODE
+
       # URLs for apps for this instance
       - WEB_APP_PUBLIC_URL
       - ANDROID_APP_PUBLIC_URL
