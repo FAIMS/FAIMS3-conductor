@@ -26,6 +26,7 @@ import {
   getNotebookUISpec,
   getNotebookRecords,
   getRolesForNotebook,
+  deleteNotebook,
 } from '../couchdb/notebooks';
 import {requireAuthenticationAPI} from '../middleware';
 import {initialiseDatabases} from '../couchdb';
@@ -40,7 +41,8 @@ import {
   userHasPermission,
   userIsClusterAdmin,
 } from '../couchdb/users';
-import {CLUSTER_ADMIN_GROUP_NAME} from '../buildconfig';
+import {CLUSTER_ADMIN_GROUP_NAME, DEVELOPER_MODE} from '../buildconfig';
+import {createManyRandomRecords} from '../couchdb/devtools';
 
 export const api = express.Router();
 
@@ -231,3 +233,42 @@ api.post('/users/:id/admin', requireAuthenticationAPI, async (req, res) => {
     res.status(401).end();
   }
 });
+
+console.log('DEVELOPER_MODE', DEVELOPER_MODE);
+
+if (DEVELOPER_MODE) {
+  api.post('/notebooks/:notebook_id/delete',
+    requireAuthenticationAPI,
+    async (req, res) => {
+      if (userIsClusterAdmin(req.user)) {
+
+        const project_id = req.params.notebook_id;
+        const notebook = await getNotebookMetadata(project_id);
+        if (notebook) {
+          await deleteNotebook(project_id);
+          res.redirect('/notebooks/');
+        } else {
+          res.status(404).end();
+        }
+      } else {
+        res.status(401).end();
+      }
+    }
+  );
+
+  api.post('/notebooks/:notebook_id/generate',
+    requireAuthenticationAPI,
+    async (req, res) => {
+      if (userIsClusterAdmin(req.user)) {
+        const project_id = req.params.notebook_id;
+        console.log('BODY', req.body);
+        const count = req.body.count || 1;
+        const record_ids = await createManyRandomRecords(project_id, count);
+        res.json({record_ids});
+        res.status(200).end();
+      } else {
+        res.status(401).end();
+      }
+    }
+  );
+}

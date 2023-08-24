@@ -19,7 +19,12 @@
  */
 
 import PouchDB from 'pouchdb';
-import {createProjectDB, getProjectMetaDB, getProjectsDB} from '.';
+import {
+  createProjectDB,
+  getProjectDataDB,
+  getProjectMetaDB,
+  getProjectsDB,
+} from '.';
 import {CLUSTER_ADMIN_GROUP_NAME} from '../buildconfig';
 import {ProjectID, resolve_project_id} from '../datamodel/core';
 import {
@@ -31,7 +36,15 @@ import {
 } from '../datamodel/database';
 
 import securityPlugin from 'pouchdb-security-helper';
-import {getFullRecordData, getRecordsWithRegex} from 'faims3-datamodel';
+import {
+  file_attachments_to_data,
+  file_data_to_attachments,
+  getDataDB,
+  getFullRecordData,
+  getRecordsWithRegex,
+  setAttachmentDumperForType,
+  setAttachmentLoaderForType,
+} from 'faims3-datamodel';
 import {userHasPermission} from './users';
 PouchDB.plugin(securityPlugin);
 
@@ -216,7 +229,6 @@ export const createNotebook = async (
   // TODO: check whether the project database exists already...
   const metaDB = createProjectDB(metaDBName);
   if (!metaDB) {
-    console.log('returning undefined');
     return undefined;
   }
 
@@ -224,6 +236,7 @@ export const createNotebook = async (
   if (process.env.NODE_ENV !== 'test') {
     const metaSecurity = await metaDB.security();
     metaSecurity.admins.roles.add(CLUSTER_ADMIN_GROUP_NAME);
+    metaSecurity.members.roles.add(`${project_id}||user`);
     metaSecurity.members.roles.add(`${project_id}||team`);
     metaSecurity.members.roles.add(`${project_id}||admin`);
     await metaSecurity.save();
@@ -251,6 +264,7 @@ export const createNotebook = async (
   if (process.env.NODE_ENV !== 'test') {
     const dataSecurity = await dataDB.security();
     dataSecurity.admins.roles.add(CLUSTER_ADMIN_GROUP_NAME);
+    dataSecurity.members.roles.add(`${project_id}||user`);
     dataSecurity.members.roles.add(`${project_id}||team`);
     dataSecurity.members.roles.add(`${project_id}||admin`);
     await dataSecurity.save();
@@ -269,6 +283,27 @@ export const createNotebook = async (
     console.log(error);
   }
   return project_id;
+};
+
+/**
+ * deleteNotebook - DANGER!! Delete a notebook and all its data
+ * @param project_id - project identifier
+ */
+export const deleteNotebook = async (project_id: string) => {
+  const projectsDB = getProjectsDB();
+  if (projectsDB) {
+    const projectDoc = await projectsDB.get(project_id);
+    if (projectDoc) {
+      const metaDB = await getProjectMetaDB(project_id);
+      const dataDB = await getProjectDataDB(project_id);
+      if (metaDB && dataDB) {
+        await metaDB.destroy();
+        await dataDB.destroy();
+        // remove the project from the projectsDB
+        await projectsDB.remove(projectDoc);
+      }
+    }
+  }
 };
 
 export const writeProjectMetadata = async (
@@ -405,3 +440,24 @@ export const getRolesForNotebook = async (project_id: ProjectID) => {
     return [];
   }
 };
+
+export async function countRecordsInNotebook(
+  project_id: ProjectID
+): Promise<Number> {
+  const dataDB = await getDataDB(project_id);
+  const res = await dataDB.find({
+    selector: {
+      record_format_version: 1,
+    },
+    limit: 100,
+  });
+  console.log('res', res.docs.length);
+  return res.docs.length;
+}
+
+/*
+ * For saving and loading attachment with type faims-attachment::Files
+ */
+
+setAttachmentLoaderForType('faims-attachment::Files', file_attachments_to_data);
+setAttachmentDumperForType('faims-attachment::Files', file_data_to_attachments);

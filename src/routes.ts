@@ -31,6 +31,7 @@ import {
   IOS_APP_URL,
   ANDROID_APP_URL,
   CONDUCTOR_PUBLIC_URL,
+  DEVELOPER_MODE,
 } from './buildconfig';
 import {
   requireAuthentication,
@@ -45,6 +46,7 @@ import {
   userIsClusterAdmin,
 } from './couchdb/users';
 import {
+  countRecordsInNotebook,
   getNotebookMetadata,
   getNotebooks,
   getRolesForNotebook,
@@ -122,6 +124,7 @@ app.get('/notebooks/', requireAuthentication, async (req, res) => {
     res.render('notebooks', {
       user: user,
       notebooks: notebooks,
+      developer: DEVELOPER_MODE,
     });
   } else {
     res.status(401).end();
@@ -153,7 +156,9 @@ app.get(
       res.render('notebook-landing', {
         isAdmin: isAdmin,
         notebook: notebook,
+        records: await countRecordsInNotebook(project_id),
         invites: invitesQR,
+        developer: DEVELOPER_MODE
       });
     } else {
       res.sendStatus(404);

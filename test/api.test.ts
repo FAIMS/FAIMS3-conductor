@@ -175,3 +175,22 @@ test('update notebook roles', async () => {
     throw new Error('could not make test notebooks');
   }
 });
+
+
+test('create random record', async () => {
+  const nb1 = await createNotebook('NB1', uispec, {});
+
+  if (nb1) {
+    return request(app)
+      .post(`/api/notebooks/${nb1}/generate`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .set('Content-Type', 'application/json')
+      .send({
+        count: 10
+      })
+      .expect({status: 'success'})
+      .expect(200)
+  } else {
+    throw new Error('could not make test notebook');
+  }
+})
