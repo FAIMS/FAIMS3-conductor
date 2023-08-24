@@ -42,7 +42,6 @@ const HANDLER_OPTIONS: {[name: string]: any} = {
 };
 
 passport.serializeUser((user: Express.User, done: DoneFunction) => {
-  console.log('trying to serialize user...');
   done(null, user.user_id);
 });
 
@@ -65,8 +64,6 @@ export function determine_callback_urls(provider_name: string): {
 }
 
 export function add_auth_routes(app: any, handlers: any) {
-  console.log('Adding auth routes', handlers);
-
   app.get('/auth/', (req: any, res: any) => {
     // Allow the user to decide what auth mechanism to use
     const available_provider_info = [];
@@ -160,7 +157,6 @@ export function add_auth_routes(app: any, handlers: any) {
 
       if (!invite) {
         res.status(400);
-        console.log('no invite', invite, req.session.invite);
         req.flash('error', {registration: 'No valid invite for registration.'});
         res.redirect('/');
       } else if (password === repeat) {

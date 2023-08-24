@@ -21,14 +21,14 @@
 import {Strategy, VerifyCallback} from 'passport-google-oauth20';
 
 import {GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET} from '../buildconfig';
-import { getInvite } from '../couchdb/invites';
+import {getInvite} from '../couchdb/invites';
 import {
   addEmailsToUser,
   saveUser,
   getUserFromEmailOrUsername,
   createUser,
 } from '../couchdb/users';
-import { acceptInvite } from '../registration';
+import {acceptInvite} from '../registration';
 
 async function oauth_verify(
   req: Request,
@@ -38,8 +38,6 @@ async function oauth_verify(
   profile: any,
   done: CallableFunction // VerifyCallback doesn't allow user to be false
 ) {
-  console.debug('google verify');
-
   // three cases:
   //   - we have a user with this user_id from a previous google login
   //   - we already have a user with the email address in this profile,
@@ -61,10 +59,8 @@ async function oauth_verify(
       // add the profile if not already there
       if (!('google' in user.profiles)) {
         user.profiles['google'] = profile;
-        console.log('adding google profile for user');
         await saveUser(user);
       }
-      console.log('valid google user');
       return done(null, user, profile);
     }
   }
@@ -81,8 +77,6 @@ async function oauth_register(
   profile: any,
   done: VerifyCallback
 ) {
-  console.debug('google register');
-  console.log('state', req.session);
   // three cases:
   //   - we have a user with this user_id from a previous google login
   //   - we already have a user with the email address in this profile,
@@ -105,10 +99,8 @@ async function oauth_register(
       // add the profile if not already there
       if (!('google' in user.profiles)) {
         user.profiles['google'] = profile;
-        console.log('adding google profile for user');
         await saveUser(user);
       }
-      console.log('valid google user');
       done(null, user, profile);
       break;
     }
@@ -116,12 +108,10 @@ async function oauth_register(
   if (!user) {
     let errorMsg = '';
     const invite = await getInvite(req.session.invite);
-    console.log('invite', invite);
     if (invite) {
       [user, errorMsg] = await createUser(emails[0], profile.id);
 
       if (user) {
-        console.log('created new user');
         user.name = profile.displayName;
         user.profiles['google'] = profile;
         addEmailsToUser(user, emails);
