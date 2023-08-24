@@ -84,8 +84,6 @@ export const getNotebooks = async (user: Express.User): Promise<any[]> => {
           non_unique_project_id: project_id,
           metadata: projectMeta,
         });
-      } else {
-        console.log('no permission for ', project_id);
       }
     }
   }

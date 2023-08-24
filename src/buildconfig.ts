@@ -253,7 +253,6 @@ function email_transporter(): any {
 
 function developer_mode(): any {
   const develop = process.env.DEVELOPER_MODE;
-  console.log('DEVELOPER_MODE', develop);
   return develop === 'true';
 }
 
