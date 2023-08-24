@@ -45,7 +45,6 @@ const uispec: ProjectUIModel = {
 
 let adminToken = '';
 const username = 'bobalooba';
-let bobalooba: Express.User;
 
 beforeAll(async () => {
   await initialiseDatabases();
@@ -57,7 +56,6 @@ beforeAll(async () => {
     const [user, error] = await createUser('', username);
     if (user) {
       await saveUser(user);
-      bobalooba = user;
     } else {
       throw new Error(error);
     }

@@ -35,7 +35,7 @@ export async function createInvite(
     project_id: project_id,
     role: role,
     number: number,
-    unlimited: number == 0,
+    unlimited: number === 0,
   };
   await saveInvite(invite);
   return invite;
