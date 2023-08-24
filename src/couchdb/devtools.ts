@@ -18,13 +18,15 @@
  *    Tools used in development and testing of FAIMS
  */
 
-import {ProjectID, upsertFAIMSData, Record, generateFAIMSDataID} from 'faims3-datamodel';
+import {
+  ProjectID,
+  upsertFAIMSData,
+  Record,
+  generateFAIMSDataID,
+} from 'faims3-datamodel';
 import {getNotebookUISpec} from './notebooks';
 import {randomInt} from 'crypto';
-import { readFileSync } from 'node:fs';
-import { readFile } from 'fs';
-import { Blob } from 'buffer';
-
+import {readFileSync} from 'node:fs';
 
 export const createManyRandomRecords = async (
   project_id: ProjectID,
@@ -72,7 +74,7 @@ export const createRandomRecord = async (project_id: ProjectID) => {
     });
     const values: {[key: string]: any} = {
       fieldNames: [],
-      views: []
+      views: [],
     };
     fields.map((field: string) => {
       values[field] = generateValue(uiSpec.fields[field]);
@@ -102,7 +104,6 @@ export const createRandomRecord = async (project_id: ProjectID) => {
     throw new Error(`notebook not found with id ${project_id}`);
   }
 };
-
 
 const SAMPLE_IMAGE_FILE = 'public/images/Faims-medium.png';
 

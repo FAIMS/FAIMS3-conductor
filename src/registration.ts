@@ -65,4 +65,5 @@ export async function acceptInvite(user: Express.User, invite: RoleInvite) {
 
 export async function rejectInvite(invite: RoleInvite) {
   //await deleteInvite(invite);
+  console.log('rejecting', invite);
 }

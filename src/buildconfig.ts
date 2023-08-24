@@ -253,7 +253,11 @@ function email_transporter(): any {
 
 function developer_mode(): any {
   const develop = process.env.DEVELOPER_MODE;
-  return develop === 'true';
+  if (develop) {
+    return TRUTHY_STRINGS.includes(develop?.toLowerCase());
+  } else {
+    return false;
+  }
 }
 
 export const DEVELOPER_MODE = developer_mode();

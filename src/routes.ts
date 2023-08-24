@@ -85,7 +85,7 @@ app.post(
     }
     const project_id: NonUniqueProjectID = req.params.id;
     const role: string = req.body.role;
-    const number: number = req.body.number;
+    const number: number = req.body.number.parseInt();
 
     if (!userHasPermission(req.user, project_id, 'modify')) {
       res.render('invite-error', {
@@ -145,7 +145,7 @@ app.get(
         notebook: notebook,
         records: await countRecordsInNotebook(project_id),
         invites: invitesQR,
-        developer: DEVELOPER_MODE
+        developer: DEVELOPER_MODE,
       });
     } else {
       res.sendStatus(404);

@@ -19,7 +19,7 @@
  *   which server to use and whether to include test data
  */
 
-import express from 'express'; 
+import express from 'express';
 import cookieSession from 'cookie-session';
 import cors from 'cors';
 import passport from 'passport';

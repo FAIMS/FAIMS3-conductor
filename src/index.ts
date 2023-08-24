@@ -39,7 +39,7 @@ registerClient({
 });
 
 process.on('unhandledRejection', error => {
-  console.error('unhandledRejection'); 
+  console.error('unhandledRejection');
   console.error(error); // This prints error with stack included (as for normal errors)
   // don't re-throw the error since we don't want to crash the server
 });

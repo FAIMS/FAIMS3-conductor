@@ -24,8 +24,6 @@ PouchDB.plugin(require('pouchdb-find'));
 import {
   getProjectDataDB,
   getProjectMetaDB,
-  getProjectsDB,
-  getUsersDB,
   initialiseDatabases,
 } from '../src/couchdb';
 import {createNotebook} from '../src/couchdb/notebooks';
@@ -39,26 +37,6 @@ registerClient({
   getProjectDB: getProjectMetaDB,
   shouldDisplayRecord: () => true,
 });
-
-const clearDB = async (db: PouchDB.Database) => {
-  const docs = await db.allDocs();
-  for (let index = 0; index < docs.rows.length; index++) {
-    const doc = docs.rows[index];
-    await db.remove(doc.id, doc.value.rev);
-  }
-};
-
-const resetDatabases = async () => {
-  const usersDB = getUsersDB();
-  if (usersDB) {
-    await clearDB(usersDB);
-  }
-  const projectsDB = getProjectsDB();
-  if (projectsDB) {
-    await clearDB(projectsDB);
-  }
-  await initialiseDatabases();
-};
 
 test('createRecords', async () => {
   await initialiseDatabases();

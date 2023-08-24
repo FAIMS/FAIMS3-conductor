@@ -235,7 +235,8 @@ api.post('/users/:id/admin', requireAuthenticationAPI, async (req, res) => {
 });
 
 if (DEVELOPER_MODE) {
-  api.post('/notebooks/:notebook_id/delete',
+  api.post(
+    '/notebooks/:notebook_id/delete',
     requireAuthenticationAPI,
     async (req, res) => {
       if (userIsClusterAdmin(req.user)) {
@@ -253,7 +254,8 @@ if (DEVELOPER_MODE) {
     }
   );
 
-  api.post('/notebooks/:notebook_id/generate',
+  api.post(
+    '/notebooks/:notebook_id/generate',
     requireAuthenticationAPI,
     async (req, res) => {
       if (userIsClusterAdmin(req.user)) {
