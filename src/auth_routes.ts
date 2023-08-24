@@ -30,16 +30,12 @@ import {getInvite} from './couchdb/invites';
 import {acceptInvite} from './registration';
 
 const AVAILABLE_AUTH_PROVIDER_DISPLAY_INFO: {[name: string]: any} = {
-  datacentral: {
-    name: 'Data Central',
-  },
   google: {
     name: 'Google',
   },
 };
 
 const HANDLER_OPTIONS: {[name: string]: any} = {
-  datacentral: {},
   google: {
     prompt: 'select_account',
   },
