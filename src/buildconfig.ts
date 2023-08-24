@@ -186,54 +186,6 @@ function cookie_secret(): string {
   }
 }
 
-function datacentral_group_prefix(): string {
-  const name = process.env.DATACENTRAL_GROUP_PREFIX;
-  if (name === '' || name === undefined) {
-    console.log('DATACENTRAL_GROUP_PREFIX not set, using default');
-    return 'FAIMS';
-  } else {
-    return name;
-  }
-}
-
-function datacentral_manage_roles(): boolean {
-  const manage_roles = process.env.HAVE_DATACENTRAL_MANAGE_ROLES;
-  if (
-    manage_roles === '' ||
-    manage_roles === undefined ||
-    FALSEY_STRINGS.includes(manage_roles.toLowerCase())
-  ) {
-    return false;
-  } else if (TRUTHY_STRINGS.includes(manage_roles.toLowerCase())) {
-    return true;
-  } else {
-    console.error(
-      'HAVE_DATACENTRAL_MANAGE_ROLES badly defined, assuming false'
-    );
-    return false;
-  }
-}
-
-function datacentral_client_id(): string {
-  const s = process.env.DATACENTRAL_CLIENT_ID;
-  if (s === '' || s === undefined) {
-    console.log('DATACENTRAL_CLIENT_ID not set, setting empty');
-    return '';
-  } else {
-    return s;
-  }
-}
-
-function datacentral_client_secret(): string {
-  const s = process.env.DATACENTRAL_CLIENT_SECRET;
-  if (s === '' || s === undefined) {
-    console.log('DATACENTRAL_CLIENT_SECRET not set, setting empty');
-    return '';
-  } else {
-    return s;
-  }
-}
-
 function google_client_id(): string {
   const s = process.env.GOOGLE_CLIENT_ID;
   if (s === '' || s === undefined) {
@@ -318,10 +270,6 @@ export const CONDUCTOR_PRIVATE_KEY_PATH = private_key_path();
 export const CONDUCTOR_PUBLIC_KEY_PATH = public_key_path();
 export const CONDUCTOR_INSTANCE_NAME = instance_name();
 export const COOKIE_SECRET = cookie_secret();
-export const DATACENTRAL_GROUP_PREFIX = datacentral_group_prefix();
-export const HAVE_DATACENTRAL_MANAGE_ROLES = datacentral_manage_roles();
-export const DATACENTRAL_CLIENT_ID = datacentral_client_id();
-export const DATACENTRAL_CLIENT_SECRET = datacentral_client_secret();
 export const GOOGLE_CLIENT_ID = google_client_id();
 export const GOOGLE_CLIENT_SECRET = google_client_secret();
 export const CLUSTER_ADMIN_GROUP_NAME = cluster_admin_group_name();
