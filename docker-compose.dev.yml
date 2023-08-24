@@ -59,11 +59,6 @@ services:
       - CONDUCTOR_EMAIL_HOST_NAME
       - CONDUCTOR_EMAIL_HOST_CONFIG
 
-      # https://faimsproject.atlassian.net/wiki/spaces/FAIMS3/pages/151846960/FAIMS3+Conductor+build+run+environment+variables#Authentication-Provider-Specific-environment-variables
-      - DATACENTRAL_GROUP_PREFIX
-      - DATACENTRAL_CLIENT_ID
-      - DATACENTRAL_CLIENT_SECRET
-      - HAVE_DATACENTRAL_MANAGE_ROLES=true
       - GOOGLE_CLIENT_ID
       - GOOGLE_CLIENT_SECRET
 
