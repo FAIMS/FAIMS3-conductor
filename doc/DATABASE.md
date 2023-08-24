@@ -24,18 +24,10 @@ The `directory` database holds a default document as follows:
       "db_name": "projects"
     },
     "conductor_url": "https://dev.conductor.faims.edu.au/",
-    "auth_mechanisms": {
-      "demo": {
-        "portal": "conductor_host",
-        "type": "oauth",
-        "name": "DataCentral"
-      }
-    }
   }
   ```
 
 `conductor_url` is the URL of the Conductor instance we will use for authentication etc.
-`auth_mechanisms` is no longer used (as far as I can see).
 
 ### `people`
 

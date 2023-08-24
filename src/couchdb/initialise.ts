@@ -80,14 +80,6 @@ export const initialiseDirectoryDB = async (
       db_name: 'projects',
     },
     conductor_url: `${CONDUCTOR_PUBLIC_URL}/`,
-    // this is no longer used....TODO: remove
-    auth_mechanisms: {
-      demo: {
-        portal: `${CONDUCTOR_PUBLIC_URL}/`,
-        type: 'oauth',
-        name: 'DataCentral',
-      },
-    },
   };
 
   const permissions = {
