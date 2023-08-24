@@ -20,12 +20,11 @@
 
 import {NonUniqueProjectID, ProjectID} from 'faims3-datamodel';
 import {getInvitesDB} from '.';
-import {ConductorRole, Email, RoleInvite} from '../datamodel/users';
+import {ConductorRole, RoleInvite} from '../datamodel/users';
 import {v4 as uuidv4} from 'uuid';
 
 export async function createInvite(
   user: Express.User,
-  email: Email,
   project_id: NonUniqueProjectID,
   role: ConductorRole,
   number: number
@@ -33,10 +32,10 @@ export async function createInvite(
   const invite: RoleInvite = {
     _id: uuidv4(),
     requesting_user: user.user_id,
-    email: email,
     project_id: project_id,
     role: role,
     number: number,
+    unlimited: number == 0,
   };
   await saveInvite(invite);
   return invite;

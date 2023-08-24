@@ -49,7 +49,12 @@ Users can be invited to roles <a href="/notebooks/{{notebook.project_id}}/invite
   {{#each invites}}
   <tr>
 
+    {{#if this.invite.unlimited}}
+    <td>Invite for unlimited users for role "{{this.invite.role}}"</td>
+    {{else}}
     <td>Invite for {{this.invite.number}} users for role "{{this.invite.role}}"</td>
+    {{/if}}
+
     <td>
       <button class="btn btn-primary" onclick="copyToClipboard('{{this.url}}')">Copy Registration URL</button>
     </td>

@@ -21,20 +21,14 @@
           </div>
           <div class="card-body">
             Create an invitation for users to sign up to
-            this notebook. 
+            this notebook.   This will generate an invite
+            URL and QR code that can be used to register.
             <div class="alert alert-warning mt-3" role="alert">
               <i class="bi bi-info-circle"></i>&nbsp;&nbsp; Users will need 
               internet access to sign in and accept invites.
             </div>
 
             <form class="mb-1 mt-2" method="post">
-              <div class="mb-3">
-                <label for="email">Email address</label>
-                <input name="email" type="email" class="form-control" id="email" aria-describedby="emailHelp" placeholder="user@team.com">
-                <div id="emailHelp" class="form-text">Optional: add the email address of the
-                  user you wish to invite.</div>
-              </div>
-
               <div class="mb-3">
                 <label for="number">Invite valid for how many users?</label>
                 <input name="number" type="number" class="form-control" id="number" aria-describedby="numberHelp" value="1">

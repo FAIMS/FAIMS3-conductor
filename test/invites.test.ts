@@ -44,24 +44,14 @@ beforeEach(initialiseDatabases);
 
 test('create invite', async () => {
   const adminUser = await getUserFromEmailOrUsername('admin');
-  const email = 'bob@here.com';
   const project_id = await createNotebook('Test Notebook', uispec, {});
   const role = 'user';
   const number = 10;
 
   if (adminUser && project_id) {
-    const invite = await createInvite(
-      adminUser,
-      email,
-      project_id,
-      role,
-      number
-    );
-
-    expect(invite.email).toBe(email);
+    const invite = await createInvite(adminUser, project_id, role, number);
 
     // check that it was saved - fetch from db
-
     const fetched = await getInvite(invite._id);
 
     if (fetched) {
@@ -75,6 +65,29 @@ test('create invite', async () => {
       // and now delete it
       const deleted = await deleteInvite(fetched);
       expect(deleted._deleted).toBe(true);
+    } else {
+      fail('could not retrieve newly created invite');
+    }
+  } else {
+    fail('could not get admin user');
+  }
+});
+
+test('create unlimited invite', async () => {
+  const adminUser = await getUserFromEmailOrUsername('admin');
+  const project_id = await createNotebook('Test Notebook', uispec, {});
+  const role = 'user';
+  const number = 0;
+
+  if (adminUser && project_id) {
+    const invite = await createInvite(adminUser, project_id, role, number);
+
+    // check that it was saved - fetch from db
+    const fetched = await getInvite(invite._id);
+
+    if (fetched) {
+      expect(fetched.project_id).toBe(project_id);
+      expect(fetched.unlimited).toBeTruthy();
     } else {
       fail('could not retrieve newly created invite');
     }
