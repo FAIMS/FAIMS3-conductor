@@ -30,6 +30,7 @@ import {createNotebook} from '../src/couchdb/notebooks';
 import * as fs from 'fs';
 import {createRandomRecord} from '../src/couchdb/devtools';
 import {registerClient} from 'faims3-datamodel';
+import {DEVELOPER_MODE} from '../src/buildconfig';
 
 // set up the database module faims3-datamodel with our callbacks to get databases
 registerClient({
@@ -38,17 +39,22 @@ registerClient({
   shouldDisplayRecord: () => true,
 });
 
-test('createRecords', async () => {
-  await initialiseDatabases();
+if (DEVELOPER_MODE) {
+  test('createRecords', async () => {
+    await initialiseDatabases();
 
-  const jsonText = fs.readFileSync('./notebooks/sample_notebook.json', 'utf-8');
-  const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
+    const jsonText = fs.readFileSync(
+      './notebooks/sample_notebook.json',
+      'utf-8'
+    );
+    const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
 
-  const projectID = await createNotebook('Test Notebook', uiSpec, metadata);
+    const projectID = await createNotebook('Test Notebook', uiSpec, metadata);
 
-  expect(projectID).not.toBe(undefined);
+    expect(projectID).not.toBe(undefined);
 
-  if (projectID) {
-    await createRandomRecord(projectID);
-  }
-});
+    if (projectID) {
+      await createRandomRecord(projectID);
+    }
+  });
+}
