@@ -35,6 +35,7 @@ import {getSigningKey} from '../src/authkeys/signing_keys';
 import fs from 'fs';
 import {createNotebook} from '../src/couchdb/notebooks';
 import {ProjectUIModel} from 'faims3-datamodel';
+import {DEVELOPER_MODE} from '../src/buildconfig';
 
 const uispec: ProjectUIModel = {
   fields: [],
@@ -174,17 +175,19 @@ test('update notebook roles', async () => {
   }
 });
 
-test('create random record', async () => {
-  const nb1 = await createNotebook('NB1', uispec, {});
+if (DEVELOPER_MODE) {
+  test('create random record', async () => {
+    const nb1 = await createNotebook('NB1', uispec, {});
 
-  if (nb1) {
-    return request(app)
-      .post(`/api/notebooks/${nb1}/generate`)
-      .set('Authorization', `Bearer ${adminToken}`)
-      .set('Content-Type', 'application/json')
-      .send({count: 10})
-      .expect(200);
-  } else {
-    throw new Error('could not make test notebook');
-  }
-});
+    if (nb1) {
+      return request(app)
+        .post(`/api/notebooks/${nb1}/generate`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .set('Content-Type', 'application/json')
+        .send({count: 10})
+        .expect(200);
+    } else {
+      throw new Error('could not make test notebook');
+    }
+  });
+}
