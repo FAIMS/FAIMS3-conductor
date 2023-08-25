@@ -230,13 +230,22 @@ export const createNotebook = async (
     return undefined;
   }
 
+  // get roles from the notebook, ensure that 'user' and 'admin' are included
+  const roles = metadata.accesses || ['admin', 'user', 'team'];
+  if (roles.indexOf('user') < 0) {
+    roles.push('user');
+  }
+  if (roles.indexOf('admin') < 0) {
+    roles.push('admin');
+  }
+
   // can't save security on a memory database so skip this if we're testing
   if (process.env.NODE_ENV !== 'test') {
     const metaSecurity = await metaDB.security();
     metaSecurity.admins.roles.add(CLUSTER_ADMIN_GROUP_NAME);
-    metaSecurity.members.roles.add(`${project_id}||user`);
-    metaSecurity.members.roles.add(`${project_id}||team`);
-    metaSecurity.members.roles.add(`${project_id}||admin`);
+    roles.forEach((role: string) => {
+      metaSecurity.members.roles.add(`${project_id}||${role}`);
+    });
     await metaSecurity.save();
   }
 
@@ -262,9 +271,9 @@ export const createNotebook = async (
   if (process.env.NODE_ENV !== 'test') {
     const dataSecurity = await dataDB.security();
     dataSecurity.admins.roles.add(CLUSTER_ADMIN_GROUP_NAME);
-    dataSecurity.members.roles.add(`${project_id}||user`);
-    dataSecurity.members.roles.add(`${project_id}||team`);
-    dataSecurity.members.roles.add(`${project_id}||admin`);
+    roles.forEach((role: string) => {
+      dataSecurity.members.roles.add(`${project_id}||${role}`);
+    });
     await dataSecurity.save();
   }
 
