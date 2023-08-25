@@ -57,4 +57,8 @@ if (DEVELOPER_MODE) {
       await createRandomRecord(projectID);
     }
   });
+} else {
+  test('dummy test since we must have at least one test', async () => {
+    expect(true).toBe(true);
+  });
 }
