@@ -105,7 +105,7 @@ export const createRandomRecord = async (project_id: ProjectID) => {
   }
 };
 
-const SAMPLE_IMAGE_FILE = 'public/images/Faims-medium.png';
+const SAMPLE_IMAGE_FILE = 'test/test-attachment-image.jpg';
 
 const generateValue = (field: any) => {
   //console.log('generateValue', field);
@@ -126,12 +126,9 @@ const generateValue = (field: any) => {
     case 'faims-core::String':
       return 'Bobalooba';
     case 'faims-attachment::Files': {
-      // should return a list of file blobs
       const image = readFileSync(SAMPLE_IMAGE_FILE);
-      //const blob = new Blob([image], {type: "image/png"});
-      //const base64 = Buffer.from(image).toString('base64');
       const buffer = Buffer.from(image);
-      return [{type: 'image/png', data: buffer}];
+      return [{type: 'image/jpeg', data: buffer}];
     }
     case 'faims-core::Integer':
       return randomInt(100);
