@@ -23,6 +23,7 @@ import express from 'express';
 import cookieSession from 'cookie-session';
 import cors from 'cors';
 import passport from 'passport';
+import morgan from 'morgan';
 import {engine as express_handlebars} from 'express-handlebars';
 import RateLimit from 'express-rate-limit';
 import flash from 'req-flash';
@@ -48,6 +49,7 @@ import {COOKIE_SECRET} from './buildconfig';
 import {api} from './api/routes';
 
 export const app = express();
+app.use(morgan('combined'));
 
 // set up rate limiter: maximum of five requests per minute
 const limiter = RateLimit({
