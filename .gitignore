@@ -1,3 +1,5 @@
+notebooks/mapping.json
+notebooks/*.bak
 *.pem
 *.pem.flattened
 # Logs
