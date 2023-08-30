@@ -76,7 +76,7 @@ app.get('/notebooks/:id/invite/', requireAuthentication, async (req, res) => {
 app.post(
   '/notebooks/:id/invite/',
   requireAuthentication,
-  body('number').not().isEmpty().isInt(),
+  body('number').not().isEmpty(),
   body('role').not().isEmpty(),
   async (req, res) => {
     const errors = validationResult(req);
@@ -85,7 +85,7 @@ app.post(
     }
     const project_id: NonUniqueProjectID = req.params.id;
     const role: string = req.body.role;
-    const number: number = req.body.number.parseInt();
+    const number: number = parseInt(req.body.number);
 
     if (!userHasPermission(req.user, project_id, 'modify')) {
       res.render('invite-error', {
