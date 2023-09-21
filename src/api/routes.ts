@@ -19,6 +19,7 @@
  */
 
 import express from 'express';
+import multer from 'multer';
 import {
   getNotebooks,
   createNotebook,
@@ -43,7 +44,10 @@ import {
 } from '../couchdb/users';
 import {CLUSTER_ADMIN_GROUP_NAME, DEVELOPER_MODE} from '../buildconfig';
 import {createManyRandomRecords} from '../couchdb/devtools';
-import { restoreFromBackup } from '../couchdb/backupRestore';
+import {restoreFromBackup} from '../couchdb/backupRestore';
+
+// TODO: configure this directory
+const upload = multer({dest: '/tmp/'});
 
 export const api = express.Router();
 
@@ -235,15 +239,19 @@ api.post('/users/:id/admin', requireAuthenticationAPI, async (req, res) => {
   }
 });
 
-api.post('/restore', requireAuthenticationAPI, async (req, res) => {
-  if (userIsClusterAdmin(req.user)) {
-    const file = req.body;
-    await restoreFromBackup(filename);
-    res.json({status: 'success'});
-  } else {
-    res.status(401).end();
+api.post(
+  '/restore',
+  upload.single('backup'),
+  requireAuthenticationAPI,
+  async (req: any, res) => {
+    if (userIsClusterAdmin(req.user)) {
+      await restoreFromBackup(req.file.path);
+      res.json({status: 'success'});
+    } else {
+      res.status(401).end();
+    }
   }
-});
+);
 
 if (DEVELOPER_MODE) {
   api.post(
