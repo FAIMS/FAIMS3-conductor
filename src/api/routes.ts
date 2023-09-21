@@ -43,6 +43,7 @@ import {
 } from '../couchdb/users';
 import {CLUSTER_ADMIN_GROUP_NAME, DEVELOPER_MODE} from '../buildconfig';
 import {createManyRandomRecords} from '../couchdb/devtools';
+import { restoreFromBackup } from '../couchdb/backupRestore';
 
 export const api = express.Router();
 
@@ -230,6 +231,16 @@ api.post('/users/:id/admin', requireAuthenticationAPI, async (req, res) => {
       error:
         'you do not have permission to modify user permissions for this server',
     });
+    res.status(401).end();
+  }
+});
+
+api.post('/restore', requireAuthenticationAPI, async (req, res) => {
+  if (userIsClusterAdmin(req.user)) {
+    const file = req.body;
+    await restoreFromBackup(filename);
+    res.json({status: 'success'});
+  } else {
     res.status(401).end();
   }
 });
