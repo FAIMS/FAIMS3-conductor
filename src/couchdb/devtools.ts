@@ -121,7 +121,7 @@ const generateValue = (field: any) => {
     );
     return options[randomInt(options.length)];
   }
-
+  // TODO: use 'faker' to generate more realistic data
   switch (fieldType) {
     case 'faims-core::String':
       return 'Bobalooba';
