@@ -1,0 +1,48 @@
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item" active aria-current="page">Restore</li>
+        </ol>
+    </nav>
+
+
+    <h1>Restore Database Backup</h1>
+
+    <div class="container">
+    <form id="restore-backup-form">
+        <input type="file" name="backup" id="backup">
+        <input type="submit" value="Restore Backup">
+    </form>
+    <div id="message"></div>
+    </div>
+
+</div>
+
+<script>
+function formHandler(event) {
+  event.preventDefault();
+  const url = '/api/restore';
+  const form = event.target;
+  const fileInput = form.querySelector('[name="backup"]');
+  if (fileInput) {
+    const formData = new FormData();
+    formData.append('backup', fileInput.files[0]);
+      fetch(url, {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('response', data);
+        if (data.status === 'success') {
+          window.location.reload();
+        } else {
+          document.getElementById('message').innerText = data.error;
+        }
+      });
+  }
+}
+document.getElementById('restore-backup-form').onsubmit = formHandler;
+
+</script>
