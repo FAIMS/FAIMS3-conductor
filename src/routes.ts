@@ -32,6 +32,7 @@ import {
   ANDROID_APP_URL,
   CONDUCTOR_PUBLIC_URL,
   DEVELOPER_MODE,
+  CONDUCTOR_AUTH_PROVIDERS,
 } from './buildconfig';
 import {
   requireAuthentication,
@@ -54,8 +55,13 @@ import {
 import {getSigningKey} from './authkeys/signing_keys';
 import {createAuthKey} from './authkeys/create';
 import {getPublicUserDbURL} from './couchdb';
+import {add_auth_providers} from './auth_providers';
+import {add_auth_routes} from './auth_routes';
 
 export {app};
+
+add_auth_providers(CONDUCTOR_AUTH_PROVIDERS);
+add_auth_routes(app, CONDUCTOR_AUTH_PROVIDERS);
 
 app.get('/notebooks/:id/invite/', requireAuthentication, async (req, res) => {
   if (await userHasPermission(req.user, req.params.id, 'modify')) {

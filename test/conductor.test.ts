@@ -24,6 +24,7 @@ PouchDB.plugin(require('pouchdb-find'));
 
 import request from 'supertest';
 import {app} from '../src/routes';
+import { CONDUCTOR_AUTH_PROVIDERS } from '../src/buildconfig';
 
 test('check is up', async () => {
   const result = await request(app).get('/up');
@@ -42,13 +43,32 @@ describe('Auth', () => {
     request(app).get('/logout/').expect(302).expect('Location', '/', done);
   });
 
-  // hmm. doesn't work becuase the auth routes don't get added until index.ts
-  // need to modify to make a testable exported app
-  //
-  // it('auth returns HTML', done => {
-  //   request(app)
-  //     .get('/auth')
-  //     .expect(200)
-  //     .expect('Content-Type', /text\/html/, done);
-  // });
+  it('auth returns HTML', done => {
+    request(app)
+      .get('/auth')
+      .expect(200)
+      .expect('Content-Type', /text\/html/, done);
+  });
+
+  it('shows local login form', done => {
+    request(app)
+      .get('/auth')
+      .expect(200)
+      .then(response => {
+        expect(response.text).toContain('Local Login');
+        done();
+      });
+  });
+
+  it('shows the configured login button(s)', done => {
+    request(app)
+      .get('/auth')
+      .expect(200)
+      .then(response => {
+        CONDUCTOR_AUTH_PROVIDERS.forEach((provider: string) => {
+          expect(response.text).toContain(provider);
+        });
+        done();
+      });
+  });
 });
