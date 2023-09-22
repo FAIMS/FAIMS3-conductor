@@ -76,7 +76,7 @@
     "jest": "^27.5.1",
     "jest-fast-check": "1.0.2",
     "nano": "^10.1.2",
-    "node-fetch": "^3.3.0",
+    "node-fetch": "^3.3.2",
     "nodemon": "^2.0.20",
     "pouchdb-adapter-memory": "^8.0.1",
     "supertest": "^6.3.3"
