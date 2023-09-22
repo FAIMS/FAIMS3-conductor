@@ -170,21 +170,9 @@ const getAutoIncrementers = (uiSpec: ProjectUIModel) => {
   }
 };
 
-/**
- * Create notebook databases and initialise them with required contents
- *
- * @param project_id A project identifier
- * @param uispec A project Ui Specification
- * @param metadata A metadata object with properties/values
- * @returns the project id
- */
-export const createNotebook = async (
-  projectName: string,
-  uispec: ProjectUIModel,
-  metadata: any
+export const addDesignDocsForNotebook = async (
+  dataDB: PouchDB.Database<any>
 ) => {
-  const project_id = generateProjectID(projectName);
-
   const attachmentFilterDoc = {
     _id: '_design/attachment_filter',
     views: {
@@ -209,6 +197,29 @@ export const createNotebook = async (
       return;
     }`,
   };
+
+  try {
+    await dataDB.put(attachmentFilterDoc);
+    await dataDB.put(userPermissionsDoc);
+  } catch (error) {
+    console.log('Error adding design documents to database:', error);
+  }
+};
+
+/**
+ * Create notebook databases and initialise them with required contents
+ *
+ * @param project_id A project identifier
+ * @param uispec A project Ui Specification
+ * @param metadata A metadata object with properties/values
+ * @returns the project id
+ */
+export const createNotebook = async (
+  projectName: string,
+  uispec: ProjectUIModel,
+  metadata: any
+) => {
+  const project_id = generateProjectID(projectName);
 
   const metaDBName = `metadata-${project_id}`;
   const dataDBName = `data-${project_id}`;
@@ -278,8 +289,7 @@ export const createNotebook = async (
   }
 
   try {
-    await dataDB.put(attachmentFilterDoc);
-    await dataDB.put(userPermissionsDoc);
+    await addDesignDocsForNotebook(dataDB);
 
     // finally add an entry to the projects db about this project
     const projectsDB = getProjectsDB();
@@ -289,6 +299,7 @@ export const createNotebook = async (
   } catch (error) {
     console.log(error);
   }
+  console.log('made a new notebook', project_id);
   return project_id;
 };
 

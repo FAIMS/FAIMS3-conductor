@@ -19,6 +19,7 @@
  */
 import {open} from 'node:fs/promises';
 import {getProjectDataDB, getProjectMetaDB, getProjectsDB} from '.';
+import {addDesignDocsForNotebook} from './notebooks';
 
 /**
  * restoreFromBackup - restore databases from a JSONL backup file
@@ -35,7 +36,6 @@ export const restoreFromBackup = async (filename: string) => {
   for await (const line of file.readLines()) {
     const doc = JSON.parse(line);
     if (doc.type === 'header') {
-      console.log('Restoring database', doc.database);
       dbName = doc.database;
 
       if (dbName.startsWith('projects')) {
@@ -49,6 +49,10 @@ export const restoreFromBackup = async (filename: string) => {
       } else if (dbName.startsWith('data')) {
         const projectName = dbName.split('||')[1];
         db = await getProjectDataDB(projectName);
+        if (db) {
+          addDesignDocsForNotebook(db);
+          // TODO: set up permissions for the databases
+        }
       } else {
         // don't try to restore anything we don't know about
         db = undefined;
