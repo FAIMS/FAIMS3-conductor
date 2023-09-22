@@ -22,11 +22,9 @@
 import PouchDB from 'pouchdb';
 import PouchDBFind from 'pouchdb-find';
 
-import {add_auth_providers} from './auth_providers';
-import {CONDUCTOR_INTERNAL_PORT, CONDUCTOR_AUTH_PROVIDERS} from './buildconfig';
+import {CONDUCTOR_INTERNAL_PORT} from './buildconfig';
 
 import {app} from './routes';
-import {add_auth_routes} from './auth_routes';
 
 import {registerClient} from 'faims3-datamodel';
 import {getProjectDataDB, getProjectMetaDB} from './couchdb';
@@ -45,8 +43,6 @@ process.on('unhandledRejection', error => {
 });
 
 PouchDB.plugin(PouchDBFind);
-add_auth_providers(CONDUCTOR_AUTH_PROVIDERS);
-add_auth_routes(app, CONDUCTOR_AUTH_PROVIDERS);
 
 app.listen(CONDUCTOR_INTERNAL_PORT, '0.0.0.0', () => {
   console.log(

@@ -36,6 +36,7 @@ import fs from 'fs';
 import {createNotebook} from '../src/couchdb/notebooks';
 import {ProjectUIModel} from 'faims3-datamodel';
 import {DEVELOPER_MODE} from '../src/buildconfig';
+import { response } from 'express';
 
 const uispec: ProjectUIModel = {
   fields: [],
@@ -152,6 +153,29 @@ test('update admin user - remove role', () => {
     .send({addrole: false})
     .expect(200)
     .expect({status: 'success'});
+});
+
+test('get notebook users', async () => {
+  const filename = 'notebooks/sample_notebook.json';
+  const jsonText = fs.readFileSync(filename, 'utf-8');
+  const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
+
+  const project_id = await createNotebook('test-notebook', uiSpec, metadata);
+
+  return request(app)
+    .get(`/api/notebooks/${project_id}/users`)
+    .set('Authorization', `Bearer ${adminToken}`)
+    .set('Content-Type', 'application/json')
+    .expect(200)
+    .then(response => {
+      expect(response.body.roles).toEqual([
+        'admin',
+        'moderator',
+        'team',
+        'user',
+      ]);
+      expect(response.body.users.length).toEqual(1);
+    });
 });
 
 test('update notebook roles', async () => {
