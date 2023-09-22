@@ -91,8 +91,9 @@ api.post('/notebooks/', requireAuthenticationAPI, async (req, res) => {
     try {
       const projectID = await createNotebook(projectName, uiSpec, metadata);
       res.json({notebook: projectID});
-    } catch {
+    } catch (err) {
       res.json({error: 'there was an error creating the notebook'});
+      console.log('Error creating notebook', err);
       res.status(500).end();
     }
   } else {
