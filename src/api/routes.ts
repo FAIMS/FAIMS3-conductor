@@ -240,21 +240,21 @@ api.post('/users/:id/admin', requireAuthenticationAPI, async (req, res) => {
   }
 });
 
-api.post(
-  '/restore',
-  upload.single('backup'),
-  requireAuthenticationAPI,
-  async (req: any, res) => {
-    if (userIsClusterAdmin(req.user)) {
-      await restoreFromBackup(req.file.path);
-      res.json({status: 'success'});
-    } else {
-      res.status(401).end();
-    }
-  }
-);
-
 if (DEVELOPER_MODE) {
+  api.post(
+    '/restore',
+    upload.single('backup'),
+    requireAuthenticationAPI,
+    async (req: any, res) => {
+      if (userIsClusterAdmin(req.user)) {
+        await restoreFromBackup(req.file.path);
+        res.json({status: 'success'});
+      } else {
+        res.status(401).end();
+      }
+    }
+  );
+
   api.post(
     '/notebooks/:notebook_id/delete',
     requireAuthenticationAPI,

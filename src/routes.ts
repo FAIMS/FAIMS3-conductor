@@ -211,6 +211,7 @@ app.get('/', async (req, res) => {
         cluster_admin: userIsClusterAdmin(req.user),
         provider: provider,
         public_key: signing_key.public_key,
+        developer: DEVELOPER_MODE,
       });
     }
   } else {
@@ -295,13 +296,14 @@ app.get('/users', requireClusterAdmin, async (req, res) => {
   }
 });
 
-app.get('/restore/', requireClusterAdmin, async (req, res) => {
-  if (req.user) {
-    res.render('restore');
-  } else {
-    res.status(401).end();
-  }
-});
+if (DEVELOPER_MODE)
+  app.get('/restore/', requireClusterAdmin, async (req, res) => {
+    if (req.user) {
+      res.render('restore');
+    } else {
+      res.status(401).end();
+    }
+  });
 
 app.get('/up/', (req, res) => {
   res.status(200).json({up: 'true'});
