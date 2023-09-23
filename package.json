@@ -53,7 +53,6 @@
   "devDependencies": {
     "@types/cookie-session": "2.0.45",
     "@types/cors": "2.8.13",
-    "@types/expect": "^24.3.0",
     "@types/express": "4.17.18",
     "@types/express-handlebars": "5.3.1",
     "@types/express-session": "1.17.5",
