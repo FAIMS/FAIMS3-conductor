@@ -1,14 +1,13 @@
 version: "3.9"
 services:
   couchdb:
-    build:
-      context: couchdb
-      dockerfile: Dockerfile
-      # dockerfile relative path is from build context
+    image: couchdb:3@sha256:d341311cf03840dfb96a7c1bcf7ef5b6a6a4d2ac53e01e7a5095329cbe8cd37c
     volumes: 
       - type: volume
         source: couchdb-data
         target: /opt/couchdb/data
+      # mount local configuration containing admin user and keys
+      - './couchdb/:/opt/couchdb/etc/local.d'
     ports:
       - "0.0.0.0:${COUCHDB_EXTERNAL_PORT}:5984" 
       
@@ -18,16 +17,17 @@ services:
       - COUCHDB_USER=admin
       - COUCHDB_PASSWORD
   conductor:
-    build:
-      context: .
+    image: ghcr.io/faims/faims3-conductor:main
     command: "npm start" 
     ports:
       - "0.0.0.0:${CONDUCTOR_EXTERNAL_PORT}:${CONDUCTOR_INTERNAL_PORT}"
+    volumes:
+      # mount local configuration containing signing keys shared with couchdb
+      - './keys:/app/keys:ro'
     environment:
       #  note that some of these are pulled from the environment (.env) 
       #  while others get values here if the value is known for 
       #  docker-compose setup
-
 
       - PROFILE_NAME
       - CONDUCTOR_INSTANCE_NAME
