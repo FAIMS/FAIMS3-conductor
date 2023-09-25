@@ -1,8 +1,8 @@
-name: Docker Image CI
+name: Build Docker Image
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
  
 # Defines two custom environment variables for the workflow. These are 
 # used for the Container registry domain, and a name for the Docker 
