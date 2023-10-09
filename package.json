@@ -32,7 +32,7 @@
     "jose": "4.15.2",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
-    "nodemailer": "^6.9.5",
+    "nodemailer": "^6.9.6",
     "oauth": "0.10.0",
     "passport": "0.5.3",
     "passport-google-oauth20": "2.0.0",
