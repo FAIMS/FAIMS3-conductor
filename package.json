@@ -55,7 +55,7 @@
     "@types/cors": "2.8.13",
     "@types/express": "4.17.18",
     "@types/express-handlebars": "5.3.1",
-    "@types/express-session": "1.17.5",
+    "@types/express-session": "1.17.8",
     "@types/jest": "27.5.0",
     "@types/morgan": "^1.9.5",
     "@types/multer": "^1.4.7",
