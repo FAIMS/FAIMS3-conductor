@@ -117,6 +117,7 @@ app.get('/notebooks/', requireAuthentication, async (req, res) => {
     res.render('notebooks', {
       user: user,
       notebooks: notebooks,
+      cluster_admin: userIsClusterAdmin(user),
       developer: DEVELOPER_MODE,
     });
   } else {
