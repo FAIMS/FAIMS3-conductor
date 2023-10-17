@@ -240,6 +240,25 @@ api.post('/users/:id/admin', requireAuthenticationAPI, async (req, res) => {
   }
 });
 
+api.post(
+  '/notebooks/:notebook_id/delete',
+  requireAuthenticationAPI,
+  async (req, res) => {
+    if (userIsClusterAdmin(req.user)) {
+      const project_id = req.params.notebook_id;
+      const notebook = await getNotebookMetadata(project_id);
+      if (notebook) {
+        await deleteNotebook(project_id);
+        res.redirect('/notebooks/');
+      } else {
+        res.status(404).end();
+      }
+    } else {
+      res.status(401).end();
+    }
+  }
+);
+
 if (DEVELOPER_MODE) {
   api.post(
     '/restore',
@@ -249,25 +268,6 @@ if (DEVELOPER_MODE) {
       if (userIsClusterAdmin(req.user)) {
         await restoreFromBackup(req.file.path);
         res.json({status: 'success'});
-      } else {
-        res.status(401).end();
-      }
-    }
-  );
-
-  api.post(
-    '/notebooks/:notebook_id/delete',
-    requireAuthenticationAPI,
-    async (req, res) => {
-      if (userIsClusterAdmin(req.user)) {
-        const project_id = req.params.notebook_id;
-        const notebook = await getNotebookMetadata(project_id);
-        if (notebook) {
-          await deleteNotebook(project_id);
-          res.redirect('/notebooks/');
-        } else {
-          res.status(404).end();
-        }
       } else {
         res.status(401).end();
       }
