@@ -36,7 +36,7 @@ import fs from 'fs';
 import {createNotebook} from '../src/couchdb/notebooks';
 import {ProjectUIModel} from 'faims3-datamodel';
 import {DEVELOPER_MODE} from '../src/buildconfig';
-import { response } from 'express';
+import {response} from 'express';
 
 const uispec: ProjectUIModel = {
   fields: [],
@@ -103,6 +103,78 @@ test('create notebook', () => {
     .expect(200)
     .expect(response => {
       expect(response.body.notebook).toMatch('-test-notebook');
+    });
+});
+
+test('update notebook', () => {
+  const filename = 'notebooks/sample_notebook.json';
+  const jsonText = fs.readFileSync(filename, 'utf-8');
+  const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
+
+  let projectID;
+
+  // create notebook
+  request(app)
+    .post('/api/notebooks')
+    .send({
+      'ui-specification': uiSpec,
+      metadata: metadata,
+      name: 'test notebook',
+    })
+    .set('Authorization', `Bearer ${adminToken}`)
+    .set('Content-Type', 'application/json')
+    .expect(200)
+    .expect(response => {
+      projectID = response.body.notebook;
+      console.log('got response', response.body);
+
+      metadata['name'] = 'Updated Test Notebook';
+      metadata['project_lead'] = 'Bob Bobalooba';
+      uiSpec.fviews['FORM1SECTION1']['label'] = 'Updated Label';
+
+      // add a new autoincrementer field
+      const newField = {
+        'component-namespace': 'faims-custom',
+        'component-name': 'BasicAutoIncrementer',
+        'type-returned': 'faims-core::String',
+        'component-parameters': {
+          name: 'newincrementor',
+          id: 'newincrementor',
+          variant: 'outlined',
+          required: false,
+          num_digits: 5,
+          form_id: 'FORM1SECTION1',
+          label: 'FeatureIDincrementor',
+        },
+        validationSchema: [['yup.string'], ['yup.required']],
+        initialValue: null,
+        access: ['admin'],
+        meta: {
+          annotation_label: 'annotation',
+          annotation: true,
+          uncertainty: {
+            include: false,
+            label: 'uncertainty',
+          },
+        },
+      };
+
+      uiSpec.fields['newincrementor'] = newField;
+      uiSpec.fviews['FORM1SECTION1']['fields'].push('newincrementor');
+
+      return request(app)
+        .put(`/api/notebooks/${projectID}`)
+        .send({
+          'ui-specification': uiSpec,
+          metadata: metadata,
+          name: 'test notebook',
+        })
+        .set('Authorization', `Bearer ${adminToken}`)
+        .set('Content-Type', 'application/json')
+        .expect(200)
+        .expect(response => {
+          expect(response.body.notebook).toMatch('-test-notebook');
+        });
     });
 });
 
