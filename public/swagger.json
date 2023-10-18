@@ -141,7 +141,15 @@
                 "produces": ["application/json"],
                 "security": {"Auth": []},
                 "requestBody": {
-                    "$ref": "#/definitions/Notebook"
+                    "description": "Notebook metadata and ui-specification",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/definitions/Notebook"
+                            }
+                        }
+                    }
                 },
                 "responses": {
                     "200": {

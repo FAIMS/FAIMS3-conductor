@@ -124,7 +124,7 @@ api.get('/notebooks/:id', requireAuthenticationAPI, async (req, res) => {
 });
 
 // PUT a new version of a notebook
-api.put('/notebook/:id', requireAuthenticationAPI, async (req, res) => {
+api.put('/notebooks/:id', requireAuthenticationAPI, async (req, res) => {
   // user must have modify permissions on this notebook
   if (userHasPermission(req.user, req.params.id, 'modify')) {
     const uiSpec = req.body['ui-specification'];

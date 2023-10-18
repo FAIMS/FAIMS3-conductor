@@ -86,7 +86,46 @@ Users can be invited to roles <a href="/notebooks/{{notebook.project_id}}/invite
 
 
 <p><a href="/notebooks/{{notebook.project_id}}/users/">Edit User Roles</a></p>
+
+
+
+  <div class="accordion" id="uploadFormContainer">
+    <h2 class="accordion-header" id="headingOne">
+      <button class="accordion-button collapsed" type="button" 
+              data-bs-toggle="collapse" data-bs-target="#collapseOne" 
+              aria-expanded="false" aria-controls="collapseOne">
+        Update this Notebook
+      </button>
+    </h2>
+
+    <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#uploadFormContainer">
+      <div class="accordion-body">
+        <p>Uploading a new version of a notebook can be a risky operation if 
+          there are already records in the notebook.  If fields are added or removed
+          from the notebook, the existing records will be incompatible with the new 
+          notebook and this may cause problems with record display and editing. Export
+          of data with mixed records may also be problematic.  
+          If you are not confident, create a new notebook instead.
+        </p>
+        <form id="upload-notebook-form">
+          <div class="mb-3">
+            <input type="file" class="form-control" name="notebook" id="notebook">
+            <div class="form-text">Select a notebook file in JSON format.</div>
+          </div>
+
+          <div class="mb-3">
+            <input type="submit" class="form-control" value="Upload Notebook">
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 {{/if}}
+
+
+
 
 </div>
 
@@ -102,4 +141,57 @@ const copyToClipboard = (text) => {
     }
     });
 }
+
+
+
+  const uploadNotebookHandler = (event) => {
+    event.preventDefault();
+    const url = '/api/notebooks/{{notebook.project_id}}';
+    const form = event.target;
+    const fileInput = form.querySelector('[name="notebook"]');
+    if (fileInput) {
+      // parse the contents of the uploaded file as JSON
+      const reader = new FileReader();
+      const filename = fileInput.files[0];
+      reader.readAsText(filename);
+      reader.onload = (evt) => {
+        try {
+          const data = JSON.parse(evt.target.result);
+          // a little bit of validation
+          if (!data.metadata || !data['ui-specification']) {
+            alert('Invalid notebook file');
+            return;
+          }
+          if (!data.metadata.name) {
+            alert('Invalid notebook file');
+            return;
+          }
+          const body = {
+            metadata: data.metadata,
+            'ui-specification': data['ui-specification'],
+          }
+          fetch(url, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body),
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.notebook) {
+              window.location.reload();
+            } else {
+              alert('Error uploading notebook');
+            }
+          });
+        } catch (e) {
+          alert('Invalid notebook file');
+          return;
+        }
+      }
+
+    }
+  }
+  document.getElementById('upload-notebook-form').onsubmit = uploadNotebookHandler;
 </script>
