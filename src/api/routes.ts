@@ -28,6 +28,7 @@ import {
   getNotebookRecords,
   getRolesForNotebook,
   deleteNotebook,
+  updateNotebook,
 } from '../couchdb/notebooks';
 import {requireAuthenticationAPI} from '../middleware';
 import {initialiseDatabases} from '../couchdb';
@@ -118,6 +119,29 @@ api.get('/notebooks/:id', requireAuthenticationAPI, async (req, res) => {
     }
   } else {
     // unauthorised response
+    res.status(401).end();
+  }
+});
+
+// PUT a new version of a notebook
+api.put('/notebook/:id', requireAuthenticationAPI, async (req, res) => {
+  // user must have modify permissions on this notebook
+  if (userHasPermission(req.user, req.params.id, 'modify')) {
+    const uiSpec = req.body['ui-specification'];
+    const metadata = req.body.metadata;
+    const projectID = req.params.id;
+    try {
+      await updateNotebook(projectID, uiSpec, metadata);
+      res.json({notebook: projectID});
+    } catch (err) {
+      res.json({error: 'there was an error creating the notebook'});
+      console.log('Error creating notebook', err);
+      res.status(500).end();
+    }
+  } else {
+    res.json({
+      error: 'you do not have permission to modify this notebook',
+    });
     res.status(401).end();
   }
 });

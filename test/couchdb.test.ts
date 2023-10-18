@@ -34,6 +34,7 @@ import {
   getNotebooks,
   getNotebookUISpec,
   getRolesForNotebook,
+  updateNotebook,
 } from '../src/couchdb/notebooks';
 import * as fs from 'fs';
 import {
@@ -231,5 +232,86 @@ test('get notebook roles', async () => {
     expect(roles).toContain('team'); // specified in the UISpec
     expect(roles).toContain('moderator'); // specified in the UISpec
     expect(roles).toContain('user'); // user role should always be present
+  }
+});
+
+test('updateNotebook', async () => {
+  await initialiseDatabases();
+  const user = await getUserFromEmailOrUsername('admin');
+
+  const jsonText = fs.readFileSync('./notebooks/sample_notebook.json', 'utf-8');
+  const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
+
+  const projectID = await createNotebook(' Test   Nõtebõõk', uiSpec, metadata);
+
+  expect(projectID).not.toBe(undefined);
+  expect(user).not.toBeNull();
+
+  if (projectID && user) {
+    // now update it with a minor change
+
+    metadata['name'] = 'Updated Test Notebook';
+    metadata['project_lead'] = 'Bob Bobalooba';
+
+    uiSpec.fviews['FORM1SECTION1']['label'] = 'Updated Label';
+
+    // add a new autoincrementer field
+    const newField = {
+      'component-namespace': 'faims-custom',
+      'component-name': 'BasicAutoIncrementer',
+      'type-returned': 'faims-core::String',
+      'component-parameters': {
+        name: 'newincrementor',
+        id: 'newincrementor',
+        variant: 'outlined',
+        required: false,
+        num_digits: 5,
+        form_id: 'FORM1SECTION1',
+        label: 'FeatureIDincrementor',
+      },
+      validationSchema: [['yup.string'], ['yup.required']],
+      initialValue: null,
+      access: ['admin'],
+      meta: {
+        annotation_label: 'annotation',
+        annotation: true,
+        uncertainty: {
+          include: false,
+          label: 'uncertainty',
+        },
+      },
+    };
+
+    uiSpec.fields['newincrementor'] = newField;
+    uiSpec.fviews['FORM1SECTION1']['fields'].push('newincrementor');
+
+    // now update the notebook
+    const newProjectID = await updateNotebook(projectID, uiSpec, metadata);
+
+    expect(newProjectID).toEqual(projectID);
+
+    expect(projectID.substring(13)).toBe('-test-notebook');
+
+    const notebooks = await getNotebooks(user);
+    expect(notebooks.length).toBe(1);
+    const db = await getProjectMetaDB(projectID);
+    if (db) {
+      const newUISpec = await getNotebookUISpec(projectID);
+      if (newUISpec) {
+        expect(newUISpec['fviews']['FORM1SECTION1']['label']).toBe(
+          'Updated Label'
+        );
+      }
+      const newMetadata = await getNotebookMetadata(projectID);
+      if (newMetadata) {
+        expect(newMetadata['name']).toBe('Updated Test Notebook');
+        expect(newMetadata['project_lead']).toBe('Bob Bobalooba');
+      }
+      const metaDB = await getProjectMetaDB(projectID);
+      if (metaDB) {
+        const autoInc = (await metaDB.get('local-autoincrementers')) as any;
+        expect(autoInc.references.length).toBe(3);
+      }
+    }
   }
 });

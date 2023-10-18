@@ -209,7 +209,7 @@ export const addDesignDocsForNotebook = async (
 /**
  * Create notebook databases and initialise them with required contents
  *
- * @param project_id A project identifier
+ * @param projectName Human readable project name
  * @param uispec A project Ui Specification
  * @param metadata A metadata object with properties/values
  * @returns the project id
@@ -299,7 +299,85 @@ export const createNotebook = async (
   } catch (error) {
     console.log(error);
   }
-  console.log('made a new notebook', project_id);
+  return project_id;
+};
+
+/**
+ * Update an existing notebook definition
+ * @param project_id Project identifier
+ * @param uispec Project UI Spec object
+ * @param metadata Project Metadata
+ * @returns project_id or undefined if the project doesn't exist
+ */
+export const updateNotebook = async (
+  project_id: string,
+  uispec: ProjectUIModel,
+  metadata: any
+) => {
+  const metaDB = await getProjectMetaDB(project_id);
+  const dataDB = await getProjectDataDB(project_id);
+  if (!dataDB || !metaDB) {
+    return undefined;
+  }
+
+  // get roles from the notebook, ensure that 'user' and 'admin' are included
+  const roles = metadata.accesses || ['admin', 'user', 'team'];
+  if (roles.indexOf('user') < 0) {
+    roles.push('user');
+  }
+  if (roles.indexOf('admin') < 0) {
+    roles.push('admin');
+  }
+
+  // can't save security on a memory database so skip this if we're testing
+  if (process.env.NODE_ENV !== 'test') {
+    const metaSecurity = metaDB.security();
+    const dataSecurity = dataDB.security();
+
+    if (!(CLUSTER_ADMIN_GROUP_NAME in metaSecurity.admins.roles)) {
+      metaSecurity.admins.roles.add(CLUSTER_ADMIN_GROUP_NAME);
+      dataSecurity.admins.roles.add(CLUSTER_ADMIN_GROUP_NAME);
+    }
+    roles.forEach((role: string) => {
+      const permission = `${project_id}||${role}`;
+      if (!(permission in metaSecurity.members.roles)) {
+        metaSecurity.members.roles.add(permission);
+        dataSecurity.members.roles.add(permission);
+      }
+    });
+    await metaSecurity.save();
+  }
+
+  // derive autoincrementers from uispec
+  const autoIncrementers = getAutoIncrementers(uispec);
+  if (autoIncrementers) {
+    // need to update any existing autoincrementer document
+    // this should have the _rev property so that our update will work
+    const existingAutoInc = (await metaDB.get(
+      'local-autoincrementers'
+    )) as AutoIncrementObject;
+    if (existingAutoInc) {
+      existingAutoInc.references = autoIncrementers.references;
+      await metaDB.put(existingAutoInc);
+    } else {
+      await metaDB.put(autoIncrementers);
+    }
+  }
+
+  // update the existing uispec document
+  // need the revision id of the existing one to do this...
+  const existingUISpec = await metaDB.get('ui-specification');
+  // set the id and rev
+  uispec['_id'] = 'ui-specification';
+  uispec['_rev'] = existingUISpec['_rev'];
+  // now store it to update the spec
+  await metaDB.put(uispec as PouchDB.Core.PutDocument<ProjectUIModel>);
+
+  // ensure that the name is in the metadata
+  // metadata.name = projectName.trim();
+  await writeProjectMetadata(metaDB, metadata);
+
+  // no need to write design docs for existing projects
   return project_id;
 };
 
@@ -330,15 +408,28 @@ export const writeProjectMetadata = async (
 ) => {
   // add metadata, one document per attribute value pair
   for (const field in metadata) {
-    const doc = {
+    const doc: any = {
       _id: PROJECT_METADATA_PREFIX + '-' + field,
       is_attachment: false, // TODO: well it might not be false! Deal with attachments
       metadata: metadata[field],
     };
+    // is there already a version of this document?
+    try {
+      const existingDoc = await metaDB.get(doc._id);
+      doc['_rev'] = existingDoc['_rev'];
+    } catch {
+      // no existing document, so don't set the rev
+    }
     await metaDB.put(doc);
   }
   // also add the whole metadata as 'projectvalue'
   metadata._id = PROJECT_METADATA_PREFIX + '-projectvalue';
+  try {
+    const existingDoc = await metaDB.get(metadata._id);
+    metadata['_rev'] = existingDoc['_rev'];
+  } catch {
+    // no existing document, so don't set the rev
+  }
   await metaDB.put(metadata);
   return metadata;
 };
@@ -467,9 +558,8 @@ export async function countRecordsInNotebook(
     selector: {
       record_format_version: 1,
     },
-    limit: 100,
+    limit: 10000,
   });
-  console.log('res', res.docs.length);
   return res.docs.length;
 }
 
