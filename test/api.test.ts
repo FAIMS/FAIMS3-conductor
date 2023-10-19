@@ -114,7 +114,7 @@ test('update notebook', () => {
   let projectID;
 
   // create notebook
-  request(app)
+  return request(app)
     .post('/api/notebooks')
     .send({
       'ui-specification': uiSpec,
@@ -124,7 +124,7 @@ test('update notebook', () => {
     .set('Authorization', `Bearer ${adminToken}`)
     .set('Content-Type', 'application/json')
     .expect(200)
-    .expect(response => {
+    .expect(async response => {
       projectID = response.body.notebook;
       console.log('got response', response.body);
 
@@ -162,7 +162,7 @@ test('update notebook', () => {
       uiSpec.fields['newincrementor'] = newField;
       uiSpec.fviews['FORM1SECTION1']['fields'].push('newincrementor');
 
-      return request(app)
+      await request(app)
         .put(`/api/notebooks/${projectID}`)
         .send({
           'ui-specification': uiSpec,
