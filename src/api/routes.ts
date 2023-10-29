@@ -29,6 +29,7 @@ import {
   getRolesForNotebook,
   deleteNotebook,
   updateNotebook,
+  streamNotebookRecordsAsCSV,
 } from '../couchdb/notebooks';
 import {requireAuthenticationAPI} from '../middleware';
 import {initialiseDatabases} from '../couchdb';
@@ -157,6 +158,21 @@ api.get(
     }
     if (records) {
       res.json({records});
+    } else {
+      res.json({error: 'notebook not found'});
+      res.status(404).end();
+    }
+  }
+);
+
+// export current versions of all records in this notebook as csv
+api.get(
+  '/notebooks/:id/:viewid.csv',
+  requireAuthenticationAPI,
+  async (req, res) => {
+    if (req.user && userHasPermission(req.user, req.params.id, 'read')) {
+      res.setHeader('Content-Type', 'text/csv');
+      streamNotebookRecordsAsCSV(req.params.id, req.params.viewid, res);
     } else {
       res.json({error: 'notebook not found'});
       res.status(404).end();

@@ -44,9 +44,12 @@ import {
   getRecordsWithRegex,
   setAttachmentDumperForType,
   setAttachmentLoaderForType,
+  HRID_STRING,
 } from 'faims3-datamodel';
 import {userHasPermission} from './users';
 PouchDB.plugin(securityPlugin);
+import {Stringifier, stringify} from 'csv-stringify';
+
 
 /**
  * getNotebooks -- return an array of notebooks from the database
@@ -532,6 +535,147 @@ export const getNotebookRecords = async (
     fullRecords.push(data);
   }
   return fullRecords;
+};
+
+/**
+ * Return an iterator over the records in a notebook
+ * @param project_id project identifier
+ */
+export const notebookRecordIterator = async (
+  project_id: string,
+  viewid: string
+) => {
+  let records = await getRecordsWithRegex(project_id, '.*', true);
+  let index = 0;
+
+  // select just those in this view
+  records = records.filter((record: any) => {
+    return record.type === viewid;
+  });
+
+  const recordIterator = {
+    async next() {
+      if (index < records.length - 1) {
+        const data = await getFullRecordData(
+          project_id,
+          records[index].record_id,
+          records[index].revision_id,
+          true
+        );
+        index++;
+        return {record: data, done: false};
+      } else {
+        return {record: null, done: true};
+      }
+    },
+  };
+  return recordIterator;
+};
+
+const getRecordHRID = (record: any) => {
+  for (const possible_name of Object.keys(record.data)) {
+    if (possible_name.startsWith(HRID_STRING)) {
+      return record.data[possible_name];
+    }
+  }
+  return record.record_id;
+};
+
+/**
+ * generate a suitable value for the CSV export from a field
+ * value.  Serialise filenames, gps coordinates, etc.
+ */
+const csvFormatValue = (fieldName: string, value: any) => {
+  const result: {[key: string]: any} = {};
+  if (value instanceof Array) {
+    if (value.length === 0) {
+      result[fieldName] = '';
+      return result;
+    }
+    const valueList = value.map((v: any) => {
+      if (v instanceof File) {
+        return v.name;
+      } else {
+        return v;
+      }
+    });
+    result[fieldName] = valueList.join(';');
+    return result;
+  }
+
+  // gps locations
+  if (value instanceof Object && 'geometry' in value) {
+    result[fieldName] = value;
+    result[fieldName + '_latitude'] = value.geometry.coordinates[0];
+    result[fieldName + '_longitude'] = value.geometry.coordinates[1];
+    return result;
+  }
+
+  console.log('defaulting to value', value);
+  // default to just the value
+  result[fieldName] = value;
+  return result;
+};
+
+const convertDataForOutput = (data: any) => {
+  let result: {[key: string]: any} = {};
+  Object.keys(data).forEach((key: string) => {
+    const formattedValue = csvFormatValue(key, data[key]);
+    result = {...result, ...formattedValue};
+  });
+  return result;
+};
+
+export const streamNotebookRecordsAsCSV = async (
+  project_id: ProjectID,
+  viewID: string,
+  res: NodeJS.WritableStream
+) => {
+  const iterator = await notebookRecordIterator(project_id, viewID);
+
+  let stringifier: Stringifier | null = null;
+  let {record, done} = await iterator.next();
+  let header_done = false;
+  while (record && !done) {
+    const hrid = getRecordHRID(record);
+    const row = [
+      hrid,
+      record.record_id,
+      record.revision_id,
+      record.type,
+      record.updated_by,
+      record.updated.toISOString(),
+    ];
+    const outputData = convertDataForOutput(record.data);
+    Object.keys(outputData).forEach((property: string) => {
+      row.push(outputData[property]);
+    });
+
+    if (!header_done) {
+      const columns = [
+        'identifier',
+        'record_id',
+        'revision_id',
+        'type',
+        'updated_by',
+        'updated',
+      ];
+      // take the keys in the generated output data which may have more than 
+      // the original data
+      Object.keys(outputData).forEach((key: string) => {
+        columns.push(key);
+      });
+      stringifier = stringify({columns, header: true});
+      // pipe output to the respose
+      stringifier.pipe(res);
+      header_done = true;
+    }
+    if (stringifier) stringifier.write(row);
+    const next = await iterator.next();
+    record = next.record;
+    done = next.done;
+  }
+  if (stringifier) stringifier.end();
 };
 
 export const getRolesForNotebook = async (project_id: ProjectID) => {

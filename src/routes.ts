@@ -49,6 +49,7 @@ import {
 import {
   countRecordsInNotebook,
   getNotebookMetadata,
+  getNotebookUISpec,
   getNotebooks,
   getRolesForNotebook,
 } from './couchdb/notebooks';
@@ -132,8 +133,9 @@ app.get(
     const user = req.user as Express.User; // requireAuthentication ensures user
     const project_id = req.params.notebook_id;
     const notebook = await getNotebookMetadata(project_id);
+    const uiSpec = await getNotebookUISpec(project_id);
     const invitesQR: any[] = [];
-    if (notebook) {
+    if (notebook && uiSpec) {
       const isAdmin = userHasPermission(user, project_id, 'modify');
       if (isAdmin) {
         const invites = await getInvitesForNotebook(project_id);
@@ -152,6 +154,7 @@ app.get(
         notebook: notebook,
         records: await countRecordsInNotebook(project_id),
         invites: invitesQR,
+        views: Object.keys(uiSpec.viewsets),
         developer: DEVELOPER_MODE,
       });
     } else {
