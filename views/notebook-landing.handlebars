@@ -21,6 +21,8 @@
         {{#each views}}
          <li>
           <a href="/api/notebooks/{{../notebook.project_id}}/{{this}}.csv">Download {{this}}</a>
+          <a href="/api/notebooks/{{../notebook.project_id}}/{{this}}.zip">Download files from {{this}}</a>
+
          </li>
         {{/each}}
       </ul>
