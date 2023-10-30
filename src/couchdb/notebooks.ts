@@ -758,8 +758,19 @@ export const streamNotebookFilesAsZip = async (
 };
 
 const generateFilename = (file: File, key: string, hrid: string) => {
+
+  const fileTypes: {[key: string]: string} = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/gif': 'gif',
+    'image/tiff': 'tif',
+    'text/plain': 'txt',
+    'application/pdf': 'pdf',
+    'application/json': 'json',
+  };
+
   const type = file.type;
-  const extension = type.split('/')[1];
+  const extension = fileTypes[type] || 'dat';
   const filename = `${key}/${hrid}-${key}.${extension}`;
   return filename;
 };
