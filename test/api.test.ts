@@ -36,7 +36,6 @@ import fs from 'fs';
 import {createNotebook} from '../src/couchdb/notebooks';
 import {ProjectUIModel} from 'faims3-datamodel';
 import {DEVELOPER_MODE} from '../src/buildconfig';
-import {response} from 'express';
 
 const uispec: ProjectUIModel = {
   fields: [],

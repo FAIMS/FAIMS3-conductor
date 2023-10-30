@@ -24,7 +24,7 @@ PouchDB.plugin(require('pouchdb-find'));
 
 import request from 'supertest';
 import {app} from '../src/routes';
-import { CONDUCTOR_AUTH_PROVIDERS } from '../src/buildconfig';
+import {CONDUCTOR_AUTH_PROVIDERS} from '../src/buildconfig';
 
 test('check is up', async () => {
   const result = await request(app).get('/up');

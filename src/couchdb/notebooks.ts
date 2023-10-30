@@ -52,7 +52,6 @@ import {userHasPermission} from './users';
 PouchDB.plugin(securityPlugin);
 import {Stringifier, stringify} from 'csv-stringify';
 
-
 /**
  * getNotebooks -- return an array of notebooks from the database
  * @oaram user - only return notebooks that this user can see
@@ -660,7 +659,7 @@ export const streamNotebookRecordsAsCSV = async (
         'updated_by',
         'updated',
       ];
-      // take the keys in the generated output data which may have more than 
+      // take the keys in the generated output data which may have more than
       // the original data
       Object.keys(outputData).forEach((key: string) => {
         columns.push(key);
@@ -701,9 +700,9 @@ export const streamNotebookFilesAsZip = async (
     throw err;
   });
 
-  // check on progress, if we've finished adding files and they are 
+  // check on progress, if we've finished adding files and they are
   // all processed then we can finalize the archive
-  archive.on('progress', (entries: any, _fs: any) => {
+  archive.on('progress', (entries: any) => {
     if (allFilesAdded && entries.total === entries.processed) {
       archive.finalize();
     }
@@ -736,7 +735,7 @@ export const streamNotebookFilesAsZip = async (
                 const {done, value} = await reader.read();
                 if (done) {
                   break;
-                };
+                }
                 chunks.push(value);
               }
               const stream = Stream.Readable.from(chunks);
@@ -758,7 +757,6 @@ export const streamNotebookFilesAsZip = async (
 };
 
 const generateFilename = (file: File, key: string, hrid: string) => {
-
   const fileTypes: {[key: string]: string} = {
     'image/jpeg': 'jpg',
     'image/png': 'png',
