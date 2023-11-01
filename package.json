@@ -15,7 +15,7 @@
     "load-notebooks": "env-cmd node scripts/loadNotebook.js ./notebooks/*.json",
     "test": "env-cmd cross-env NODE_ENV=test TS_NODE_PROJECT='./tsconfig.json' mocha",
     "test:watch": "env-cmd cross-env NODE_ENV=test TS_NODE_PROJECT='./tsconfig.json' mocha -w",
-    "coverage": "nyc --reporter=html env-cmd cross-env NODE_ENV=test TS_NODE_PROJECT='./tsconfig.json' mocha"
+    "coverage": "nyc --reporter=html --reporter=lcov env-cmd cross-env NODE_ENV=test TS_NODE_PROJECT='./tsconfig.json' mocha"
   },
   "dependencies": {
     "archiver": "^6.0.1",
