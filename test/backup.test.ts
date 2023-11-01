@@ -20,11 +20,46 @@
 import PouchDB from 'pouchdb';
 import {initialiseDatabases} from '../src/couchdb';
 import {restoreFromBackup} from '../src/couchdb/backupRestore';
+import {getNotebooks, notebookRecordIterator} from '../src/couchdb/notebooks';
+import {getDataDB, registerClient} from 'faims3-datamodel';
+import {getUserFromEmailOrUsername} from '../src/couchdb/users';
 PouchDB.plugin(require('pouchdb-adapter-memory')); // enable memory adapter for testing
 PouchDB.plugin(require('pouchdb-find'));
 
-test('restore backup', async () => {
-  await initialiseDatabases();
+import {expect} from 'chai';
+import {callbackObject, cleanDataDBS} from './mocks';
 
-  await restoreFromBackup('test/backup-short.jsonl');
+// register our mock database clients with the module
+registerClient(callbackObject);
+
+describe('Backup and restore', () => {
+  it('restore backup', async () => {
+    await initialiseDatabases();
+    await cleanDataDBS();
+
+    await restoreFromBackup('test/backup.jsonl');
+
+    // should now have the notebooks from the backup defined
+    const user = await getUserFromEmailOrUsername('admin');
+    if (user) {
+      const notebooks = await getNotebooks(user);
+      expect(notebooks.length).to.equal(2);
+      expect(notebooks[0].name).to.equal('Campus Survey Demo');
+
+      // test record iterator while we're here
+      const iterator = await notebookRecordIterator(
+        notebooks[0].non_unique_project_id,
+        'FORM2'
+      );
+      let count = 0;
+      let {record, done} = await iterator.next();
+      while (record && !done) {
+        count += 1;
+        ({record, done} = await iterator.next());
+      }
+      expect(count).to.equal(17);
+    } else {
+      fail("can't find user admin");
+    }
+  });
 });

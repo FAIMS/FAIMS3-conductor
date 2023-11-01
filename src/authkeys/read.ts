@@ -29,7 +29,6 @@ import {getSigningKey} from './signing_keys';
  */
 export const validateToken = async (token: string) => {
   const signingKey = await getSigningKey();
-
   //console.log(`verifying token: '${token}'`);
   try {
     const {payload} = await jwtVerify(token, signingKey.public_key, {
@@ -39,7 +38,7 @@ export const validateToken = async (token: string) => {
     //console.log('Token Payload', payload);
 
     if (payload.sub) {
-      const user = getUserFromEmailOrUsername(payload.sub);
+      const user = await getUserFromEmailOrUsername(payload.sub);
       return user;
     } else {
       return undefined;

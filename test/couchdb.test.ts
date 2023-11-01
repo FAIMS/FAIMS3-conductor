@@ -24,8 +24,6 @@ PouchDB.plugin(require('pouchdb-find'));
 import {
   getDirectoryDB,
   getProjectMetaDB,
-  getProjectsDB,
-  getUsersDB,
   initialiseDatabases,
 } from '../src/couchdb';
 import {
@@ -47,32 +45,14 @@ import {
 } from '../src/couchdb/users';
 import {CONDUCTOR_INSTANCE_NAME} from '../src/buildconfig';
 import {ProjectUIModel} from 'faims3-datamodel';
+import {expect} from 'chai';
+import {resetDatabases} from './mocks';
 
 const uispec: ProjectUIModel = {
   fields: [],
   views: {},
   viewsets: {},
   visible_types: [],
-};
-
-const clearDB = async (db: PouchDB.Database) => {
-  const docs = await db.allDocs();
-  for (let index = 0; index < docs.rows.length; index++) {
-    const doc = docs.rows[index];
-    await db.remove(doc.id, doc.value.rev);
-  }
-};
-
-const resetDatabases = async () => {
-  const usersDB = getUsersDB();
-  if (usersDB) {
-    await clearDB(usersDB);
-  }
-  const projectsDB = getProjectsDB();
-  if (projectsDB) {
-    await clearDB(projectsDB);
-  }
-  await initialiseDatabases();
 };
 
 const username = 'bobalooba';
@@ -92,23 +72,23 @@ beforeEach(async () => {
   }
 });
 
-test('check initialise', async () => {
+it('check initialise', async () => {
   await initialiseDatabases();
 
   const directoryDB = getDirectoryDB();
-  expect(directoryDB).not.toBe(undefined);
+  expect(directoryDB).not.to.equal(undefined);
   if (directoryDB) {
     const default_document = (await directoryDB.get('default')) as any;
-    expect(default_document.name).toBe(CONDUCTOR_INSTANCE_NAME);
+    expect(default_document.name).to.equal(CONDUCTOR_INSTANCE_NAME);
 
     const permissions_document = (await directoryDB.get(
       '_design/permissions'
     )) as any;
-    expect(permissions_document['_id']).toBe('_design/permissions');
+    expect(permissions_document['_id']).to.equal('_design/permissions');
   }
 });
 
-test('project roles', async () => {
+it('project roles', async () => {
   // make some notebooks
   const nb1 = await createNotebook('NB1', uispec, {});
   const nb2 = await createNotebook('NB2', uispec, {});
@@ -116,20 +96,20 @@ test('project roles', async () => {
   if (nb1 && nb2) {
     // give user access to two of them
     addProjectRoleToUser(bobalooba, nb1, 'user');
-    expect(userHasPermission(bobalooba, nb1, 'read')).toBe(true);
+    expect(userHasPermission(bobalooba, nb1, 'read')).to.equal(true);
     addProjectRoleToUser(bobalooba, nb2, 'admin');
-    expect(userHasPermission(bobalooba, nb2, 'modify')).toBe(true);
+    expect(userHasPermission(bobalooba, nb2, 'modify')).to.equal(true);
     // and this should still be true
-    expect(userHasPermission(bobalooba, nb1, 'read')).toBe(true);
+    expect(userHasPermission(bobalooba, nb1, 'read')).to.equal(true);
 
     removeProjectRoleFromUser(bobalooba, nb1, 'user');
-    expect(userHasPermission(bobalooba, nb1, 'read')).toBe(false);
+    expect(userHasPermission(bobalooba, nb1, 'read')).to.equal(false);
     // but still...
-    expect(userHasPermission(bobalooba, nb2, 'modify')).toBe(true);
+    expect(userHasPermission(bobalooba, nb2, 'modify')).to.equal(true);
   }
 });
 
-test('getNotebooks', async () => {
+it('getNotebooks', async () => {
   // make some notebooks
   const nb1 = await createNotebook('NB1', uispec, {});
   const nb2 = await createNotebook('NB2', uispec, {});
@@ -143,13 +123,13 @@ test('getNotebooks', async () => {
     await saveUser(bobalooba);
 
     const notebooks = await getNotebooks(bobalooba);
-    expect(notebooks.length).toBe(2);
+    expect(notebooks.length).to.equal(2);
   } else {
     throw new Error('could not make test notebooks');
   }
 });
 
-test('createNotebook', async () => {
+it('createNotebook', async () => {
   await initialiseDatabases();
   const user = await getUserFromEmailOrUsername('admin');
 
@@ -158,45 +138,45 @@ test('createNotebook', async () => {
 
   const projectID = await createNotebook(' Test   Nõtebõõk', uiSpec, metadata);
 
-  expect(projectID).not.toBe(undefined);
-  expect(user).not.toBeNull();
+  expect(projectID).not.to.equal(undefined);
+  expect(user).not.to.be.null;
 
   if (projectID && user) {
-    expect(projectID.substring(13)).toBe('-test-notebook');
+    expect(projectID.substring(13)).to.equal('-test-notebook');
 
     const notebooks = await getNotebooks(user);
-    expect(notebooks.length).toBe(1);
+    expect(notebooks.length).to.equal(1);
     const db = await getProjectMetaDB(projectID);
     if (db) {
       const autoInc = (await db.get('local-autoincrementers')) as any;
-      expect(autoInc.references.length).toBe(2);
-      expect(autoInc.references[0].form_id).toBe('FORM1SECTION1');
+      expect(autoInc.references.length).to.equal(2);
+      expect(autoInc.references[0].form_id).to.equal('FORM1SECTION1');
     }
   }
 });
 
-test('getNotebookMetadata', async () => {
+it('getNotebookMetadata', async () => {
   await initialiseDatabases();
 
   const jsonText = fs.readFileSync('./notebooks/sample_notebook.json', 'utf-8');
   const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
   const name = 'Test Notebook';
   const projectID = await createNotebook(name, uiSpec, metadata);
-  expect(projectID).not.toBe(undefined);
+  expect(projectID).not.to.equal(undefined);
   if (projectID) {
     const retrievedMetadata = await getNotebookMetadata(projectID);
 
-    expect(retrievedMetadata).not.toBeNull();
+    expect(retrievedMetadata).not.to.be.null;
     if (retrievedMetadata) {
-      expect(retrievedMetadata['lead_institution']).toBe(
+      expect(retrievedMetadata['lead_institution']).to.equal(
         metadata['lead_institution']
       );
-      expect(retrievedMetadata['name']).toBe(name);
+      expect(retrievedMetadata['name']).to.equal(name);
     }
   }
 });
 
-test('getNotebookUISpec', async () => {
+it('getNotebookUISpec', async () => {
   await initialiseDatabases();
 
   const jsonText = fs.readFileSync('./notebooks/sample_notebook.json', 'utf-8');
@@ -204,19 +184,19 @@ test('getNotebookUISpec', async () => {
   const name = 'Test Notebook';
   const projectID = await createNotebook(name, uiSpec, metadata);
 
-  expect(projectID).not.toBe(undefined);
+  expect(projectID).not.to.equal(undefined);
   if (projectID) {
     const retrieved = await getNotebookUISpec(projectID);
 
-    expect(retrieved).not.toBeNull();
+    expect(retrieved).not.to.be.null;
     if (retrieved) {
-      expect(retrieved['fviews'].length).toBe(uiSpec.fviews.length);
-      expect(retrieved['fields']).not.toBe(undefined);
+      expect(retrieved['fviews'].length).to.equal(uiSpec.fviews.length);
+      expect(retrieved['fields']).not.to.equal(undefined);
     }
   }
 });
 
-test('get notebook roles', async () => {
+it('get notebook roles', async () => {
   await initialiseDatabases();
 
   const jsonText = fs.readFileSync('./notebooks/sample_notebook.json', 'utf-8');
@@ -224,18 +204,18 @@ test('get notebook roles', async () => {
   const name = 'Test Notebook';
   const projectID = await createNotebook(name, uiSpec, metadata);
 
-  expect(projectID).not.toBe(undefined);
+  expect(projectID).not.to.equal(undefined);
   if (projectID) {
     const roles = await getRolesForNotebook(projectID);
-    expect(roles.length).toBe(4);
-    expect(roles).toContain('admin'); // admin role should always be present
-    expect(roles).toContain('team'); // specified in the UISpec
-    expect(roles).toContain('moderator'); // specified in the UISpec
-    expect(roles).toContain('user'); // user role should always be present
+    expect(roles.length).to.equal(4);
+    expect(roles).to.include('admin'); // admin role should always be present
+    expect(roles).to.include('team'); // specified in the UISpec
+    expect(roles).to.include('moderator'); // specified in the UISpec
+    expect(roles).to.include('user'); // user role should always be present
   }
 });
 
-test('updateNotebook', async () => {
+it('updateNotebook', async () => {
   await initialiseDatabases();
   const user = await getUserFromEmailOrUsername('admin');
 
@@ -244,8 +224,8 @@ test('updateNotebook', async () => {
 
   const projectID = await createNotebook(' Test   Nõtebõõk', uiSpec, metadata);
 
-  expect(projectID).not.toBe(undefined);
-  expect(user).not.toBeNull();
+  expect(projectID).not.to.equal(undefined);
+  expect(user).not.to.be.null;
 
   if (projectID && user) {
     // now update it with a minor change
@@ -288,29 +268,29 @@ test('updateNotebook', async () => {
     // now update the notebook
     const newProjectID = await updateNotebook(projectID, uiSpec, metadata);
 
-    expect(newProjectID).toEqual(projectID);
+    expect(newProjectID).to.equal(projectID);
 
-    expect(projectID.substring(13)).toBe('-test-notebook');
+    expect(projectID.substring(13)).to.equal('-test-notebook');
 
     const notebooks = await getNotebooks(user);
-    expect(notebooks.length).toBe(1);
+    expect(notebooks.length).to.equal(1);
     const db = await getProjectMetaDB(projectID);
     if (db) {
       const newUISpec = await getNotebookUISpec(projectID);
       if (newUISpec) {
-        expect(newUISpec['fviews']['FORM1SECTION1']['label']).toBe(
+        expect(newUISpec['fviews']['FORM1SECTION1']['label']).to.equal(
           'Updated Label'
         );
       }
       const newMetadata = await getNotebookMetadata(projectID);
       if (newMetadata) {
-        expect(newMetadata['name']).toBe('Updated Test Notebook');
-        expect(newMetadata['project_lead']).toBe('Bob Bobalooba');
+        expect(newMetadata['name']).to.equal('Updated Test Notebook');
+        expect(newMetadata['project_lead']).to.equal('Bob Bobalooba');
       }
       const metaDB = await getProjectMetaDB(projectID);
       if (metaDB) {
         const autoInc = (await metaDB.get('local-autoincrementers')) as any;
-        expect(autoInc.references.length).toBe(3);
+        expect(autoInc.references.length).to.equal(3);
       }
     }
   }

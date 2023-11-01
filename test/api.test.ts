@@ -26,8 +26,8 @@ import request from 'supertest';
 import {app} from '../src/routes';
 import {initialiseDatabases} from '../src/couchdb';
 import {
-  createUser,
   getUserFromEmailOrUsername,
+  createUser,
   saveUser,
 } from '../src/couchdb/users';
 import {createAuthKey} from '../src/authkeys/create';
@@ -36,6 +36,7 @@ import fs from 'fs';
 import {createNotebook} from '../src/couchdb/notebooks';
 import {ProjectUIModel} from 'faims3-datamodel';
 import {DEVELOPER_MODE} from '../src/buildconfig';
+import {expect} from 'chai';
 
 const uispec: ProjectUIModel = {
   fields: [],
@@ -47,45 +48,43 @@ const uispec: ProjectUIModel = {
 let adminToken = '';
 const username = 'bobalooba';
 
-beforeAll(async () => {
+before(async () => {
   await initialiseDatabases();
   const signing_key = await getSigningKey();
   const adminUser = await getUserFromEmailOrUsername('admin');
   if (adminUser) {
     adminToken = await createAuthKey(adminUser, signing_key);
-
-    const [user, error] = await createUser('', username);
+    const [user, _error] = await createUser('', username);
     if (user) {
       await saveUser(user);
-    } else {
-      throw new Error(error);
     }
   }
 });
 
-test('check is up - not authenticated', async () => {
+it('check is up - not authenticated', async () => {
   const result = await request(app).get('/api/hello');
-  expect(result.statusCode).toBe(401);
+  expect(result.statusCode).to.equal(401);
 });
 
-test('check is up - authenticated', async () => {
+it('check is up - authenticated', async () => {
+  console.log('check is up - authenticated');
   const result = await request(app)
     .get('/api/hello')
     .set('Authorization', `Bearer ${adminToken}`);
-  expect(result.statusCode).toBe(200);
+  expect(result.statusCode).to.equal(200);
 });
 
-test('get notebooks', () => {
+it('get notebooks', () => {
   return request(app)
     .get('/api/notebooks')
     .set('Authorization', `Bearer ${adminToken}`)
     .expect(200)
     .expect(response => {
-      expect(response.body).toEqual([]);
+      expect(response.body).to.be.empty;
     });
 });
 
-test('create notebook', () => {
+it('create notebook', () => {
   const filename = 'notebooks/sample_notebook.json';
   const jsonText = fs.readFileSync(filename, 'utf-8');
   const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
@@ -101,11 +100,11 @@ test('create notebook', () => {
     .set('Content-Type', 'application/json')
     .expect(200)
     .expect(response => {
-      expect(response.body.notebook).toMatch('-test-notebook');
+      expect(response.body.notebook).to.include('-test-notebook');
     });
 });
 
-test('update notebook', () => {
+it('update notebook', () => {
   const filename = 'notebooks/sample_notebook.json';
   const jsonText = fs.readFileSync(filename, 'utf-8');
   const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
@@ -172,12 +171,12 @@ test('update notebook', () => {
         .set('Content-Type', 'application/json')
         .expect(200)
         .expect(response => {
-          expect(response.body.notebook).toMatch('-test-notebook');
+          expect(response.body.notebook).to.include('-test-notebook');
         });
     });
 });
 
-test('get notebook', async () => {
+it('get notebook', async () => {
   const filename = 'notebooks/sample_notebook.json';
   const jsonText = fs.readFileSync(filename, 'utf-8');
   const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
@@ -191,23 +190,23 @@ test('get notebook', async () => {
       .set('Content-Type', 'application/json')
       .expect(200)
       .expect(response => {
-        expect(response.body.metadata.name).toEqual('test-notebook');
+        expect(response.body.metadata.name).to.equal('test-notebook');
       });
   } else {
     fail('unable to create test notebook');
   }
 });
 
-test('update admin user - no auth', async () => {
-  return request(app)
+it('update admin user - no auth', async () => {
+  return await request(app)
     .post(`/api/users/${username}/admin`)
     .send({addrole: true})
     .set('Content-Type', 'application/json')
     .expect(401);
 });
 
-test('update admin user - add role', () => {
-  return request(app)
+it('update admin user - add role', async () => {
+  return await request(app)
     .post(`/api/users/${username}/admin`)
     .set('Authorization', `Bearer ${adminToken}`)
     .set('Content-Type', 'application/json')
@@ -216,7 +215,7 @@ test('update admin user - add role', () => {
     .expect({status: 'success'});
 });
 
-test('update admin user - remove role', () => {
+it('update admin user - remove role', () => {
   return request(app)
     .post(`/api/users/${username}/admin`)
     .set('Authorization', `Bearer ${adminToken}`)
@@ -226,7 +225,7 @@ test('update admin user - remove role', () => {
     .expect({status: 'success'});
 });
 
-test('get notebook users', async () => {
+it('get notebook users', async () => {
   const filename = 'notebooks/sample_notebook.json';
   const jsonText = fs.readFileSync(filename, 'utf-8');
   const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
@@ -239,17 +238,17 @@ test('get notebook users', async () => {
     .set('Content-Type', 'application/json')
     .expect(200)
     .then(response => {
-      expect(response.body.roles).toEqual([
+      expect(response.body.roles).to.deep.equal([
         'admin',
         'moderator',
         'team',
         'user',
       ]);
-      expect(response.body.users.length).toEqual(1);
+      expect(response.body.users.length).to.equal(1);
     });
 });
 
-test('update notebook roles', async () => {
+it('update notebook roles', async () => {
   // make some notebooks
   const nb1 = await createNotebook('NB1', uispec, {});
 
@@ -271,7 +270,7 @@ test('update notebook roles', async () => {
 });
 
 if (DEVELOPER_MODE) {
-  test('create random record', async () => {
+  it('create random record', async () => {
     const nb1 = await createNotebook('NB1', uispec, {});
 
     if (nb1) {

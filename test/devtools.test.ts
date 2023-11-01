@@ -31,16 +31,14 @@ import * as fs from 'fs';
 import {createRandomRecord} from '../src/couchdb/devtools';
 import {registerClient} from 'faims3-datamodel';
 import {DEVELOPER_MODE} from '../src/buildconfig';
+import {expect} from 'chai';
+import {callbackObject} from './mocks';
 
 // set up the database module faims3-datamodel with our callbacks to get databases
-registerClient({
-  getDataDB: getProjectDataDB,
-  getProjectDB: getProjectMetaDB,
-  shouldDisplayRecord: () => true,
-});
+registerClient(callbackObject);
 
 if (DEVELOPER_MODE) {
-  test('createRecords', async () => {
+  it('createRecords', async () => {
     await initialiseDatabases();
 
     const jsonText = fs.readFileSync(
@@ -51,14 +49,14 @@ if (DEVELOPER_MODE) {
 
     const projectID = await createNotebook('Test Notebook', uiSpec, metadata);
 
-    expect(projectID).not.toBe(undefined);
+    expect(projectID).not.to.be.undefined;
 
     if (projectID) {
       await createRandomRecord(projectID);
     }
   });
 } else {
-  test('dummy test since we must have at least one test', async () => {
-    expect(true).toBe(true);
+  it('dummy test since we must have at least one test', async () => {
+    expect(true).to.be.true;
   });
 }

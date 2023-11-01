@@ -129,7 +129,6 @@ export const initialiseUserDB = async (db: PouchDB.Database | undefined) => {
       security.members.roles.removeAll();
       await security.save();
     }
-
     const [user, error] = await registerLocalUser(
       'admin',
       '', // no email address

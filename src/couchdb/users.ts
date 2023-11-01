@@ -179,7 +179,9 @@ async function getUserFromUsername(
   const users_db = getUsersDB();
   if (users_db) {
     try {
-      return (await users_db.get(username)) as Express.User;
+      const user = (await users_db.get(username)) as Express.User;
+      return user;
+      //return (await users_db.get(username)) as Express.User;
     } catch (err) {
       return null;
     }

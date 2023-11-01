@@ -30,11 +30,11 @@ import {registerClient} from 'faims3-datamodel';
 import {getProjectDataDB, getProjectMetaDB} from './couchdb';
 
 // set up the database module faims3-datamodel with our callbacks to get databases
-registerClient({
-  getDataDB: getProjectDataDB,
-  getProjectDB: getProjectMetaDB,
-  shouldDisplayRecord: () => true,
-});
+// registerClient({
+//   getDataDB: getProjectDataDB,
+//   getProjectDB: getProjectMetaDB,
+//   shouldDisplayRecord: () => true,
+// });
 
 process.on('unhandledRejection', error => {
   console.error('unhandledRejection');

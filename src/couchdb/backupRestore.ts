@@ -18,8 +18,9 @@
  *    Functions to backup and restore databases
  */
 import {open} from 'node:fs/promises';
-import {getProjectDataDB, getProjectMetaDB, getProjectsDB} from '.';
+import {getProjectsDB} from '.';
 import {addDesignDocsForNotebook} from './notebooks';
+import {getDataDB, getProjectDB} from 'faims3-datamodel';
 
 /**
  * restoreFromBackup - restore databases from a JSONL backup file
@@ -45,10 +46,10 @@ export const restoreFromBackup = async (filename: string) => {
         db = await getProjectsDB();
       } else if (dbName.startsWith('metadata')) {
         const projectName = dbName.split('||')[1];
-        db = await getProjectMetaDB(projectName);
+        db = await getProjectDB(projectName);
       } else if (dbName.startsWith('data')) {
         const projectName = dbName.split('||')[1];
-        db = await getProjectDataDB(projectName);
+        db = await getDataDB(projectName);
         if (db) {
           addDesignDocsForNotebook(db);
           // TODO: set up permissions for the databases
@@ -68,7 +69,7 @@ export const restoreFromBackup = async (filename: string) => {
       try {
         await db.put(doc.doc);
       } catch (error) {
-        console.log('Error restoring document', doc.id, error);
+        console.log('Error restoring document', doc.id)//, error);
       }
     }
   }

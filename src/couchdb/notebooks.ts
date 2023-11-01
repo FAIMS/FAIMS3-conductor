@@ -73,6 +73,7 @@ export const getNotebooks = async (user: Express.User): Promise<any[]> => {
         projects.push(e.doc as unknown as ProjectObject);
       }
     });
+
     for (const project of projects) {
       const project_id = project._id;
       const full_project_id = resolve_project_id(listing_id, project_id);
@@ -548,7 +549,6 @@ export const notebookRecordIterator = async (
 ) => {
   let records = await getRecordsWithRegex(project_id, '.*', true);
   let index = 0;
-
   // select just those in this view
   records = records.filter((record: any) => {
     return record.type === viewid;
@@ -556,7 +556,7 @@ export const notebookRecordIterator = async (
 
   const recordIterator = {
     async next() {
-      if (index < records.length - 1) {
+      if (index < records.length) {
         const data = await getFullRecordData(
           project_id,
           records[index].record_id,

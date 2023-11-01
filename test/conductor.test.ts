@@ -25,10 +25,11 @@ PouchDB.plugin(require('pouchdb-find'));
 import request from 'supertest';
 import {app} from '../src/routes';
 import {CONDUCTOR_AUTH_PROVIDERS} from '../src/buildconfig';
+import {expect} from 'chai';
 
-test('check is up', async () => {
+it('check is up', async () => {
   const result = await request(app).get('/up');
-  expect(result.statusCode).toEqual(200);
+  expect(result.statusCode).to.equal(200);
 });
 
 describe('Auth', () => {
@@ -55,7 +56,7 @@ describe('Auth', () => {
       .get('/auth')
       .expect(200)
       .then(response => {
-        expect(response.text).toContain('Local Login');
+        expect(response.text).to.include('Local Login');
         done();
       });
   });
@@ -66,7 +67,7 @@ describe('Auth', () => {
       .expect(200)
       .then(response => {
         CONDUCTOR_AUTH_PROVIDERS.forEach((provider: string) => {
-          expect(response.text).toContain(provider);
+          expect(response.text).to.include(provider);
         });
         done();
       });
