@@ -37,7 +37,7 @@ import {
 } from '../src/couchdb/users';
 PouchDB.plugin(require('pouchdb-adapter-memory')); // enable memory adapter for testing
 PouchDB.plugin(require('pouchdb-find'));
-import {expect} from 'chai';
+import {expect, assert} from 'chai';
 
 import * as fs from 'fs';
 import {createNotebook} from '../src/couchdb/notebooks';
@@ -63,7 +63,7 @@ describe('user creation', () => {
       expect(newUserUsername.user_id).to.equal(username);
       expect(newUserUsername.emails.length).to.equal(0);
     } else {
-      fail('user is null after createUser with valid username');
+      assert.fail('user is null after createUser with valid username');
     }
 
     const [newUserEmail, errorEmail] = await createUser(email, '');
@@ -72,7 +72,7 @@ describe('user creation', () => {
       expect(newUserEmail.user_id).not.to.equal('');
       expect(newUserEmail.emails).to.include(email.toLowerCase());
     } else {
-      fail('user is null after createUser with valid email');
+      assert.fail('user is null after createUser with valid email');
     }
   });
 
@@ -256,7 +256,7 @@ describe('user creation', () => {
         }
       );
     } else {
-      fail('user is null after createUser with valid username');
+      assert.fail('user is null after createUser with valid username');
     }
   });
 

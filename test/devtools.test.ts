@@ -21,11 +21,7 @@ import PouchDB from 'pouchdb';
 PouchDB.plugin(require('pouchdb-adapter-memory')); // enable memory adapter for testing
 PouchDB.plugin(require('pouchdb-find'));
 
-import {
-  getProjectDataDB,
-  getProjectMetaDB,
-  initialiseDatabases,
-} from '../src/couchdb';
+import {initialiseDatabases} from '../src/couchdb';
 import {createNotebook} from '../src/couchdb/notebooks';
 import * as fs from 'fs';
 import {createRandomRecord} from '../src/couchdb/devtools';

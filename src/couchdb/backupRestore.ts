@@ -69,7 +69,7 @@ export const restoreFromBackup = async (filename: string) => {
       try {
         await db.put(doc.doc);
       } catch (error) {
-        console.log('Error restoring document', doc.id)//, error);
+        console.log('Error restoring document', doc.id, error);
       }
     }
   }

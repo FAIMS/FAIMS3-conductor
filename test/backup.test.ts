@@ -21,7 +21,7 @@ import PouchDB from 'pouchdb';
 import {initialiseDatabases} from '../src/couchdb';
 import {restoreFromBackup} from '../src/couchdb/backupRestore';
 import {getNotebooks, notebookRecordIterator} from '../src/couchdb/notebooks';
-import {getDataDB, registerClient} from 'faims3-datamodel';
+import {registerClient} from 'faims3-datamodel';
 import {getUserFromEmailOrUsername} from '../src/couchdb/users';
 PouchDB.plugin(require('pouchdb-adapter-memory')); // enable memory adapter for testing
 PouchDB.plugin(require('pouchdb-find'));
@@ -41,6 +41,7 @@ describe('Backup and restore', () => {
 
     // should now have the notebooks from the backup defined
     const user = await getUserFromEmailOrUsername('admin');
+    expect(user).not.to.be.undefined;
     if (user) {
       const notebooks = await getNotebooks(user);
       expect(notebooks.length).to.equal(2);
@@ -58,8 +59,6 @@ describe('Backup and restore', () => {
         ({record, done} = await iterator.next());
       }
       expect(count).to.equal(17);
-    } else {
-      fail("can't find user admin");
     }
   });
 });

@@ -54,6 +54,7 @@ before(async () => {
   const adminUser = await getUserFromEmailOrUsername('admin');
   if (adminUser) {
     adminToken = await createAuthKey(adminUser, signing_key);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [user, _error] = await createUser('', username);
     if (user) {
       await saveUser(user);
@@ -183,18 +184,15 @@ it('get notebook', async () => {
 
   const project_id = await createNotebook('test-notebook', uiSpec, metadata);
 
-  if (project_id) {
-    return request(app)
-      .get('/api/notebooks/' + project_id)
-      .set('Authorization', `Bearer ${adminToken}`)
-      .set('Content-Type', 'application/json')
-      .expect(200)
-      .expect(response => {
-        expect(response.body.metadata.name).to.equal('test-notebook');
-      });
-  } else {
-    fail('unable to create test notebook');
-  }
+  expect(project_id).not.to.be.undefined;
+  return request(app)
+    .get('/api/notebooks/' + project_id)
+    .set('Authorization', `Bearer ${adminToken}`)
+    .set('Content-Type', 'application/json')
+    .expect(200)
+    .expect(response => {
+      expect(response.body.metadata.name).to.equal('test-notebook');
+    });
 });
 
 it('update admin user - no auth', async () => {

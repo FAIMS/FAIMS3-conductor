@@ -32,7 +32,7 @@ import {initialiseDatabases} from '../src/couchdb';
 
 PouchDB.plugin(require('pouchdb-adapter-memory')); // enable memory adapter for testing
 PouchDB.plugin(require('pouchdb-find'));
-import {expect} from 'chai';
+import {expect, assert} from 'chai';
 
 const uispec: ProjectUIModel = {
   fields: [],
@@ -68,10 +68,10 @@ describe('Invites', () => {
         const deleted = await deleteInvite(fetched);
         expect(deleted._deleted).to.be.true;
       } else {
-        fail('could not retrieve newly created invite');
+        assert.fail('could not retrieve newly created invite');
       }
     } else {
-      fail('could not get admin user');
+      assert.fail('could not get admin user');
     }
   });
 
@@ -91,10 +91,10 @@ describe('Invites', () => {
         expect(fetched.project_id).to.equal(project_id);
         expect(fetched.unlimited).to.be.true;
       } else {
-        fail('could not retrieve newly created invite');
+        assert.fail('could not retrieve newly created invite');
       }
     } else {
-      fail('could not get admin user');
+      assert.fail('could not get admin user');
     }
   });
 });
