@@ -37,8 +37,7 @@ import {ProjectUIModel} from 'faims3-datamodel';
 import {DEVELOPER_MODE} from '../src/buildconfig';
 import {expect} from 'chai';
 import {resetDatabases} from './mocks';
-import { restoreFromBackup } from '../src/couchdb/backupRestore';
-import e from 'express';
+import {restoreFromBackup} from '../src/couchdb/backupRestore';
 
 const uispec: ProjectUIModel = {
   fields: [],
@@ -83,7 +82,7 @@ describe('API tests', () => {
     const jsonText = fs.readFileSync(filename, 'utf-8');
     const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
 
-    const project_id = await createNotebook('test-notebook', uiSpec, metadata);
+    await createNotebook('test-notebook', uiSpec, metadata);
 
     return request(app)
       .get('/api/notebooks')
