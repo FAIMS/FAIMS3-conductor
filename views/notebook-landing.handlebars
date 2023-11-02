@@ -15,6 +15,19 @@
     <dt>Project Lead</dt><dd>{{notebook.project_lead}}</dd>
     <dt>Description</dt><dd>{{ notebook.pre_description }}</dd>
     <dt>Records</dt><dd>{{ records }}</dd>
+    <dt>Download Records as CSV</dt>
+    <dd>
+      <ul>
+        {{#each views}}
+         <li>
+          <a href="/api/notebooks/{{../notebook.project_id}}/{{this}}.csv">Download {{this}}</a>
+          <a href="/api/notebooks/{{../notebook.project_id}}/{{this}}.zip">Download files from {{this}}</a>
+
+         </li>
+        {{/each}}
+      </ul>
+    </dd>
+
 </dl>
 
 {{#if isAdmin}}

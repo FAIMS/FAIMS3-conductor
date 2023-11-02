@@ -24,14 +24,33 @@ PouchDB.plugin(require('pouchdb-find'));
 
 import request from 'supertest';
 import {app} from '../src/routes';
-import { CONDUCTOR_AUTH_PROVIDERS } from '../src/buildconfig';
+import {CONDUCTOR_AUTH_PROVIDERS, LOCAL_COUCHDB_AUTH} from '../src/buildconfig';
+import {expect} from 'chai';
+import {cleanDataDBS, resetDatabases} from './mocks';
+import {createUser, saveUser} from '../src/couchdb/users';
+import {createNotebook} from '../src/couchdb/notebooks';
+import fs from 'fs';
 
-test('check is up', async () => {
+it('check is up', async () => {
   const result = await request(app).get('/up');
-  expect(result.statusCode).toEqual(200);
+  expect(result.statusCode).to.equal(200);
 });
 
+const username = 'bobalooba';
+const adminPassword = LOCAL_COUCHDB_AUTH ? LOCAL_COUCHDB_AUTH.password : '';
+
 describe('Auth', () => {
+  beforeEach(async () => {
+    await resetDatabases();
+    await cleanDataDBS();
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [user, _error] = await createUser('', username);
+    if (user) {
+      await saveUser(user);
+    }
+  });
+
   it('redirect to auth', done => {
     request(app)
       .get('/')
@@ -55,7 +74,7 @@ describe('Auth', () => {
       .get('/auth')
       .expect(200)
       .then(response => {
-        expect(response.text).toContain('Local Login');
+        expect(response.text).to.include('Local Login');
         done();
       });
   });
@@ -66,9 +85,72 @@ describe('Auth', () => {
       .expect(200)
       .then(response => {
         CONDUCTOR_AUTH_PROVIDERS.forEach((provider: string) => {
-          expect(response.text).toContain(provider);
+          expect(response.text).to.include(provider);
         });
         done();
+      });
+  });
+
+  it('shows the notebooks page', async () => {
+    const filename = 'notebooks/sample_notebook.json';
+    const jsonText = fs.readFileSync(filename, 'utf-8');
+    const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
+
+    await createNotebook('test-notebook', uiSpec, metadata);
+    const agent = request.agent(app);
+
+    await agent
+      .post('/auth/local/')
+      .send({username: 'admin', password: adminPassword})
+      .expect(302);
+
+    await agent
+      .get('/notebooks/')
+      .expect(200)
+      .then(response => {
+        expect(response.text).to.include('test-notebook');
+      });
+  });
+
+  it('shows page for one notebook', async () => {
+    const filename = 'notebooks/sample_notebook.json';
+    const jsonText = fs.readFileSync(filename, 'utf-8');
+    const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
+
+    const project_id = await createNotebook('test-notebook', uiSpec, metadata);
+    const agent = request.agent(app);
+
+    await agent
+      .post('/auth/local/')
+      .send({username: 'admin', password: adminPassword})
+      .expect(302);
+
+    await agent
+      .get(`/notebooks/${project_id}/`)
+      .expect(200)
+      .then(response => {
+        expect(response.text).to.include('test-notebook');
+      });
+  });
+
+  it('get home page logged in', async () => {
+    const filename = 'notebooks/sample_notebook.json';
+    const jsonText = fs.readFileSync(filename, 'utf-8');
+    const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
+
+    await createNotebook('test-notebook', uiSpec, metadata);
+    const agent = request.agent(app);
+
+    await agent
+      .post('/auth/local/')
+      .send({username: 'admin', password: adminPassword})
+      .expect(302);
+
+    await agent
+      .get('/')
+      .expect(200)
+      .then(response => {
+        expect(response.text).to.include('Admin User');
       });
   });
 });

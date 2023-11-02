@@ -17,6 +17,9 @@
         "isolatedModules": true,
         "noEmit": false,
     },
+    "ts-node": {
+        "files": true
+    },
     "include": [
         "src", "test"
     ]

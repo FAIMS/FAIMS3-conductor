@@ -37,6 +37,7 @@ import {
 } from '../src/couchdb/users';
 PouchDB.plugin(require('pouchdb-adapter-memory')); // enable memory adapter for testing
 PouchDB.plugin(require('pouchdb-find'));
+import {expect, assert} from 'chai';
 
 import * as fs from 'fs';
 import {createNotebook} from '../src/couchdb/notebooks';
@@ -50,235 +51,243 @@ const clearUsers = async () => {
     }
   }
 };
+describe('user creation', () => {
+  beforeEach(clearUsers);
 
-beforeEach(clearUsers);
+  it('create user - good', async () => {
+    const email = 'BOB@Here.com';
+    const username = 'bobalooba';
+    const [newUserUsername, errorUsername] = await createUser('', username);
+    expect(errorUsername).to.equal('');
+    if (newUserUsername) {
+      expect(newUserUsername.user_id).to.equal(username);
+      expect(newUserUsername.emails.length).to.equal(0);
+    } else {
+      assert.fail('user is null after createUser with valid username');
+    }
 
-test('create user - good', async () => {
-  const email = 'BOB@Here.com';
-  const username = 'bobalooba';
-  const [newUserUsername, errorUsername] = await createUser('', username);
-  expect(errorUsername).toBe('');
-  if (newUserUsername) {
-    expect(newUserUsername.user_id).toBe(username);
-    expect(newUserUsername.emails.length).toBe(0);
-  } else {
-    fail('user is null after createUser with valid username');
-  }
+    const [newUserEmail, errorEmail] = await createUser(email, '');
+    expect(errorEmail).to.equal('');
+    if (newUserEmail) {
+      expect(newUserEmail.user_id).not.to.equal('');
+      expect(newUserEmail.emails).to.include(email.toLowerCase());
+    } else {
+      assert.fail('user is null after createUser with valid email');
+    }
+  });
 
-  const [newUserEmail, errorEmail] = await createUser(email, '');
-  expect(errorEmail).toBe('');
-  if (newUserEmail) {
-    expect(newUserEmail.user_id).not.toBe('');
-    expect(newUserEmail.emails).toContain(email.toLowerCase());
-  } else {
-    fail('user is null after createUser with valid email');
-  }
-});
+  it('create user - duplicates and missing', async () => {
+    const email = 'BOBBY@here.com';
+    const username = 'bobalooba';
 
-test('create user - duplicates and missing', async () => {
-  const email = 'BOBBY@here.com';
-  const username = 'bobalooba';
+    const [newUser, errorFirst] = await createUser(email, '');
+    expect(errorFirst).to.equal('');
+    if (newUser) {
+      await saveUser(newUser);
+      // now make another user with the same email
+      const [anotherUser, errorSecond] = await createUser(email, '');
+      expect(errorSecond).to.equal(`User with email '${email}' already exists`);
+      expect(anotherUser).to.be.null;
+    }
+    const [newUserU, errorFirstU] = await createUser('', username);
+    expect(errorFirstU).to.equal('');
+    if (newUserU) {
+      await saveUser(newUserU);
+      // now make another user with the same email
+      const [anotherUserU, errorSecondU] = await createUser('', username);
+      expect(errorSecondU).to.equal(
+        `User with username '${username}' already exists`
+      );
+      expect(anotherUserU).to.be.null;
+    }
 
-  const [newUser, errorFirst] = await createUser(email, '');
-  expect(errorFirst).toBe('');
-  if (newUser) {
-    await saveUser(newUser);
-    // now make another user with the same email
-    const [anotherUser, errorSecond] = await createUser(email, '');
-    expect(errorSecond).toBe(`User with email '${email}' already exists`);
-    expect(anotherUser).toBe(null);
-  }
-  const [newUserU, errorFirstU] = await createUser('', username);
-  expect(errorFirstU).toBe('');
-  if (newUserU) {
-    await saveUser(newUserU);
-    // now make another user with the same email
-    const [anotherUserU, errorSecondU] = await createUser('', username);
-    expect(errorSecondU).toBe(
-      `User with username '${username}' already exists`
-    );
-    expect(anotherUserU).toBe(null);
-  }
+    const [newUserM, errorM] = await createUser('', '');
+    expect(errorM).to.equal('At least one of username and email is required');
+    expect(newUserM).to.be.null;
+  });
 
-  const [newUserM, errorM] = await createUser('', '');
-  expect(errorM).toBe('At least one of username and email is required');
-  expect(newUserM).toBe(null);
-});
+  it('user roles', async () => {
+    const email = 'BOBBY@here.com';
+    const username = 'bobalooba';
 
-test('user roles', async () => {
-  const email = 'BOBBY@here.com';
-  const username = 'bobalooba';
+    const [newUser, error] = await createUser(email, username);
+    expect(error).to.equal('');
+    if (newUser) {
+      // add some roles
+      addOtherRoleToUser(newUser, 'cluster-admin');
+      addOtherRoleToUser(newUser, 'chief-bobalooba');
 
-  const [newUser, error] = await createUser(email, username);
-  expect(error).toBe('');
-  if (newUser) {
-    // add some roles
-    addOtherRoleToUser(newUser, 'cluster-admin');
-    addOtherRoleToUser(newUser, 'chief-bobalooba');
+      // check that 'roles' has been updated
+      expect(newUser.roles.length).to.equal(2);
+      expect(newUser.roles).to.include('cluster-admin');
+      expect(newUser.roles).to.include('chief-bobalooba');
 
-    // check that 'roles' has been updated
-    expect(newUser.roles.length).toBe(2);
-    expect(newUser.roles).toContain('cluster-admin');
-    expect(newUser.roles).toContain('chief-bobalooba');
+      addProjectRoleToUser(newUser, 'important-project', 'admin');
 
-    addProjectRoleToUser(newUser, 'important-project', 'admin');
+      expect(newUser.other_roles.length).to.equal(2);
+      expect(newUser.other_roles).to.include('cluster-admin');
+      expect(newUser.other_roles).to.include('chief-bobalooba');
+      expect(Object.keys(newUser.project_roles)).to.include(
+        'important-project'
+      );
+      expect(newUser.project_roles['important-project']).to.include('admin');
 
-    expect(newUser.other_roles.length).toBe(2);
-    expect(newUser.other_roles).toContain('cluster-admin');
-    expect(newUser.other_roles).toContain('chief-bobalooba');
-    expect(Object.keys(newUser.project_roles)).toContain('important-project');
-    expect(newUser.project_roles['important-project']).toContain('admin');
+      expect(newUser.roles.length).to.equal(3);
+      expect(newUser.roles).to.include('important-project||admin');
 
-    expect(newUser.roles.length).toBe(3);
-    expect(newUser.roles).toContain('important-project||admin');
+      // add more project roles
+      addProjectRoleToUser(newUser, 'important-project', 'team');
+      expect(newUser.project_roles['important-project']).to.include('admin');
+      expect(newUser.project_roles['important-project']).to.include('team');
+      expect(newUser.project_roles['important-project'].length).to.equal(2);
 
-    // add more project roles
-    addProjectRoleToUser(newUser, 'important-project', 'team');
-    expect(newUser.project_roles['important-project']).toContain('admin');
-    expect(newUser.project_roles['important-project']).toContain('team');
-    expect(newUser.project_roles['important-project'].length).toBe(2);
+      expect(newUser.roles.length).to.equal(4);
+      expect(newUser.roles).to.include('cluster-admin');
+      expect(newUser.roles).to.include('chief-bobalooba');
+      expect(newUser.roles).to.include('important-project||admin');
+      expect(newUser.roles).to.include('important-project||team');
 
-    expect(newUser.roles.length).toBe(4);
-    expect(newUser.roles).toContain('cluster-admin');
-    expect(newUser.roles).toContain('chief-bobalooba');
-    expect(newUser.roles).toContain('important-project||admin');
-    expect(newUser.roles).toContain('important-project||team');
+      // doing it again should be a no-op
+      addProjectRoleToUser(newUser, 'important-project', 'team');
+      expect(newUser.project_roles['important-project'].length).to.equal(2);
 
-    // doing it again should be a no-op
-    addProjectRoleToUser(newUser, 'important-project', 'team');
-    expect(newUser.project_roles['important-project'].length).toBe(2);
+      addOtherRoleToUser(newUser, 'cluster-admin');
+      expect(newUser.other_roles.length).to.equal(2);
 
-    addOtherRoleToUser(newUser, 'cluster-admin');
-    expect(newUser.other_roles.length).toBe(2);
+      expect(newUser.roles.length).to.equal(4);
+      expect(newUser.roles).to.include('cluster-admin');
+      expect(newUser.roles).to.include('chief-bobalooba');
+      expect(newUser.roles).to.include('important-project||admin');
+      expect(newUser.roles).to.include('important-project||team');
 
-    expect(newUser.roles.length).toBe(4);
-    expect(newUser.roles).toContain('cluster-admin');
-    expect(newUser.roles).toContain('chief-bobalooba');
-    expect(newUser.roles).toContain('important-project||admin');
-    expect(newUser.roles).toContain('important-project||team');
+      // remove one
+      removeProjectRoleFromUser(newUser, 'important-project', 'admin');
+      expect(newUser.project_roles['important-project']).not.to.include(
+        'admin'
+      );
+      expect(newUser.project_roles['important-project']).to.include('team');
 
-    // remove one
-    removeProjectRoleFromUser(newUser, 'important-project', 'admin');
-    expect(newUser.project_roles['important-project']).not.toContain('admin');
-    expect(newUser.project_roles['important-project']).toContain('team');
+      removeOtherRoleFromUser(newUser, 'cluster-admin');
+      expect(newUser.other_roles.length).to.equal(1);
+      expect(newUser.other_roles).to.include('chief-bobalooba');
+      expect(newUser.other_roles).not.to.include('cluster-admin');
 
-    removeOtherRoleFromUser(newUser, 'cluster-admin');
-    expect(newUser.other_roles.length).toBe(1);
-    expect(newUser.other_roles).toContain('chief-bobalooba');
-    expect(newUser.other_roles).not.toContain('cluster-admin');
+      expect(newUser.roles.length).to.equal(2);
+      expect(newUser.roles).not.to.include('cluster-admin');
+      expect(newUser.roles).to.include('chief-bobalooba');
+      expect(newUser.roles).not.to.include('important-project||admin');
+      expect(newUser.roles).to.include('important-project||team');
 
-    expect(newUser.roles.length).toBe(2);
-    expect(newUser.roles).not.toContain('cluster-admin');
-    expect(newUser.roles).toContain('chief-bobalooba');
-    expect(newUser.roles).not.toContain('important-project||admin');
-    expect(newUser.roles).toContain('important-project||team');
+      // remove roles that aren't there should be harmless
+      removeProjectRoleFromUser(newUser, 'important-project', 'not-there');
+      expect(newUser.project_roles['important-project'].length).to.equal(1);
+      removeOtherRoleFromUser(newUser, 'non-existant');
+      expect(newUser.other_roles.length).to.equal(1);
+      expect(newUser.other_roles).to.include('chief-bobalooba');
+    }
+  });
 
-    // remove roles that aren't there should be harmless
-    removeProjectRoleFromUser(newUser, 'important-project', 'not-there');
-    expect(newUser.project_roles['important-project'].length).toBe(1);
-    removeOtherRoleFromUser(newUser, 'non-existant');
-    expect(newUser.other_roles.length).toBe(1);
-    expect(newUser.other_roles).toContain('chief-bobalooba');
-  }
-});
+  it('checking permissions', async () => {
+    const email = 'BOBBY@here.com';
+    const username = 'bobalooba';
+    const project_id = 'myProject';
 
-test('checking permissions', async () => {
-  const email = 'BOBBY@here.com';
-  const username = 'bobalooba';
-  const project_id = 'myProject';
+    const [user, error] = await createUser(email, username);
+    expect(error).to.equal('');
+    if (user) {
+      expect(userHasPermission(user, project_id, 'read')).to.be.false;
+      expect(userHasPermission(user, project_id, 'modify')).to.be.false;
 
-  const [user, error] = await createUser(email, username);
-  expect(error).toBe('');
-  if (user) {
-    expect(userHasPermission(user, project_id, 'read')).toBe(false);
-    expect(userHasPermission(user, project_id, 'modify')).toBe(false);
+      // add some roles
+      addOtherRoleToUser(user, CLUSTER_ADMIN_GROUP_NAME);
 
-    // add some roles
-    addOtherRoleToUser(user, CLUSTER_ADMIN_GROUP_NAME);
+      expect(userHasPermission(user, project_id, 'read')).to.be.true;
+      expect(userHasPermission(user, project_id, 'modify')).to.be.true;
 
-    expect(userHasPermission(user, project_id, 'read')).toBe(true);
-    expect(userHasPermission(user, project_id, 'modify')).toBe(true);
+      removeOtherRoleFromUser(user, CLUSTER_ADMIN_GROUP_NAME);
 
-    removeOtherRoleFromUser(user, CLUSTER_ADMIN_GROUP_NAME);
+      // test permissions for user role
+      addProjectRoleToUser(user, project_id, 'user');
+      expect(userHasPermission(user, project_id, 'read')).to.be.true;
+      expect(userHasPermission(user, project_id, 'modify')).to.be.false;
 
-    // test permissions for user role
-    addProjectRoleToUser(user, project_id, 'user');
-    expect(userHasPermission(user, project_id, 'read')).toBe(true);
-    expect(userHasPermission(user, project_id, 'modify')).toBe(false);
+      // but can't access another project
+      expect(userHasPermission(user, 'anotherProject', 'read')).to.be.false;
+      expect(userHasPermission(user, 'anotherProject', 'modify')).to.be.false;
 
-    // but can't access another project
-    expect(userHasPermission(user, 'anotherProject', 'read')).toBe(false);
-    expect(userHasPermission(user, 'anotherProject', 'modify')).toBe(false);
+      // give them admin permission
+      addProjectRoleToUser(user, project_id, 'admin');
 
-    // give them admin permission
-    addProjectRoleToUser(user, project_id, 'admin');
+      expect(userHasPermission(user, project_id, 'read')).to.be.true;
+      expect(userHasPermission(user, project_id, 'modify')).to.be.true;
+    }
+  });
 
-    expect(userHasPermission(user, project_id, 'read')).toBe(true);
-    expect(userHasPermission(user, project_id, 'modify')).toBe(true);
-  }
-});
+  it('add local password', async () => {
+    const username = 'bobalooba';
+    const password = 'verysecret';
+    const [user, error] = await createUser('', username);
+    expect(error).to.equal('');
+    if (user) {
+      await addLocalPasswordForUser(user, password);
+      const profile = user.profiles['local'] as any; // really LocalProfile
+      expect(profile).not.to.be.undefined;
+      expect(profile.salt).not.to.be.null;
+      expect(profile.password).not.to.be.null;
 
-test('add local password', async () => {
-  const username = 'bobalooba';
-  const password = 'verysecret';
-  const [user, error] = await createUser('', username);
-  expect(error).toBe('');
-  if (user) {
-    await addLocalPasswordForUser(user, password);
-    const profile = user.profiles['local'] as any; // really LocalProfile
-    expect(profile).not.toBe(undefined);
-    expect(profile.salt).not.toBe(null);
-    expect(profile.password).not.toBe(null);
-
-    await validateLocalUser(
-      username,
-      password,
-      (error: string, validUser: Express.User | false) => {
-        expect(validUser).not.toBe(false);
-        if (validUser) {
-          expect(validUser.user_id).toBe(username);
-          expect(error).toBe(null);
+      await validateLocalUser(
+        username,
+        password,
+        (error: string, validUser: Express.User | false) => {
+          expect(validUser).not.to.be.false;
+          if (validUser) {
+            expect(validUser.user_id).to.equal(username);
+            expect(error).to.be.null;
+          }
         }
-      }
+      );
+
+      await validateLocalUser(
+        username,
+        'not the password',
+        (error: string, validUser: Express.User | false) => {
+          expect(validUser).to.be.false;
+          expect(error).to.be.null;
+        }
+      );
+    } else {
+      assert.fail('user is null after createUser with valid username');
+    }
+  });
+
+  it('listing users for notebooks', async () => {
+    await initialiseDatabases();
+
+    const jsonText = fs.readFileSync(
+      './notebooks/sample_notebook.json',
+      'utf-8'
     );
+    const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
+    const name = 'Test Notebook';
+    const project_id = await createNotebook(name, uiSpec, metadata);
+    const username = 'bobalooba';
 
-    await validateLocalUser(
-      username,
-      'not the password',
-      (error: string, validUser: Express.User | false) => {
-        expect(validUser).toBe(false);
-        expect(error).toBe(null);
-      }
-    );
-  } else {
-    fail('user is null after createUser with valid username');
-  }
-});
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [user, error] = await createUser('', username);
+    if (user && project_id) {
+      addProjectRoleToUser(user, project_id, 'team');
+      addProjectRoleToUser(user, project_id, 'moderator');
+      await saveUser(user);
 
-test('listing users for notebooks', async () => {
-  await initialiseDatabases();
+      const userInfo = await getUserInfoForNotebook(project_id);
 
-  const jsonText = fs.readFileSync('./notebooks/sample_notebook.json', 'utf-8');
-  const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
-  const name = 'Test Notebook';
-  const project_id = await createNotebook(name, uiSpec, metadata);
-  const username = 'bobalooba';
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [user, error] = await createUser('', username);
-  if (user && project_id) {
-    addProjectRoleToUser(user, project_id, 'team');
-    addProjectRoleToUser(user, project_id, 'moderator');
-    await saveUser(user);
-
-    const userInfo = await getUserInfoForNotebook(project_id);
-
-    expect(userInfo.roles).toContain('admin');
-    expect(userInfo.roles).toContain('moderator');
-    expect(userInfo.roles).toContain('team');
-    // should have the admin user and this new one
-    expect(userInfo.users.length).toBe(2);
-    expect(userInfo.users[1].username).toBe(username);
-    expect(userInfo.users[1].roles[0].value).toBe(false);
-  }
+      expect(userInfo.roles).to.include('admin');
+      expect(userInfo.roles).to.include('moderator');
+      expect(userInfo.roles).to.include('team');
+      // should have the admin user and this new one
+      expect(userInfo.users.length).to.equal(2);
+      expect(userInfo.users[1].username).to.equal(username);
+      expect(userInfo.users[1].roles[0].value).to.be.false;
+    }
+  });
 });

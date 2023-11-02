@@ -25,7 +25,7 @@ import {
   COUCHDB_INTERNAL_URL,
   LOCAL_COUCHDB_AUTH,
 } from '../buildconfig';
-import {ProjectID} from '../datamodel/core';
+import {ProjectID} from 'faims3-datamodel';
 import {ProjectObject} from '../datamodel/database';
 import {
   initialiseDirectoryDB,
@@ -81,6 +81,7 @@ export const getPublicUserDbURL = (): string => {
 export const getUsersDB = (): PouchDB.Database | undefined => {
   if (!_usersDB) {
     const pouch_options = pouchOptions();
+
     const dbName = COUCHDB_INTERNAL_URL + PEOPLE_DB_NAME;
     _usersDB = new PouchDB(dbName, pouch_options);
   }

@@ -29,6 +29,8 @@ import {
   getRolesForNotebook,
   deleteNotebook,
   updateNotebook,
+  streamNotebookRecordsAsCSV,
+  streamNotebookFilesAsZip,
 } from '../couchdb/notebooks';
 import {requireAuthenticationAPI} from '../middleware';
 import {initialiseDatabases} from '../couchdb';
@@ -164,6 +166,36 @@ api.get(
   }
 );
 
+// export current versions of all records in this notebook as csv
+api.get(
+  '/notebooks/:id/:viewid.csv',
+  requireAuthenticationAPI,
+  async (req, res) => {
+    if (req.user && userHasPermission(req.user, req.params.id, 'read')) {
+      res.setHeader('Content-Type', 'text/csv');
+      streamNotebookRecordsAsCSV(req.params.id, req.params.viewid, res);
+    } else {
+      res.json({error: 'notebook not found'});
+      res.status(404).end();
+    }
+  }
+);
+
+// export files for all records in this notebook as zip
+api.get(
+  '/notebooks/:id/:viewid.zip',
+  requireAuthenticationAPI,
+  async (req, res) => {
+    if (req.user && userHasPermission(req.user, req.params.id, 'read')) {
+      res.setHeader('Content-Type', 'application/zip');
+      streamNotebookFilesAsZip(req.params.id, req.params.viewid, res);
+    } else {
+      res.json({error: 'notebook not found'});
+      res.status(404).end();
+    }
+  }
+);
+
 api.get('/notebooks/:id/users/', requireAuthenticationAPI, async (req, res) => {
   // user must have admin access tot his notebook
 
@@ -214,19 +246,22 @@ api.post(
             error = 'Unknown user ' + username;
           }
         } else {
-          error = 'Unknow role';
+          error = 'Unknown role';
         }
       } else {
         error = 'Unknown notebook';
       }
       // user or project not found or bad role
-      res.json({status: 'error', error});
-      res.status(404).end();
+      res.status(404);
+      res.json({status: 'error', error}).end();
     } else {
-      res.json({
-        error: 'you do not have permission to modify users for this notebook',
-      });
-      res.status(401).end();
+      res.status(401);
+      res
+        .json({
+          status: 'error',
+          error: 'you do not have permission to modify users for this notebook',
+        })
+        .end();
     }
   }
 );

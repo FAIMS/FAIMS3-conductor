@@ -26,7 +26,7 @@ import {
   getProjectsDB,
 } from '.';
 import {CLUSTER_ADMIN_GROUP_NAME} from '../buildconfig';
-import {ProjectID, resolve_project_id} from '../datamodel/core';
+import {ProjectID, resolve_project_id} from 'faims3-datamodel';
 import {
   ProjectMetadata,
   ProjectObject,
@@ -34,6 +34,8 @@ import {
   ProjectUIModel,
   PROJECT_METADATA_PREFIX,
 } from '../datamodel/database';
+import archiver from 'archiver';
+import {Stream} from 'stream';
 
 import securityPlugin from 'pouchdb-security-helper';
 import {
@@ -44,9 +46,11 @@ import {
   getRecordsWithRegex,
   setAttachmentDumperForType,
   setAttachmentLoaderForType,
+  HRID_STRING,
 } from 'faims3-datamodel';
 import {userHasPermission} from './users';
 PouchDB.plugin(securityPlugin);
+import {Stringifier, stringify} from 'csv-stringify';
 
 /**
  * getNotebooks -- return an array of notebooks from the database
@@ -69,6 +73,7 @@ export const getNotebooks = async (user: Express.User): Promise<any[]> => {
         projects.push(e.doc as unknown as ProjectObject);
       }
     });
+
     for (const project of projects) {
       const project_id = project._id;
       const full_project_id = resolve_project_id(listing_id, project_id);
@@ -532,6 +537,243 @@ export const getNotebookRecords = async (
     fullRecords.push(data);
   }
   return fullRecords;
+};
+
+/**
+ * Return an iterator over the records in a notebook
+ * @param project_id project identifier
+ */
+export const notebookRecordIterator = async (
+  project_id: string,
+  viewid: string
+) => {
+  let records = await getRecordsWithRegex(project_id, '.*', true);
+  let index = 0;
+  // select just those in this view
+  records = records.filter((record: any) => {
+    return record.type === viewid;
+  });
+
+  const recordIterator = {
+    async next() {
+      if (index < records.length) {
+        const data = await getFullRecordData(
+          project_id,
+          records[index].record_id,
+          records[index].revision_id,
+          true
+        );
+        index++;
+        return {record: data, done: false};
+      } else {
+        return {record: null, done: true};
+      }
+    },
+  };
+  return recordIterator;
+};
+
+const getRecordHRID = (record: any) => {
+  for (const possible_name of Object.keys(record.data)) {
+    if (possible_name.startsWith(HRID_STRING)) {
+      return record.data[possible_name];
+    }
+  }
+  return record.record_id;
+};
+
+/**
+ * generate a suitable value for the CSV export from a field
+ * value.  Serialise filenames, gps coordinates, etc.
+ */
+const csvFormatValue = (fieldName: string, value: any, hrid: string) => {
+  const result: {[key: string]: any} = {};
+  if (value instanceof Array) {
+    if (value.length === 0) {
+      result[fieldName] = '';
+      return result;
+    }
+    const valueList = value.map((v: any) => {
+      if (v instanceof File) {
+        return generateFilename(v, fieldName, hrid);
+      } else {
+        return v;
+      }
+    });
+    result[fieldName] = valueList.join(';');
+    return result;
+  }
+
+  // gps locations
+  if (value instanceof Object && 'geometry' in value) {
+    result[fieldName] = value;
+    result[fieldName + '_latitude'] = value.geometry.coordinates[0];
+    result[fieldName + '_longitude'] = value.geometry.coordinates[1];
+    return result;
+  }
+  // default to just the value
+  result[fieldName] = value;
+  return result;
+};
+
+const convertDataForOutput = (data: any, hrid: string) => {
+  let result: {[key: string]: any} = {};
+  Object.keys(data).forEach((key: string) => {
+    const formattedValue = csvFormatValue(key, data[key], hrid);
+    result = {...result, ...formattedValue};
+  });
+  return result;
+};
+
+export const streamNotebookRecordsAsCSV = async (
+  project_id: ProjectID,
+  viewID: string,
+  res: NodeJS.WritableStream
+) => {
+  const iterator = await notebookRecordIterator(project_id, viewID);
+
+  let stringifier: Stringifier | null = null;
+  let {record, done} = await iterator.next();
+  let header_done = false;
+  while (record && !done) {
+    const hrid = getRecordHRID(record);
+    const row = [
+      hrid,
+      record.record_id,
+      record.revision_id,
+      record.type,
+      record.updated_by,
+      record.updated.toISOString(),
+    ];
+    const outputData = convertDataForOutput(record.data, hrid);
+    Object.keys(outputData).forEach((property: string) => {
+      row.push(outputData[property]);
+    });
+
+    if (!header_done) {
+      const columns = [
+        'identifier',
+        'record_id',
+        'revision_id',
+        'type',
+        'updated_by',
+        'updated',
+      ];
+      // take the keys in the generated output data which may have more than
+      // the original data
+      Object.keys(outputData).forEach((key: string) => {
+        columns.push(key);
+      });
+      stringifier = stringify({columns, header: true});
+      // pipe output to the respose
+      stringifier.pipe(res);
+      header_done = true;
+    }
+    if (stringifier) stringifier.write(row);
+    const next = await iterator.next();
+    record = next.record;
+    done = next.done;
+  }
+  if (stringifier) stringifier.end();
+};
+
+export const streamNotebookFilesAsZip = async (
+  project_id: ProjectID,
+  viewID: string,
+  res: NodeJS.WritableStream
+) => {
+  let allFilesAdded = false;
+  let doneFinalize = false;
+  const iterator = await notebookRecordIterator(project_id, viewID);
+  const archive = archiver('zip', {zlib: {level: 9}});
+  // good practice to catch warnings (ie stat failures and other non-blocking errors)
+  archive.on('warning', err => {
+    if (err.code === 'ENOENT') {
+      // log warning
+    } else {
+      // throw error
+      throw err;
+    }
+  });
+
+  // good practice to catch this error explicitly
+  archive.on('error', err => {
+    throw err;
+  });
+
+  // check on progress, if we've finished adding files and they are
+  // all processed then we can finalize the archive
+  archive.on('progress', (entries: any) => {
+    if (!doneFinalize && allFilesAdded && entries.total === entries.processed) {
+      console.log('finalizing archive');
+      archive.finalize();
+      doneFinalize = true;
+    }
+  });
+
+  archive.pipe(res);
+
+  let {record, done} = await iterator.next();
+  while (!done) {
+    // iterate over the fields, if it's a file, then
+    // append it to the archive
+    if (record !== null) {
+      const hrid = getRecordHRID(record);
+
+      Object.keys(record.data).forEach(async (key: string) => {
+        if (record && record.data[key] instanceof Array) {
+          if (record.data[key].length === 0) {
+            return;
+          }
+          if (record.data[key][0] instanceof File) {
+            const file_list = record.data[key] as File[];
+            file_list.forEach(async (file: File) => {
+              const buffer = await file.stream();
+              const reader = buffer.getReader();
+              // this is how we turn a File object into
+              // a Buffer to pass to the archiver, insane that
+              // we can't derive something from the file that will work
+              const chunks: Uint8Array[] = [];
+              while (true) {
+                const {done, value} = await reader.read();
+                if (done) {
+                  break;
+                }
+                chunks.push(value);
+              }
+              const stream = Stream.Readable.from(chunks);
+              const filename = generateFilename(file, key, hrid);
+              await archive.append(stream, {
+                name: filename,
+              });
+            });
+          }
+        }
+      });
+    }
+
+    const next = await iterator.next();
+    record = next.record;
+    done = next.done;
+  }
+  allFilesAdded = true;
+};
+
+const generateFilename = (file: File, key: string, hrid: string) => {
+  const fileTypes: {[key: string]: string} = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/gif': 'gif',
+    'image/tiff': 'tif',
+    'text/plain': 'txt',
+    'application/pdf': 'pdf',
+    'application/json': 'json',
+  };
+
+  const type = file.type;
+  const extension = fileTypes[type] || 'dat';
+  const filename = `${key}/${hrid}-${key}.${extension}`;
+  return filename;
 };
 
 export const getRolesForNotebook = async (project_id: ProjectID) => {

@@ -22,7 +22,7 @@
 import {ProjectRole} from 'faims3-datamodel/build/src/types';
 import {getUsersDB} from '.';
 import {CLUSTER_ADMIN_GROUP_NAME} from '../buildconfig';
-import {NonUniqueProjectID, ProjectID} from '../datamodel/core';
+import {NonUniqueProjectID, ProjectID} from 'faims3-datamodel';
 import {
   AllProjectRoles,
   ConductorRole,
@@ -179,7 +179,9 @@ async function getUserFromUsername(
   const users_db = getUsersDB();
   if (users_db) {
     try {
-      return (await users_db.get(username)) as Express.User;
+      const user = (await users_db.get(username)) as Express.User;
+      return user;
+      //return (await users_db.get(username)) as Express.User;
     } catch (err) {
       return null;
     }

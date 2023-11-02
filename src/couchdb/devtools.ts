@@ -72,10 +72,7 @@ export const createRandomRecord = async (project_id: ProjectID) => {
       field_types[field] =
         uiSpec.fields[field]['type-returned'] || 'faims-core::String';
     });
-    const values: {[key: string]: any} = {
-      fieldNames: [],
-      views: [],
-    };
+    const values: {[key: string]: any} = {};
     fields.map((field: string) => {
       values[field] = generateValue(uiSpec.fields[field]);
     });
@@ -136,6 +133,25 @@ const generateValue = (field: any) => {
       return randomInt(10) > 5;
     case 'faims-core::Date':
       return new Date().toISOString();
+    case 'faims-pos::Location':
+      return {
+        type: 'Feature',
+        properties: {
+          timestamp: Date.now(),
+          altitude: null,
+          speed: null,
+          heading: null,
+          accuracy: 20,
+          altitude_accuracy: null,
+        },
+        geometry: {
+          type: 'Point',
+          coordinates: [
+            randomInt(180) + randomInt(10000) / 10000,
+            randomInt(180) - 90 + randomInt(10000) / 10000,
+          ],
+        },
+      };
     default:
       return '';
   }
