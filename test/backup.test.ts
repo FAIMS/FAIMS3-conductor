@@ -18,7 +18,6 @@
  *   Tests for the interface to couchDB
  */
 import PouchDB from 'pouchdb';
-import {initialiseDatabases} from '../src/couchdb';
 import {restoreFromBackup} from '../src/couchdb/backupRestore';
 import {getNotebooks, notebookRecordIterator} from '../src/couchdb/notebooks';
 import {registerClient} from 'faims3-datamodel';
@@ -27,14 +26,14 @@ PouchDB.plugin(require('pouchdb-adapter-memory')); // enable memory adapter for 
 PouchDB.plugin(require('pouchdb-find'));
 
 import {expect} from 'chai';
-import {callbackObject, cleanDataDBS} from './mocks';
+import {callbackObject, cleanDataDBS, resetDatabases} from './mocks';
 
 // register our mock database clients with the module
 registerClient(callbackObject);
 
 describe('Backup and restore', () => {
   it('restore backup', async () => {
-    await initialiseDatabases();
+    await resetDatabases();
     await cleanDataDBS();
 
     await restoreFromBackup('test/backup.jsonl');
