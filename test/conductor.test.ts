@@ -27,22 +27,15 @@ import {app} from '../src/routes';
 import {CONDUCTOR_AUTH_PROVIDERS, LOCAL_COUCHDB_AUTH} from '../src/buildconfig';
 import {expect} from 'chai';
 import {cleanDataDBS, resetDatabases} from './mocks';
-import {
-  createUser,
-  getUserFromEmailOrUsername,
-  saveUser,
-} from '../src/couchdb/users';
+import {createUser, saveUser} from '../src/couchdb/users';
 import {createNotebook} from '../src/couchdb/notebooks';
 import fs from 'fs';
-import {createAuthKey} from '../src/authkeys/create';
-import {getSigningKey} from '../src/authkeys/signing_keys';
 
 it('check is up', async () => {
   const result = await request(app).get('/up');
   expect(result.statusCode).to.equal(200);
 });
 
-let adminToken = '';
 const username = 'bobalooba';
 const adminPassword = LOCAL_COUCHDB_AUTH ? LOCAL_COUCHDB_AUTH.password : '';
 
@@ -50,15 +43,11 @@ describe('Auth', () => {
   beforeEach(async () => {
     await resetDatabases();
     await cleanDataDBS();
-    const signing_key = await getSigningKey();
-    const adminUser = await getUserFromEmailOrUsername('admin');
-    if (adminUser) {
-      adminToken = await createAuthKey(adminUser, signing_key);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const [user, _error] = await createUser('', username);
-      if (user) {
-        await saveUser(user);
-      }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [user, _error] = await createUser('', username);
+    if (user) {
+      await saveUser(user);
     }
   });
 
@@ -164,5 +153,4 @@ describe('Auth', () => {
         expect(response.text).to.include('Admin User');
       });
   });
-
 });
