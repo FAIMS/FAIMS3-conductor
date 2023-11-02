@@ -33,6 +33,7 @@ import {
   getNotebookUISpec,
   getRolesForNotebook,
   updateNotebook,
+  validateNotebookID,
 } from '../src/couchdb/notebooks';
 import * as fs from 'fs';
 import {
@@ -184,6 +185,24 @@ describe('notebook api', () => {
         );
         expect(retrievedMetadata['name']).to.equal(name);
       }
+    }
+  });
+
+  it('can validate a notebook id', async () => {
+    const jsonText = fs.readFileSync(
+      './notebooks/sample_notebook.json',
+      'utf-8'
+    );
+    const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
+    const name = 'Test Notebook';
+    const projectID = await createNotebook(name, uiSpec, metadata);
+    expect(projectID).not.to.equal(undefined);
+    if (projectID) {
+      const valid = await validateNotebookID(projectID);
+      expect(valid).to.be.true;
+
+      const invalid = await validateNotebookID('invalid');
+      expect(invalid).to.be.false;
     }
   });
 

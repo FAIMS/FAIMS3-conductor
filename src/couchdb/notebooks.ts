@@ -683,6 +683,7 @@ export const streamNotebookFilesAsZip = async (
   res: NodeJS.WritableStream
 ) => {
   let allFilesAdded = false;
+  let doneFinalize = false;
   const iterator = await notebookRecordIterator(project_id, viewID);
   const archive = archiver('zip', {zlib: {level: 9}});
   // good practice to catch warnings (ie stat failures and other non-blocking errors)
@@ -703,8 +704,10 @@ export const streamNotebookFilesAsZip = async (
   // check on progress, if we've finished adding files and they are
   // all processed then we can finalize the archive
   archive.on('progress', (entries: any) => {
-    if (allFilesAdded && entries.total === entries.processed) {
+    if (!doneFinalize && allFilesAdded && entries.total === entries.processed) {
+      console.log('finalizing archive');
       archive.finalize();
+      doneFinalize = true;
     }
   });
 

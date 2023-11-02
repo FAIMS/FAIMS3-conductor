@@ -335,6 +335,23 @@ describe('API tests', () => {
     }
   });
 
+  it('can download files as zip', async () => {
+    // pull in some test data
+    await restoreFromBackup('test/backup.jsonl');
+
+    const adminUser = await getUserFromEmailOrUsername('admin');
+    if (adminUser) {
+      const notebooks = await getNotebooks(adminUser);
+      expect(notebooks).to.have.lengthOf(2);
+
+      await request(app)
+        .get('/api/notebooks/1693291182736-campus-survey-demo/FORM2.zip')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200)
+        .expect('Content-Type', 'application/zip');
+    }
+  });
+
   if (DEVELOPER_MODE) {
     it('create random record', async () => {
       const nb1 = await createNotebook('NB1', uispec, {});

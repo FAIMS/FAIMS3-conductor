@@ -19,7 +19,11 @@
  */
 import PouchDB from 'pouchdb';
 import {restoreFromBackup} from '../src/couchdb/backupRestore';
-import {getNotebooks, notebookRecordIterator} from '../src/couchdb/notebooks';
+import {
+  getNotebookRecords,
+  getNotebooks,
+  notebookRecordIterator,
+} from '../src/couchdb/notebooks';
 import {registerClient} from 'faims3-datamodel';
 import {getUserFromEmailOrUsername} from '../src/couchdb/users';
 PouchDB.plugin(require('pouchdb-adapter-memory')); // enable memory adapter for testing
@@ -58,6 +62,12 @@ describe('Backup and restore', () => {
         ({record, done} = await iterator.next());
       }
       expect(count).to.equal(17);
+
+      // throw in a test of getNotebookRecords while we're here
+      const records = await getNotebookRecords(
+        notebooks[0].non_unique_project_id
+      );
+      expect(records).to.have.lengthOf(28);
     }
   });
 });

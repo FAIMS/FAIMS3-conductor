@@ -187,7 +187,7 @@ api.get(
   requireAuthenticationAPI,
   async (req, res) => {
     if (req.user && userHasPermission(req.user, req.params.id, 'read')) {
-      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Type', 'application/zip');
       streamNotebookFilesAsZip(req.params.id, req.params.viewid, res);
     } else {
       res.json({error: 'notebook not found'});
