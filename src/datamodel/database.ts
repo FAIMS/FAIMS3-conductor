@@ -25,7 +25,7 @@ import {
   AttributeValuePairID,
   ProjectID,
   ListingID,
-} from './core';
+} from 'faims3-datamodel';
 
 export const UI_SPECIFICATION_NAME = 'ui-specification';
 export const PROJECT_SPECIFICATION_PREFIX = 'project-specification';
@@ -260,7 +260,3 @@ export interface ProjectUIModel {
  * discriminated by the prefix of the object's id
  */
 export type ProjectDataObject = AttributeValuePair | Revision | EncodedRecord;
-
-export function isRecord(doc: ProjectDataObject): doc is EncodedRecord {
-  return (<EncodedRecord>doc).record_format_version !== undefined;
-}

@@ -25,7 +25,7 @@ import {
   COUCHDB_INTERNAL_URL,
   LOCAL_COUCHDB_AUTH,
 } from '../buildconfig';
-import {ProjectID} from '../datamodel/core';
+import {ProjectID} from 'faims3-datamodel';
 import {ProjectObject} from '../datamodel/database';
 import {
   initialiseDirectoryDB,

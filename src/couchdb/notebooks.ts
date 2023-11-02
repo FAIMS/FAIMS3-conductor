@@ -26,7 +26,7 @@ import {
   getProjectsDB,
 } from '.';
 import {CLUSTER_ADMIN_GROUP_NAME} from '../buildconfig';
-import {ProjectID, resolve_project_id} from '../datamodel/core';
+import {ProjectID, resolve_project_id} from 'faims3-datamodel';
 import {
   ProjectMetadata,
   ProjectObject,

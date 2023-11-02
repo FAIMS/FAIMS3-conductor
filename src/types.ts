@@ -25,7 +25,7 @@ import type {
   OtherRoles,
   UserServiceProfiles,
 } from './datamodel/users';
-import type {NonUniqueProjectID} from './datamodel/core';
+import type {NonUniqueProjectID} from 'faims3-datamodel';
 
 export type DoneFunction = (err?: Error | null, profile?: any) => void;
 export type UserProfileCallback = (
