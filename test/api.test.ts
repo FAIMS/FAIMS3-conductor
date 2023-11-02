@@ -36,7 +36,7 @@ import {createNotebook, getNotebooks} from '../src/couchdb/notebooks';
 import {ProjectUIModel} from 'faims3-datamodel';
 import {DEVELOPER_MODE} from '../src/buildconfig';
 import {expect} from 'chai';
-import {resetDatabases} from './mocks';
+import {resetDatabases, cleanDataDBS} from './mocks';
 import {restoreFromBackup} from '../src/couchdb/backupRestore';
 
 const uispec: ProjectUIModel = {
@@ -52,6 +52,7 @@ const username = 'bobalooba';
 describe('API tests', () => {
   beforeEach(async () => {
     await resetDatabases();
+    await cleanDataDBS();
     const signing_key = await getSigningKey();
     const adminUser = await getUserFromEmailOrUsername('admin');
     if (adminUser) {
@@ -300,6 +301,24 @@ describe('API tests', () => {
         .expect(200);
     } else {
       throw new Error('could not make test notebooks');
+    }
+  });
+
+  it('can download records as json', async () => {
+    // pull in some test data
+    await restoreFromBackup('test/backup.jsonl');
+
+    const adminUser = await getUserFromEmailOrUsername('admin');
+    if (adminUser) {
+      const notebooks = await getNotebooks(adminUser);
+      expect(notebooks).to.have.lengthOf(2);
+
+      await request(app)
+        .get('/api/notebooks/1693291182736-campus-survey-demo/records/')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .set('Content-Type', 'application/json')
+        .expect(200)
+        .expect('Content-Type', 'application/json; charset=utf-8');
     }
   });
 
