@@ -246,19 +246,22 @@ api.post(
             error = 'Unknown user ' + username;
           }
         } else {
-          error = 'Unknow role';
+          error = 'Unknown role';
         }
       } else {
         error = 'Unknown notebook';
       }
       // user or project not found or bad role
-      res.json({status: 'error', error});
-      res.status(404).end();
+      res.status(404);
+      res.json({status: 'error', error}).end();
     } else {
-      res.json({
-        error: 'you do not have permission to modify users for this notebook',
-      });
-      res.status(401).end();
+      res.status(401);
+      res
+        .json({
+          status: 'error',
+          error: 'you do not have permission to modify users for this notebook',
+        })
+        .end();
     }
   }
 );

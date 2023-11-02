@@ -51,7 +51,6 @@ export const cleanDataDBS = async () => {
   for (const name in databaseList) {
     db = databaseList[name];
     delete databaseList[name];
-    console.log('recreating database ', name);
     if (db !== undefined) {
       try {
         await db.destroy();

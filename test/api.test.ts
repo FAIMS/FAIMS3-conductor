@@ -288,7 +288,7 @@ describe('API tests', () => {
     const nb1 = await createNotebook('NB1', uispec, {});
 
     if (nb1) {
-      return request(app)
+      await request(app)
         .post(`/api/notebooks/${nb1}/users/`)
         .set('Authorization', `Bearer ${adminToken}`)
         .set('Content-Type', 'application/json')
@@ -299,6 +299,90 @@ describe('API tests', () => {
         })
         .expect({status: 'success'})
         .expect(200);
+
+      // take it away again
+      await request(app)
+        .post(`/api/notebooks/${nb1}/users/`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .set('Content-Type', 'application/json')
+        .send({
+          username: username,
+          role: 'user',
+          addrole: false,
+        })
+        .expect({status: 'success'})
+        .expect(200);
+    } else {
+      throw new Error('could not make test notebooks');
+    }
+  });
+
+  it('fails to update notebook roles', async () => {
+    // make some notebooks
+    const nb1 = await createNotebook('NB1', uispec, {});
+
+    if (nb1) {
+      // invalid notebook name
+      await request(app)
+        .post('/api/notebooks/invalid-notebook/users/')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .set('Content-Type', 'application/json')
+        .send({
+          username: username,
+          role: 'user',
+          addrole: true,
+        })
+        .expect({error: 'Unknown notebook', status: 'error'})
+        .expect(404);
+
+      // invalid role name
+      await request(app)
+        .post(`/api/notebooks/${nb1}/users/`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .set('Content-Type', 'application/json')
+        .send({
+          username: username,
+          role: 'not a valid role',
+          addrole: true,
+        })
+        .expect({error: 'Unknown role', status: 'error'})
+        .expect(404);
+
+      // invalid user name
+      await request(app)
+        .post(`/api/notebooks/${nb1}/users/`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .set('Content-Type', 'application/json')
+        .send({
+          username: 'fred dag',
+          role: 'user',
+          addrole: true,
+        })
+        .expect({error: 'Unknown user fred dag', status: 'error'})
+        .expect(404);
+
+      const bobby = await getUserFromEmailOrUsername(username);
+      if (bobby) {
+        const signing_key = await getSigningKey();
+        const bobbyToken = await createAuthKey(bobby, signing_key);
+
+        // invalid user name
+        await request(app)
+          .post(`/api/notebooks/${nb1}/users/`)
+          .set('Authorization', `Bearer ${bobbyToken}`)
+          .set('Content-Type', 'application/json')
+          .send({
+            username: username,
+            role: 'user',
+            addrole: true,
+          })
+          .expect({
+            error:
+              'you do not have permission to modify users for this notebook',
+            status: 'error',
+          })
+          .expect(401);
+      }
     } else {
       throw new Error('could not make test notebooks');
     }
