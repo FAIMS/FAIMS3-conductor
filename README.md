@@ -95,10 +95,7 @@ npm run load-notebooks
 
 ## Deploying a notebook
 
-* Set USER_TOKEN in bash `export USER_TOKEN=blah` (from token export in conductor)
-* Set public_url `export CONDUCTOR_PUBLIC_URL=https://conductor.fieldmark.app`
-* Delete all unwanted tokens from the notebooks folder, then load desired notebook and run `npm run load-notebooks` 
-* Otherwise, set up environment and `node scripts/loadNotebooks.js path/to/notebook.json`
+Notebooks can be uploaded to Conductor via the web interface.
 
 ## Development
 
@@ -118,7 +115,6 @@ Then start the services:
 ```bash
 docker compose -f docker-compose.dev.yml up
 ```
-
 
 ## Tests
 

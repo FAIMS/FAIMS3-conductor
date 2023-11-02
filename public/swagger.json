@@ -127,13 +127,13 @@
             },
             "put": {
                 "summary": "Update a notebook",
-                "description": "Update a notebook by id",
+                "description": "Update a notebook by identifier",
                 "tags": ["Notebooks"],
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "Notebook id",
+                        "description": "Notebook identifier",
                         "required": true,
                         "type": "string"
                     }
@@ -173,7 +173,7 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "Notebook id",
+                        "description": "Notebook identifier",
                         "required": true,
                         "type": "string"
                     }
@@ -188,6 +188,79 @@
                             "items": {
                                 "$ref": "#/definitions/RecordList",
                             }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/UnauthorizedError"
+                    }
+                }
+            }
+        },
+        "/notebooks/{id}/{viewID}.csv": {
+            "get": {
+                "summary": "Get a records as CSV",
+                "description": "Export notebook records as CSV for one form",
+                "tags": ["Export"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Notebook identifier",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "viewID",
+                        "in": "path",
+                        "description": "view (form) dentifier",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "produces": ["text/csv"],
+                "security": {"Auth": []},
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/UnauthorizedError"
+                    }
+                }
+            }
+        },
+        "/notebooks/{id}/{viewID}.zip": {
+            "get": {
+                "summary": "Get all record attachments as a zip file",
+                "description": "Export all attachments (photos, files) for a form as a zip file",
+                "tags": ["Export"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Notebook id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "viewID",
+                        "in": "path",
+                        "description": "view (form) dentifier",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "produces": ["application/zip"],
+                "security": {"Auth": []},
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "string",
+                            "format": "binary"
                         }
                     },
                     "401": {
