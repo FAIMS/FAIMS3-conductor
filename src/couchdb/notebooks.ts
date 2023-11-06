@@ -26,7 +26,11 @@ import {
   getProjectsDB,
 } from '.';
 import {CLUSTER_ADMIN_GROUP_NAME} from '../buildconfig';
-import {ProjectID, resolve_project_id} from 'faims3-datamodel';
+import {
+  ProjectID,
+  resolve_project_id,
+  notebookRecordIterator,
+} from 'faims3-datamodel';
 import {
   ProjectMetadata,
   ProjectObject,
@@ -526,6 +530,7 @@ export const getNotebookRecords = async (
   project_id: string
 ): Promise<any | null> => {
   const records = await getRecordsWithRegex(project_id, '.*', true);
+  console.log(`got ${records.length} records from ${project_id}`);
   const fullRecords: any[] = [];
   for (let i = 0; i < records.length; i++) {
     const data = await getFullRecordData(
@@ -537,40 +542,6 @@ export const getNotebookRecords = async (
     fullRecords.push(data);
   }
   return fullRecords;
-};
-
-/**
- * Return an iterator over the records in a notebook
- * @param project_id project identifier
- */
-export const notebookRecordIterator = async (
-  project_id: string,
-  viewid: string
-) => {
-  let records = await getRecordsWithRegex(project_id, '.*', true);
-  let index = 0;
-  // select just those in this view
-  records = records.filter((record: any) => {
-    return record.type === viewid;
-  });
-
-  const recordIterator = {
-    async next() {
-      if (index < records.length) {
-        const data = await getFullRecordData(
-          project_id,
-          records[index].record_id,
-          records[index].revision_id,
-          true
-        );
-        index++;
-        return {record: data, done: false};
-      } else {
-        return {record: null, done: true};
-      }
-    },
-  };
-  return recordIterator;
 };
 
 const getRecordHRID = (record: any) => {

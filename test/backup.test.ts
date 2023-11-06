@@ -19,12 +19,8 @@
  */
 import PouchDB from 'pouchdb';
 import {restoreFromBackup} from '../src/couchdb/backupRestore';
-import {
-  getNotebookRecords,
-  getNotebooks,
-  notebookRecordIterator,
-} from '../src/couchdb/notebooks';
-import {registerClient} from 'faims3-datamodel';
+import {getNotebookRecords, getNotebooks} from '../src/couchdb/notebooks';
+import {registerClient, notebookRecordIterator} from 'faims3-datamodel';
 import {getUserFromEmailOrUsername} from '../src/couchdb/users';
 PouchDB.plugin(require('pouchdb-adapter-memory')); // enable memory adapter for testing
 PouchDB.plugin(require('pouchdb-find'));
