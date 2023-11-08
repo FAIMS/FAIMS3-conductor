@@ -88,7 +88,7 @@ function is_testing() {
 
 function couchdb_internal_url(): string {
   let couchdb = process.env.COUCHDB_INTERNAL_URL;
-  const couchdbDefault = 'http://localhost:5984/';
+  const couchdbDefault = 'http://localhost:5984';
   if (couchdb === '' || couchdb === undefined) {
     console.log('COUCHDB_INTERNAL_URL not set, using default');
     return couchdbDefault;
@@ -103,7 +103,7 @@ function couchdb_internal_url(): string {
 
 function couchdb_public_url(): string {
   let couchdb = process.env.COUCHDB_PUBLIC_URL;
-  const couchdbDefault = 'http://localhost:5984/';
+  const couchdbDefault = 'http://localhost:5984';
   if (couchdb === '' || couchdb === undefined) {
     console.log('COUCHDB_PUBLIC_URL not set, using default');
     return couchdbDefault;

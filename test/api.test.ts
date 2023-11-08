@@ -71,7 +71,6 @@ describe('API tests', () => {
   });
 
   it('check is up - authenticated', async () => {
-    console.log('check is up - authenticated');
     const result = await request(app)
       .get('/api/hello')
       .set('Authorization', `Bearer ${adminToken}`);
@@ -205,7 +204,6 @@ describe('API tests', () => {
   });
 
   it('can delete a notebook', async () => {
-    await resetDatabases();
     const filename = 'notebooks/sample_notebook.json';
     const jsonText = fs.readFileSync(filename, 'utf-8');
     const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);

@@ -21,11 +21,7 @@ import PouchDB from 'pouchdb';
 PouchDB.plugin(require('pouchdb-adapter-memory')); // enable memory adapter for testing
 PouchDB.plugin(require('pouchdb-find'));
 
-import {
-  getDirectoryDB,
-  getProjectMetaDB,
-  initialiseDatabases,
-} from '../src/couchdb';
+import {getDirectoryDB, initialiseDatabases} from '../src/couchdb';
 import {
   createNotebook,
   getNotebookMetadata,
@@ -45,9 +41,10 @@ import {
   userHasPermission,
 } from '../src/couchdb/users';
 import {CONDUCTOR_INSTANCE_NAME} from '../src/buildconfig';
-import {ProjectUIModel} from 'faims3-datamodel';
+import {ProjectUIModel, getProjectDB} from 'faims3-datamodel';
 import {expect} from 'chai';
 import {resetDatabases} from './mocks';
+import {fail} from 'assert';
 
 const uispec: ProjectUIModel = {
   fields: [],
@@ -155,11 +152,15 @@ describe('notebook api', () => {
 
       const notebooks = await getNotebooks(user);
       expect(notebooks.length).to.equal(1);
-      const db = await getProjectMetaDB(projectID);
+      const db = await getProjectDB(projectID);
       if (db) {
-        const autoInc = (await db.get('local-autoincrementers')) as any;
-        expect(autoInc.references.length).to.equal(2);
-        expect(autoInc.references[0].form_id).to.equal('FORM1SECTION1');
+        try {
+          const autoInc = (await db.get('local-autoincrementers')) as any;
+          expect(autoInc.references.length).to.equal(2);
+          expect(autoInc.references[0].form_id).to.equal('FORM1SECTION1');
+        } catch (err) {
+          fail('could not get autoincrementers');
+        }
       }
     }
   });
@@ -317,7 +318,7 @@ describe('notebook api', () => {
 
       const notebooks = await getNotebooks(user);
       expect(notebooks.length).to.equal(1);
-      const db = await getProjectMetaDB(projectID);
+      const db = await getProjectDB(projectID);
       if (db) {
         const newUISpec = await getNotebookUISpec(projectID);
         if (newUISpec) {
@@ -330,7 +331,7 @@ describe('notebook api', () => {
           expect(newMetadata['name']).to.equal('Updated Test Notebook');
           expect(newMetadata['project_lead']).to.equal('Bob Bobalooba');
         }
-        const metaDB = await getProjectMetaDB(projectID);
+        const metaDB = await getProjectDB(projectID);
         if (metaDB) {
           const autoInc = (await metaDB.get('local-autoincrementers')) as any;
           expect(autoInc.references.length).to.equal(3);

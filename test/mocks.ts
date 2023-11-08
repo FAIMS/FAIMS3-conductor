@@ -3,12 +3,17 @@ import PouchDB from 'pouchdb';
 PouchDB.plugin(require('pouchdb-adapter-memory')); // enable memory adapter for testing
 import {ProjectID, DBCallbackObject} from 'faims3-datamodel';
 import {getProjectsDB, getUsersDB, initialiseDatabases} from '../src/couchdb';
+import {COUCHDB_INTERNAL_URL} from '../src/buildconfig';
 
 const databaseList: any = {};
 
 const getDatabase = async (databaseName: string) => {
   if (databaseList[databaseName] === undefined) {
-    const db = new PouchDB(databaseName, {adapter: 'memory'});
+    // still use the COUCHDB URL setting to be consistent with
+    // other bits of the code, but this database will be in memory
+    const db = new PouchDB(COUCHDB_INTERNAL_URL + '/' + databaseName, {
+      adapter: 'memory',
+    });
     databaseList[databaseName] = db;
   }
   return databaseList[databaseName];
@@ -56,7 +61,7 @@ export const cleanDataDBS = async () => {
         await db.destroy();
         //await db.close();
       } catch (err) {
-        console.error(err);
+        //console.error(err);
       }
     }
   }

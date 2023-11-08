@@ -168,12 +168,18 @@ api.get(
 
 // export current versions of all records in this notebook as csv
 api.get(
-  '/notebooks/:id/:viewid.csv',
+  '/notebooks/:id/:viewID.csv',
   requireAuthenticationAPI,
   async (req, res) => {
     if (req.user && userHasPermission(req.user, req.params.id, 'read')) {
-      res.setHeader('Content-Type', 'text/csv');
-      streamNotebookRecordsAsCSV(req.params.id, req.params.viewid, res);
+      try {
+        res.setHeader('Content-Type', 'text/csv');
+        streamNotebookRecordsAsCSV(req.params.id, req.params.viewID, res);
+      } catch (err) {
+        console.log('Error streaming CSV', err);
+        res.json({error: 'error creating CSV'});
+        res.status(500).end();
+      }
     } else {
       res.json({error: 'notebook not found'});
       res.status(404).end();

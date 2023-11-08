@@ -19,15 +19,11 @@
  */
 
 import PouchDB from 'pouchdb';
-import {
-  createProjectDB,
-  getProjectDataDB,
-  getProjectMetaDB,
-  getProjectsDB,
-} from '.';
+import {getProjectsDB} from '.';
 import {CLUSTER_ADMIN_GROUP_NAME} from '../buildconfig';
 import {
   ProjectID,
+  getProjectDB,
   resolve_project_id,
   notebookRecordIterator,
 } from 'faims3-datamodel';
@@ -244,12 +240,10 @@ export const createNotebook = async (
     status: 'published',
   };
 
-  // TODO: check whether the project database exists already...
-  const metaDB = createProjectDB(metaDBName);
+  const metaDB = await getProjectDB(project_id);
   if (!metaDB) {
     return undefined;
   }
-
   // get roles from the notebook, ensure that 'user' and 'admin' are included
   const roles = metadata.accesses || ['admin', 'user', 'team'];
   if (roles.indexOf('user') < 0) {
@@ -280,13 +274,11 @@ export const createNotebook = async (
   // ensure that the name is in the metadata
   metadata.name = projectName.trim();
   await writeProjectMetadata(metaDB, metadata);
-
   // data database
-  const dataDB = createProjectDB(dataDBName);
+  const dataDB = await getDataDB(project_id);
   if (!dataDB) {
     return undefined;
   }
-
   // can't save security on a memory database so skip this if we're testing
   if (process.env.NODE_ENV !== 'test') {
     const dataSecurity = await dataDB.security();
@@ -323,8 +315,8 @@ export const updateNotebook = async (
   uispec: ProjectUIModel,
   metadata: any
 ) => {
-  const metaDB = await getProjectMetaDB(project_id);
-  const dataDB = await getProjectDataDB(project_id);
+  const metaDB = await getProjectDB(project_id);
+  const dataDB = await getDataDB(project_id);
   if (!dataDB || !metaDB) {
     return undefined;
   }
@@ -399,8 +391,8 @@ export const deleteNotebook = async (project_id: string) => {
   if (projectsDB) {
     const projectDoc = await projectsDB.get(project_id);
     if (projectDoc) {
-      const metaDB = await getProjectMetaDB(project_id);
-      const dataDB = await getProjectDataDB(project_id);
+      const metaDB = await getProjectDB(project_id);
+      const dataDB = await getDataDB(project_id);
       if (metaDB && dataDB) {
         await metaDB.destroy();
         await dataDB.destroy();
@@ -452,24 +444,31 @@ export const getNotebookMetadata = async (
   project_id: string
 ): Promise<ProjectMetadata | null> => {
   const result: ProjectMetadata = {};
-  try {
-    // get the metadata from the db
-    const projectDB = await getProjectMetaDB(project_id);
-    if (projectDB) {
-      const metaDocs = await projectDB.allDocs({include_docs: true});
-      metaDocs.rows.forEach((doc: any) => {
-        const id: string = doc['id'];
-        if (id && id.startsWith(PROJECT_METADATA_PREFIX)) {
-          const key: string = id.substring(PROJECT_METADATA_PREFIX.length + 1);
-          result[key] = doc.doc.metadata;
-        }
-      });
-      result.project_id = project_id;
-      return result;
-    } else {
-      console.error('no metadata database found for', project_id);
+  const isValid = await validateNotebookID(project_id);
+  if (isValid) {
+    try {
+      // get the metadata from the db
+      const projectDB = await getProjectDB(project_id);
+      if (projectDB) {
+        const metaDocs = await projectDB.allDocs({include_docs: true});
+        metaDocs.rows.forEach((doc: any) => {
+          const id: string = doc['id'];
+          if (id && id.startsWith(PROJECT_METADATA_PREFIX)) {
+            const key: string = id.substring(
+              PROJECT_METADATA_PREFIX.length + 1
+            );
+            result[key] = doc.doc.metadata;
+          }
+        });
+        result.project_id = project_id;
+        return result;
+      } else {
+        console.error('no metadata database found for', project_id);
+      }
+    } catch (error) {
+      console.log('unknown project', project_id);
     }
-  } catch (error) {
+  } else {
     console.log('unknown project', project_id);
   }
   return null;
@@ -485,7 +484,7 @@ export const getNotebookUISpec = async (
 ): Promise<ProjectMetadata | null> => {
   try {
     // get the metadata from the db
-    const projectDB = await getProjectMetaDB(project_id);
+    const projectDB = await getProjectDB(project_id);
     if (projectDB) {
       const uiSpec = (await projectDB.get('ui-specification')) as any;
       delete uiSpec._id;
@@ -509,15 +508,17 @@ export const validateNotebookID = async (
   project_id: string
 ): Promise<boolean> => {
   try {
-    const projectDB = await getProjectMetaDB(project_id);
-    if (projectDB) {
-      return true;
-    } else {
-      return false;
+    const projectsDB = getProjectsDB();
+    if (projectsDB) {
+      const projectDoc = await projectsDB.get(project_id);
+      if (projectDoc) {
+        return true;
+      }
     }
   } catch (error) {
     return false;
   }
+  return false;
 };
 
 /**
@@ -530,7 +531,6 @@ export const getNotebookRecords = async (
   project_id: string
 ): Promise<any | null> => {
   const records = await getRecordsWithRegex(project_id, '.*', true);
-  console.log(`got ${records.length} records from ${project_id}`);
   const fullRecords: any[] = [];
   for (let i = 0; i < records.length; i++) {
     const data = await getFullRecordData(
@@ -557,43 +557,128 @@ const getRecordHRID = (record: any) => {
  * generate a suitable value for the CSV export from a field
  * value.  Serialise filenames, gps coordinates, etc.
  */
-const csvFormatValue = (fieldName: string, value: any, hrid: string) => {
+const csvFormatValue = (
+  fieldName: string,
+  fieldType: string,
+  value: any,
+  hrid: string
+) => {
   const result: {[key: string]: any} = {};
-  if (value instanceof Array) {
-    if (value.length === 0) {
-      result[fieldName] = '';
-      return result;
-    }
-    const valueList = value.map((v: any) => {
-      if (v instanceof File) {
-        return generateFilename(v, fieldName, hrid);
-      } else {
-        return v;
+  if (fieldType === 'faims-attachment::Files') {
+    if (value instanceof Array) {
+      if (value.length === 0) {
+        result[fieldName] = '';
+        return result;
       }
-    });
-    result[fieldName] = valueList.join(';');
+      const valueList = value.map((v: any) => {
+        if (v instanceof File) {
+          return generateFilename(v, fieldName, hrid);
+        } else {
+          return v;
+        }
+      });
+      result[fieldName] = valueList.join(';');
+    } else {
+      result[fieldName] = value;
+    }
     return result;
   }
 
   // gps locations
-  if (value instanceof Object && 'geometry' in value) {
-    result[fieldName] = value;
-    result[fieldName + '_latitude'] = value.geometry.coordinates[0];
-    result[fieldName + '_longitude'] = value.geometry.coordinates[1];
+  if (fieldType === 'faims-pos::Location') {
+    if (value instanceof Object && 'geometry' in value) {
+      result[fieldName] = value;
+      result[fieldName + '_latitude'] = value.geometry.coordinates[0];
+      result[fieldName + '_longitude'] = value.geometry.coordinates[1];
+    } else {
+      result[fieldName] = value;
+      result[fieldName + '_latitude'] = '';
+      result[fieldName + '_longitude'] = '';
+    }
     return result;
   }
+
+  if (fieldType === 'faims-core::Relationship') {
+    if (value instanceof Array) {
+      result[fieldName] = value
+        .map((v: any) => {
+          return `${v.relation_type_vocabPair[0]}/${v.record_id}`;
+        })
+        .join(';');
+    } else {
+      result[fieldName] = value;
+    }
+    return result;
+  }
+
   // default to just the value
   result[fieldName] = value;
   return result;
 };
 
-const convertDataForOutput = (data: any, hrid: string) => {
+const convertDataForOutput = (
+  fields: {name: string; type: string}[],
+  data: any,
+  hrid: string
+) => {
   let result: {[key: string]: any} = {};
-  Object.keys(data).forEach((key: string) => {
-    const formattedValue = csvFormatValue(key, data[key], hrid);
-    result = {...result, ...formattedValue};
+  fields.map((field: any) => {
+    if (field.name in data) {
+      const formattedValue = csvFormatValue(
+        field.name,
+        field.type,
+        data[field.name],
+        hrid
+      );
+      result = {...result, ...formattedValue};
+    } else {
+      console.error('field missing in data', field.name, data);
+    }
   });
   return result;
+};
+
+export const getNotebookFields = async (
+  project_id: ProjectID,
+  viewID: string
+) => {
+  // work out what fields we're going to output from the uiSpec
+  const uiSpec = await getNotebookUISpec(project_id);
+  if (!uiSpec) {
+    throw new Error("can't find project " + project_id);
+  }
+  if (!(viewID in uiSpec.viewsets)) {
+    throw new Error(`invalid form ${viewID} not found in notebook`);
+  }
+  const views = uiSpec.viewsets[viewID].views;
+  const fields: string[] = [];
+  views.forEach((view: any) => {
+    uiSpec.fviews[view].fields.forEach((field: any) => {
+      fields.push(field);
+    });
+  });
+  return fields;
+};
+
+const getNotebookFieldTypes = async (project_id: ProjectID, viewID: string) => {
+  const uiSpec = await getNotebookUISpec(project_id);
+  if (!uiSpec) {
+    throw new Error("can't find project " + project_id);
+  }
+  if (!(viewID in uiSpec.viewsets)) {
+    throw new Error(`invalid form ${viewID} not found in notebook`);
+  }
+  const views = uiSpec.viewsets[viewID].views;
+  const fields: any[] = [];
+  views.forEach((view: any) => {
+    uiSpec.fviews[view].fields.forEach((field: any) => {
+      fields.push({
+        name: field,
+        type: uiSpec.fields[field]['type-returned'],
+      });
+    });
+  });
+  return fields;
 };
 
 export const streamNotebookRecordsAsCSV = async (
@@ -602,6 +687,7 @@ export const streamNotebookRecordsAsCSV = async (
   res: NodeJS.WritableStream
 ) => {
   const iterator = await notebookRecordIterator(project_id, viewID);
+  const fields = await getNotebookFieldTypes(project_id, viewID);
 
   let stringifier: Stringifier | null = null;
   let {record, done} = await iterator.next();
@@ -616,7 +702,7 @@ export const streamNotebookRecordsAsCSV = async (
       record.updated_by,
       record.updated.toISOString(),
     ];
-    const outputData = convertDataForOutput(record.data, hrid);
+    const outputData = convertDataForOutput(fields, record.data, hrid);
     Object.keys(outputData).forEach((property: string) => {
       row.push(outputData[property]);
     });
@@ -676,7 +762,6 @@ export const streamNotebookFilesAsZip = async (
   // all processed then we can finalize the archive
   archive.on('progress', (entries: any) => {
     if (!doneFinalize && allFilesAdded && entries.total === entries.processed) {
-      console.log('finalizing archive');
       archive.finalize();
       doneFinalize = true;
     }
