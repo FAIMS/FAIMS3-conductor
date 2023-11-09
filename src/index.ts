@@ -28,6 +28,7 @@ import {app} from './routes';
 
 import {registerClient} from 'faims3-datamodel';
 import {getProjectDataDB, getProjectMetaDB} from './couchdb';
+import {validateDatabases} from './couchdb/notebooks';
 
 // set up the database module faims3-datamodel with our callbacks to get databases
 registerClient({
@@ -43,6 +44,10 @@ process.on('unhandledRejection', error => {
 });
 
 PouchDB.plugin(PouchDBFind);
+
+// on startup, run a validation of the databases that can perform
+// any required migrations
+validateDatabases();
 
 app.listen(CONDUCTOR_INTERNAL_PORT, '0.0.0.0', () => {
   console.log(

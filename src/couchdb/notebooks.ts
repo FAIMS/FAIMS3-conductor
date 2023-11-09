@@ -187,6 +187,24 @@ type DesignDocument = {
   validate_doc_update?: string;
 };
 
+const isEqualObjects = (a: any, b: any) => {
+  for (const key in a) { // Using for-in in a object you can iterate the properties
+    const a_value = a[key];
+    const b_value = b[key];
+    if (a_value instanceof Object && b_value instanceof Object) {
+      if (!isEqualObjects(a_value, b_value)) {
+        return false;
+      }
+    } else {
+      if (a_value !== b_value) {
+        console.log('objects differ on', key);
+        return false;
+      }
+    }
+  }
+  return true;
+};
+
 export const addDesignDocsForNotebook = async (
   dataDB: PouchDB.Database<any>
 ) => {
@@ -215,6 +233,7 @@ export const addDesignDocsForNotebook = async (
       return;
     }`,
   });
+
   // create indexes for each kind of document in the database
   documents.push({
     _id: '_design/index',
@@ -238,6 +257,10 @@ export const addDesignDocsForNotebook = async (
       const existing = await dataDB.get(doc._id);
       if (existing) {
         doc['_rev'] = existing['_rev'];
+        // are they the same?
+        if (isEqualObjects(existing, doc)) {
+          return;
+        }
       }
       await dataDB.put(doc);
     } catch (error) {
@@ -248,6 +271,34 @@ export const addDesignDocsForNotebook = async (
       }
     }
   });
+};
+
+/**
+ * validateDatabases - check that all notebook databases are set up
+ *  properly, add design documents if they are missing
+ */
+export const validateDatabases = async () => {
+  const output: any[] = [];
+  const projects: ProjectObject[] = [];
+  const projects_db = getProjectsDB();
+  if (projects_db) {
+    const res = await projects_db.allDocs({
+      include_docs: true,
+    });
+    res.rows.forEach(e => {
+      if (e.doc !== undefined && !e.id.startsWith('_')) {
+        projects.push(e.doc as unknown as ProjectObject);
+      }
+    });
+
+    for (const project of projects) {
+      const project_id = project._id;
+      const dataDB = await getDataDB(project_id);
+      // ensure that design documents are here
+      await addDesignDocsForNotebook(dataDB);
+    }
+  }
+  return output;
 };
 
 /**
