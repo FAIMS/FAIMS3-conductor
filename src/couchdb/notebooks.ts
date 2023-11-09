@@ -188,7 +188,7 @@ type DesignDocument = {
 };
 
 const isEqualObjects = (a: any, b: any) => {
-  for (const key in a) { // Using for-in in a object you can iterate the properties
+  for (const key in a) {
     const a_value = a[key];
     const b_value = b[key];
     if (a_value instanceof Object && b_value instanceof Object) {
