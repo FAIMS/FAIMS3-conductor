@@ -175,10 +175,23 @@ const getAutoIncrementers = (uiSpec: ProjectUIModel) => {
   }
 };
 
+type DesignDocument = {
+  _id: string;
+  _rev?: string;
+  views?: {
+    [key: string]: {
+      map: string;
+    };
+  };
+  language?: string;
+  validate_doc_update?: string;
+};
+
 export const addDesignDocsForNotebook = async (
   dataDB: PouchDB.Database<any>
 ) => {
-  const attachmentFilterDoc = {
+  const documents: DesignDocument[] = [];
+  documents.push({
     _id: '_design/attachment_filter',
     views: {
       attachment_filter: {
@@ -189,8 +202,8 @@ export const addDesignDocsForNotebook = async (
         }`,
       },
     },
-  };
-  const userPermissionsDoc = {
+  });
+  documents.push({
     _id: '_design/permissions',
     validate_doc_update: `function (newDoc, oldDoc, userCtx, _secObj) {
       if (userCtx === null || userCtx === undefined) {
@@ -201,9 +214,9 @@ export const addDesignDocsForNotebook = async (
       }
       return;
     }`,
-  };
+  });
   // create indexes for each kind of document in the database
-  const indexDoc = {
+  documents.push({
     _id: '_design/index',
     views: {
       record: {
@@ -217,15 +230,24 @@ export const addDesignDocsForNotebook = async (
       },
     },
     language: 'javascript',
-  };
+  });
 
-  try {
-    await dataDB.put(attachmentFilterDoc);
-    await dataDB.put(userPermissionsDoc);
-    await dataDB.put(indexDoc);
-  } catch (error) {
-    console.log('Error adding design documents to database:', error);
-  }
+  // add or update each of the documents
+  documents.forEach(async (doc: DesignDocument) => {
+    try {
+      const existing = await dataDB.get(doc._id);
+      if (existing) {
+        doc['_rev'] = existing['_rev'];
+      }
+      await dataDB.put(doc);
+    } catch (error) {
+      try {
+        await dataDB.put(doc);
+      } catch (error) {
+        console.log('Error adding design documents to database:', error);
+      }
+    }
+  });
 };
 
 /**
@@ -883,13 +905,12 @@ export async function countRecordsInNotebook(
   project_id: ProjectID
 ): Promise<Number> {
   const dataDB = await getDataDB(project_id);
-  const res = await dataDB.find({
-    selector: {
-      record_format_version: 1,
-    },
-    limit: 10000,
-  });
-  return res.docs.length;
+  try {
+    const res = await dataDB.query('index/record');
+    return res.docs.length;
+  } catch {
+    return 0;
+  }
 }
 
 /*
