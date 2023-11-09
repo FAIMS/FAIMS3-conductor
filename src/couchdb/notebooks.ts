@@ -202,10 +202,27 @@ export const addDesignDocsForNotebook = async (
       return;
     }`,
   };
+  // create indexes for each kind of document in the database
+  const indexDoc = {
+    _id: '_design/index',
+    views: {
+      record: {
+        map: 'function (doc) {\n  if (doc.record_format_version === 1)\n    emit(doc._id, doc);\n}',
+      },
+      revision: {
+        map: 'function (doc) {\n  if (doc.revision_format_version === 1)  \n    emit(doc._id, doc);\n}',
+      },
+      avp: {
+        map: 'function (doc) {\n  if (doc.avp_format_version === 1)\n    emit(doc._id, doc);\n}',
+      },
+    },
+    language: 'javascript',
+  };
 
   try {
     await dataDB.put(attachmentFilterDoc);
     await dataDB.put(userPermissionsDoc);
+    await dataDB.put(indexDoc);
   } catch (error) {
     console.log('Error adding design documents to database:', error);
   }
@@ -224,6 +241,7 @@ export const createNotebook = async (
   uispec: ProjectUIModel,
   metadata: any
 ) => {
+  console.log('creating notebook', projectName);
   const project_id = generateProjectID(projectName);
 
   const metaDBName = `metadata-${project_id}`;
@@ -240,10 +258,24 @@ export const createNotebook = async (
     status: 'published',
   };
 
+  try {
+    // first add an entry to the projects db about this project
+    // this is used to find the other databases below
+    const projectsDB = getProjectsDB();
+    if (projectsDB) {
+      console.log('writing to projectDB', projectsDB.name);
+      await projectsDB.put(projectDoc);
+    }
+  } catch (error) {
+    console.log('Error creating project entry in projects database:', error);
+    return undefined;
+  }
+
   const metaDB = await getProjectDB(project_id);
   if (!metaDB) {
     return undefined;
   }
+  console.log('writing metadata', metaDB.name);
   // get roles from the notebook, ensure that 'user' and 'admin' are included
   const roles = metadata.accesses || ['admin', 'user', 'team'];
   if (roles.indexOf('user') < 0) {
@@ -290,13 +322,8 @@ export const createNotebook = async (
   }
 
   try {
+    console.log('adding design docs to data db', dataDB.name);
     await addDesignDocsForNotebook(dataDB);
-
-    // finally add an entry to the projects db about this project
-    const projectsDB = getProjectsDB();
-    if (projectsDB) {
-      await projectsDB.put(projectDoc);
-    }
   } catch (error) {
     console.log(error);
   }
@@ -686,6 +713,8 @@ export const streamNotebookRecordsAsCSV = async (
   viewID: string,
   res: NodeJS.WritableStream
 ) => {
+  const start = Date.now();
+
   const iterator = await notebookRecordIterator(project_id, viewID);
   const fields = await getNotebookFieldTypes(project_id, viewID);
 
@@ -732,6 +761,8 @@ export const streamNotebookRecordsAsCSV = async (
     done = next.done;
   }
   if (stringifier) stringifier.end();
+  const end = Date.now();
+  console.log('streamNotebookRecordsAsCSV', end - start);
 };
 
 export const streamNotebookFilesAsZip = async (
