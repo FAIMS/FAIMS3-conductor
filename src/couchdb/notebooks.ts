@@ -314,7 +314,6 @@ export const createNotebook = async (
   uispec: ProjectUIModel,
   metadata: any
 ) => {
-  console.log('creating notebook', projectName);
   const project_id = generateProjectID(projectName);
 
   const metaDBName = `metadata-${project_id}`;
@@ -336,7 +335,6 @@ export const createNotebook = async (
     // this is used to find the other databases below
     const projectsDB = getProjectsDB();
     if (projectsDB) {
-      console.log('writing to projectDB', projectsDB.name);
       await projectsDB.put(projectDoc);
     }
   } catch (error) {
@@ -348,7 +346,6 @@ export const createNotebook = async (
   if (!metaDB) {
     return undefined;
   }
-  console.log('writing metadata', metaDB.name);
   // get roles from the notebook, ensure that 'user' and 'admin' are included
   const roles = metadata.accesses || ['admin', 'user', 'team'];
   if (roles.indexOf('user') < 0) {
@@ -395,7 +392,6 @@ export const createNotebook = async (
   }
 
   try {
-    console.log('adding design docs to data db', dataDB.name);
     await addDesignDocsForNotebook(dataDB);
   } catch (error) {
     console.log(error);
