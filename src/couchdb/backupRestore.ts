@@ -19,8 +19,11 @@
  */
 import {open} from 'node:fs/promises';
 import {getProjectsDB} from '.';
-import {addDesignDocsForNotebook} from './notebooks';
-import {getDataDB, getProjectDB} from 'faims3-datamodel';
+import {
+  addDesignDocsForNotebook,
+  getDataDB,
+  getProjectDB,
+} from 'faims3-datamodel';
 
 /**
  * restoreFromBackup - restore databases from a JSONL backup file

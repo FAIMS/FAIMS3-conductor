@@ -26,6 +26,7 @@ import {
   getProjectDB,
   resolve_project_id,
   notebookRecordIterator,
+  addDesignDocsForNotebook,
 } from 'faims3-datamodel';
 import {
   ProjectMetadata,
@@ -175,103 +176,116 @@ const getAutoIncrementers = (uiSpec: ProjectUIModel) => {
   }
 };
 
-type DesignDocument = {
-  _id: string;
-  _rev?: string;
-  views?: {
-    [key: string]: {
-      map: string;
-    };
-  };
-  language?: string;
-  validate_doc_update?: string;
-};
+// type DesignDocument = {
+//   _id: string;
+//   _rev?: string;
+//   views?: {
+//     [key: string]: {
+//       map: string;
+//       reduce?: string;
+//     };
+//   };
+//   language?: string;
+//   validate_doc_update?: string;
+// };
 
-const isEqualObjects = (a: any, b: any) => {
-  for (const key in a) {
-    const a_value = a[key];
-    const b_value = b[key];
-    if (a_value instanceof Object && b_value instanceof Object) {
-      if (!isEqualObjects(a_value, b_value)) {
-        return false;
-      }
-    } else {
-      if (a_value !== b_value) {
-        console.log('objects differ on', key);
-        return false;
-      }
-    }
-  }
-  return true;
-};
+// const isEqualObjects = (a: any, b: any) => {
+//   // we have the same keys
+//   if (
+//     !Object.keys(a).every(key => key in b) ||
+//     !Object.keys(b).every(key => key in a)
+//   ) {
+//     return false;
+//   }
+//   // and all the key values match
+//   for (const key in a) {
+//     const a_value = a[key];
+//     const b_value = b[key];
+//     if (a_value instanceof Object && b_value instanceof Object) {
+//       if (!isEqualObjects(a_value, b_value)) {
+//         return false;
+//       }
+//     } else {
+//       if (a_value !== b_value) {
+//         console.log('objects differ on', key);
+//         return false;
+//       }
+//     }
+//   }
+//   return true;
+// };
 
-export const addDesignDocsForNotebook = async (
-  dataDB: PouchDB.Database<any>
-) => {
-  const documents: DesignDocument[] = [];
-  documents.push({
-    _id: '_design/attachment_filter',
-    views: {
-      attachment_filter: {
-        map: `function (doc) {
-          if (doc.attach_format_version === undefined) {
-            emit(doc._id);
-          }
-        }`,
-      },
-    },
-  });
-  documents.push({
-    _id: '_design/permissions',
-    validate_doc_update: `function (newDoc, oldDoc, userCtx, _secObj) {
-      if (userCtx === null || userCtx === undefined) {
-        throw {unauthorized: 'You must be logged in. No token given.'};
-      }
-      if (userCtx.name === null || userCtx.name === undefined) {
-        throw {unauthorized: 'You must be logged in. No username given.'};
-      }
-      return;
-    }`,
-  });
+// export const addDesignDocsForNotebook = async (
+//   dataDB: PouchDB.Database<any>
+// ) => {
+//   const documents: DesignDocument[] = [];
+//   documents.push({
+//     _id: '_design/attachment_filter',
+//     views: {
+//       attachment_filter: {
+//         map: `function (doc) {
+//           if (doc.attach_format_version === undefined) {
+//             emit(doc._id);
+//           }
+//         }`,
+//       },
+//     },
+//   });
+//   documents.push({
+//     _id: '_design/permissions',
+//     validate_doc_update: `function (newDoc, oldDoc, userCtx, _secObj) {
+//       if (userCtx === null || userCtx === undefined) {
+//         throw {unauthorized: 'You must be logged in. No token given.'};
+//       }
+//       if (userCtx.name === null || userCtx.name === undefined) {
+//         throw {unauthorized: 'You must be logged in. No username given.'};
+//       }
+//       return;
+//     }`,
+//   });
 
-  // create indexes for each kind of document in the database
-  documents.push({
-    _id: '_design/index',
-    views: {
-      record: {
-        map: 'function (doc) {\n  if (doc.record_format_version === 1)\n    emit(doc._id, doc);\n}',
-      },
-      revision: {
-        map: 'function (doc) {\n  if (doc.revision_format_version === 1)  \n    emit(doc._id, doc);\n}',
-      },
-      avp: {
-        map: 'function (doc) {\n  if (doc.avp_format_version === 1)\n    emit(doc._id, doc);\n}',
-      },
-    },
-    language: 'javascript',
-  });
+//   // create indexes for each kind of document in the database
+//   documents.push({
+//     _id: '_design/index',
+//     views: {
+//       record: {
+//         map: 'function (doc) {\n  if (doc.record_format_version === 1)\n    emit(doc._id, doc);\n}',
+//       },
+//       revision: {
+//         map: 'function (doc) {\n  if (doc.revision_format_version === 1)  \n    emit(doc._id, doc);\n}',
+//       },
+//       avp: {
+//         map: 'function (doc) {\n  if (doc.avp_format_version === 1)\n    emit(doc._id, doc);\n}',
+//       },
+//       recordCount: {
+//         map: 'function (doc) {\n  if (doc.record_format_version === 1)\n    emit(doc._id, 1);\n}',
+//         reduce: '_count',
+//       },
+//     },
+//     language: 'javascript',
+//   });
 
-  // add or update each of the documents
-  documents.forEach(async (doc: DesignDocument) => {
-    try {
-      const existing = await dataDB.get(doc._id);
-      if (existing) {
-        doc['_rev'] = existing['_rev'];
-        // are they the same?
-        if (isEqualObjects(existing, doc)) {
-          return;
-        }
-      }
-      await dataDB.put(doc);
-    } catch (error) {
-      try {
-        await dataDB.put(doc);
-      } catch (error) {
-        console.log('Error adding design documents to database:', error);
-      }
-    }
-  });
-};
+//   // add or update each of the documents
+//   documents.forEach(async (doc: DesignDocument) => {
+//     try {
+//       const existing = await dataDB.get(doc._id);
+//       if (existing) {
+//         doc['_rev'] = existing['_rev'];
+//         // are they the same?
+//         if (isEqualObjects(existing, doc)) {
+//           return;
+//         }
+//       }
+//       await dataDB.put(doc);
+//     } catch (error) {
+//       try {
+//         await dataDB.put(doc);
+//       } catch (error) {
+//         console.log('Error adding design documents to database:', error);
+//       }
+//     }
+//   });
+// };
 
 /**
  * validateDatabases - check that all notebook databases are set up
@@ -791,6 +805,7 @@ export const streamNotebookRecordsAsCSV = async (
   let {record, done} = await iterator.next();
   let header_done = false;
   while (record && !done) {
+    console.log('record', record.record_id);
     const hrid = getRecordHRID(record);
     const row = [
       hrid,
@@ -953,9 +968,10 @@ export async function countRecordsInNotebook(
 ): Promise<Number> {
   const dataDB = await getDataDB(project_id);
   try {
-    const res = await dataDB.query('index/record');
-    return res.docs.length;
-  } catch {
+    const res = await dataDB.query('index/recordCount');
+    return res.rows[0].value;
+  } catch (error) {
+    console.log(error);
     return 0;
   }
 }
