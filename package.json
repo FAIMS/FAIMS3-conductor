@@ -55,7 +55,7 @@
     "@types/archiver": "^5.3.4",
     "@types/chai": "^4.3.9",
     "@types/cookie-session": "2.0.47",
-    "@types/cors": "2.8.15",
+    "@types/cors": "2.8.17",
     "@types/express": "4.17.18",
     "@types/express-handlebars": "5.3.1",
     "@types/express-session": "1.17.9",
