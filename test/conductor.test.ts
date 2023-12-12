@@ -24,12 +24,17 @@ PouchDB.plugin(require('pouchdb-find'));
 
 import request from 'supertest';
 import {app} from '../src/routes';
-import {CONDUCTOR_AUTH_PROVIDERS, LOCAL_COUCHDB_AUTH} from '../src/buildconfig';
+import {
+  CONDUCTOR_AUTH_PROVIDERS,
+  LOCAL_COUCHDB_AUTH,
+  NOTEBOOK_CREATOR_GROUP_NAME,
+} from '../src/buildconfig';
 import {expect} from 'chai';
 import {cleanDataDBS, resetDatabases} from './mocks';
-import {createUser, saveUser} from '../src/couchdb/users';
+import {addOtherRoleToUser, createUser, saveUser} from '../src/couchdb/users';
 import {createNotebook} from '../src/couchdb/notebooks';
 import fs from 'fs';
+import {addLocalPasswordForUser} from '../src/auth_providers/local';
 
 it('check is up', async () => {
   const result = await request(app).get('/up');
@@ -37,7 +42,11 @@ it('check is up', async () => {
 });
 
 const username = 'bobalooba';
+const userPassword = 'bobalooba';
 const adminPassword = LOCAL_COUCHDB_AUTH ? LOCAL_COUCHDB_AUTH.password : '';
+
+const notebookUser = 'notebook';
+const notebookPassword = 'notebook';
 
 describe('Auth', () => {
   beforeEach(async () => {
@@ -48,6 +57,14 @@ describe('Auth', () => {
     const [user, _error] = await createUser('', username);
     if (user) {
       await saveUser(user);
+      await addLocalPasswordForUser(user, userPassword); // saves the user
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [nbUser, _nberror] = await createUser('', notebookUser);
+    if (nbUser) {
+      await addOtherRoleToUser(nbUser, NOTEBOOK_CREATOR_GROUP_NAME);
+      await addLocalPasswordForUser(nbUser, notebookPassword); // saves the user
     }
   });
 
@@ -109,6 +126,45 @@ describe('Auth', () => {
       .expect(200)
       .then(response => {
         expect(response.text).to.include('test-notebook');
+        expect(response.text).to.include('Upload a Notebook');
+      });
+  });
+
+  it("doesn't show the notebooks page when not logged in", async () => {
+    const agent = request.agent(app);
+    // expect a redirect to login
+    await agent.get('/notebooks/').expect(302);
+  });
+
+  it('shows the add notebook option for a notebook-creater user', async () => {
+    const agent = request.agent(app);
+
+    await agent
+      .post('/auth/local/')
+      .send({username: notebookUser, password: notebookPassword})
+      .expect(302);
+
+    await agent
+      .get('/notebooks/')
+      .expect(200)
+      .then(response => {
+        expect(response.text).to.include('Upload a Notebook');
+      });
+  });
+
+  it("doesn't show the add notebook option for a regular user", async () => {
+    const agent = request.agent(app);
+
+    await agent
+      .post('/auth/local/')
+      .send({username: username, password: userPassword})
+      .expect(302);
+
+    await agent
+      .get('/notebooks/')
+      .expect(200)
+      .then(response => {
+        expect(response.text).not.to.include('Upload a Notebook');
       });
   });
 
@@ -133,6 +189,27 @@ describe('Auth', () => {
       });
   });
 
+  it('shows notebook users page for admin user', async () => {
+    const filename = 'notebooks/sample_notebook.json';
+    const jsonText = fs.readFileSync(filename, 'utf-8');
+    const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
+
+    const project_id = await createNotebook('test-notebook', uiSpec, metadata);
+    const agent = request.agent(app);
+
+    await agent
+      .post('/auth/local/')
+      .send({username: 'admin', password: adminPassword})
+      .expect(302);
+
+    await agent
+      .get(`/notebooks/${project_id}/users`)
+      .expect(200)
+      .then(response => {
+        expect(response.text).to.include('admin');
+      });
+  });
+
   it('get home page logged in', async () => {
     const filename = 'notebooks/sample_notebook.json';
     const jsonText = fs.readFileSync(filename, 'utf-8');
@@ -152,5 +229,32 @@ describe('Auth', () => {
       .then(response => {
         expect(response.text).to.include('Admin User');
       });
+  });
+
+  it('shows users page for admin user', async () => {
+    const agent = request.agent(app);
+
+    await agent
+      .post('/auth/local/')
+      .send({username: 'admin', password: adminPassword})
+      .expect(302);
+
+    await agent
+      .get('/users')
+      .expect(200)
+      .then(response => {
+        expect(response.text).to.include('admin');
+      });
+  });
+
+  it('does not show the users page for regular user', async () => {
+    const agent = request.agent(app);
+
+    await agent
+      .post('/auth/local/')
+      .send({username: username, password: userPassword})
+      .expect(302);
+
+    await agent.get('/users').expect(401);
   });
 });
