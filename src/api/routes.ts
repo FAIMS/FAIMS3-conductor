@@ -45,7 +45,7 @@ import {
   userHasPermission,
   userIsClusterAdmin,
 } from '../couchdb/users';
-import {CLUSTER_ADMIN_GROUP_NAME, DEVELOPER_MODE} from '../buildconfig';
+import {CLUSTER_ADMIN_GROUP_NAME, DEVELOPER_MODE, NOTEBOOK_CREATOR_GROUP_NAME} from '../buildconfig';
 import {createManyRandomRecords} from '../couchdb/devtools';
 import {restoreFromBackup} from '../couchdb/backupRestore';
 
@@ -278,17 +278,26 @@ api.post('/users/:id/admin', requireAuthenticationAPI, async (req, res) => {
     let error = '';
     const username = req.params.id;
     const addrole = req.body.addrole;
+    const role = req.body.role;
 
+    console.log('addrole', addrole, 'role', role, NOTEBOOK_CREATOR_GROUP_NAME);
     const user = await getUserFromEmailOrUsername(username);
     if (user) {
-      if (addrole) {
-        await addOtherRoleToUser(user, CLUSTER_ADMIN_GROUP_NAME);
+      if (
+        role === CLUSTER_ADMIN_GROUP_NAME ||
+        role === NOTEBOOK_CREATOR_GROUP_NAME
+      ) {
+        if (addrole) {
+          await addOtherRoleToUser(user, role);
+        } else {
+          await removeOtherRoleFromUser(user, role);
+        }
+        await saveUser(user);
+        res.json({status: 'success'});
+        return;
       } else {
-        await removeOtherRoleFromUser(user, CLUSTER_ADMIN_GROUP_NAME);
+        error = 'Unknown role';
       }
-      await saveUser(user);
-      res.json({status: 'success'});
-      return;
     } else {
       error = 'Unknown user ' + username;
     }

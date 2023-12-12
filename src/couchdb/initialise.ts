@@ -136,7 +136,7 @@ export const initialiseUserDB = async (db: PouchDB.Database | undefined) => {
       LOCAL_COUCHDB_AUTH.password
     );
     if (user) {
-      addOtherRoleToUser(user, 'cluster-admin');
+      addOtherRoleToUser(user, CLUSTER_ADMIN_GROUP_NAME);
       saveUser(user);
     } else {
       console.error(error);

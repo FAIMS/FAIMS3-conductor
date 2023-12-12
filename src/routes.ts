@@ -43,6 +43,7 @@ import {createInvite, getInvitesForNotebook} from './couchdb/invites';
 import {
   getUserInfoForNotebook,
   getUsers,
+  userCanCreateNotebooks,
   userHasPermission,
   userIsClusterAdmin,
 } from './couchdb/users';
@@ -119,6 +120,7 @@ app.get('/notebooks/', requireAuthentication, async (req, res) => {
       user: user,
       notebooks: notebooks,
       cluster_admin: userIsClusterAdmin(user),
+      can_create_notebooks: userCanCreateNotebooks(user),
       developer: DEVELOPER_MODE,
     });
   } else {
@@ -292,6 +294,7 @@ app.get('/users', requireClusterAdmin, async (req, res) => {
             username: user._id,
             name: user.name,
             is_cluster_admin: userIsClusterAdmin(user),
+            can_create_notebooks: userCanCreateNotebooks(user),
           };
         }),
     });
