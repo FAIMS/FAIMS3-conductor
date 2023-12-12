@@ -34,7 +34,7 @@ import {getSigningKey} from '../src/authkeys/signing_keys';
 import fs from 'fs';
 import {createNotebook, getNotebooks} from '../src/couchdb/notebooks';
 import {ProjectUIModel} from 'faims3-datamodel';
-import {DEVELOPER_MODE} from '../src/buildconfig';
+import {CLUSTER_ADMIN_GROUP_NAME, DEVELOPER_MODE, NOTEBOOK_CREATOR_GROUP_NAME} from '../src/buildconfig';
 import {expect} from 'chai';
 import {resetDatabases, cleanDataDBS} from './mocks';
 import {restoreFromBackup} from '../src/couchdb/backupRestore';
@@ -238,24 +238,44 @@ describe('API tests', () => {
       .expect(401);
   });
 
-  it('update admin user - add role', async () => {
+  it('update admin user - add cluster admin role', async () => {
     return await request(app)
       .post(`/api/users/${username}/admin`)
       .set('Authorization', `Bearer ${adminToken}`)
       .set('Content-Type', 'application/json')
-      .send({addrole: true})
+      .send({addrole: true, role: CLUSTER_ADMIN_GROUP_NAME})
       .expect(200)
       .expect({status: 'success'});
   });
 
-  it('update admin user - remove role', () => {
+  it('update admin user - remove cluster admin role', () => {
     return request(app)
       .post(`/api/users/${username}/admin`)
       .set('Authorization', `Bearer ${adminToken}`)
       .set('Content-Type', 'application/json')
-      .send({addrole: false})
+      .send({addrole: false, role: CLUSTER_ADMIN_GROUP_NAME})
       .expect(200)
       .expect({status: 'success'});
+  });
+
+  it('update admin user - add notebook creator role', async () => {
+    return await request(app)
+      .post(`/api/users/${username}/admin`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .set('Content-Type', 'application/json')
+      .send({addrole: true, role: NOTEBOOK_CREATOR_GROUP_NAME})
+      .expect(200)
+      .expect({status: 'success'});
+  });
+
+  it('update admin user - fail to add unknown role', async () => {
+    return await request(app)
+      .post(`/api/users/${username}/admin`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .set('Content-Type', 'application/json')
+      .send({addrole: true, role: 'unknown-role'})
+      .expect(404)
+      .expect({status: 'error', error: 'Unknown role'});
   });
 
   it('get notebook users', async () => {

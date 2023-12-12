@@ -369,7 +369,8 @@
                                 "type": "object",
                                 "properties": {
                                     "username": {"type": "string"},
-                                    "addrole": {"type": "boolean"}
+                                    "addrole": {"type": "boolean"},
+                                    "role": {"type": "string", "enum": ["cluster-admin", "notebook-creator"]},
                                 }
                             }
                         }

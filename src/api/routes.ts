@@ -45,7 +45,11 @@ import {
   userHasPermission,
   userIsClusterAdmin,
 } from '../couchdb/users';
-import {CLUSTER_ADMIN_GROUP_NAME, DEVELOPER_MODE, NOTEBOOK_CREATOR_GROUP_NAME} from '../buildconfig';
+import {
+  CLUSTER_ADMIN_GROUP_NAME,
+  DEVELOPER_MODE,
+  NOTEBOOK_CREATOR_GROUP_NAME,
+} from '../buildconfig';
 import {createManyRandomRecords} from '../couchdb/devtools';
 import {restoreFromBackup} from '../couchdb/backupRestore';
 
@@ -303,14 +307,15 @@ api.post('/users/:id/admin', requireAuthenticationAPI, async (req, res) => {
     }
 
     // user or project not found or bad role
-    res.json({status: 'error', error});
-    res.status(404).end();
+    res.status(404).json({status: 'error', error}).end();
   } else {
-    res.json({
-      error:
-        'you do not have permission to modify user permissions for this server',
-    });
-    res.status(401).end();
+    res
+      .status(401)
+      .json({
+        error:
+         'you do not have permission to modify user permissions for this server',
+      })
+      .end();
   }
 });
 
