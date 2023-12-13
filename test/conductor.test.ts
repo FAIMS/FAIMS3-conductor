@@ -41,8 +41,8 @@ it('check is up', async () => {
   expect(result.statusCode).to.equal(200);
 });
 
-const username = 'bobalooba';
-const userPassword = 'bobalooba';
+const localUserName = 'bobalooba';
+const localUserPassword = 'bobalooba';
 const adminPassword = LOCAL_COUCHDB_AUTH ? LOCAL_COUCHDB_AUTH.password : '';
 
 const notebookUser = 'notebook';
@@ -54,10 +54,10 @@ describe('Auth', () => {
     await cleanDataDBS();
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [user, _error] = await createUser('', username);
+    const [user, _error] = await createUser('', localUserName);
     if (user) {
       await saveUser(user);
-      await addLocalPasswordForUser(user, userPassword); // saves the user
+      await addLocalPasswordForUser(user, localUserPassword); // saves the user
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -157,7 +157,7 @@ describe('Auth', () => {
 
     await agent
       .post('/auth/local/')
-      .send({username: username, password: userPassword})
+      .send({username: localUserName, password: localUserPassword})
       .expect(302);
 
     await agent
@@ -252,7 +252,7 @@ describe('Auth', () => {
 
     await agent
       .post('/auth/local/')
-      .send({username: username, password: userPassword})
+      .send({username: localUserName, password: localUserPassword})
       .expect(302);
 
     await agent.get('/users').expect(401);

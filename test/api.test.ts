@@ -28,16 +28,27 @@ import {
   getUserFromEmailOrUsername,
   createUser,
   saveUser,
+  addOtherRoleToUser,
+  userHasProjectRole,
 } from '../src/couchdb/users';
 import {createAuthKey} from '../src/authkeys/create';
 import {getSigningKey} from '../src/authkeys/signing_keys';
 import fs from 'fs';
-import {createNotebook, getNotebooks} from '../src/couchdb/notebooks';
+import {
+  createNotebook,
+  getNotebooks,
+  getNotebookMetadata,
+} from '../src/couchdb/notebooks';
 import {ProjectUIModel} from 'faims3-datamodel';
-import {CLUSTER_ADMIN_GROUP_NAME, DEVELOPER_MODE, NOTEBOOK_CREATOR_GROUP_NAME} from '../src/buildconfig';
+import {
+  CLUSTER_ADMIN_GROUP_NAME,
+  DEVELOPER_MODE,
+  NOTEBOOK_CREATOR_GROUP_NAME,
+} from '../src/buildconfig';
 import {expect} from 'chai';
 import {resetDatabases, cleanDataDBS} from './mocks';
 import {restoreFromBackup} from '../src/couchdb/backupRestore';
+import {addLocalPasswordForUser} from '../src/auth_providers/local';
 
 const uispec: ProjectUIModel = {
   fields: [],
@@ -47,7 +58,13 @@ const uispec: ProjectUIModel = {
 };
 
 let adminToken = '';
-const username = 'bobalooba';
+const localUserName = 'bobalooba';
+const localUserPassword = 'bobalooba';
+let localUserToken = '';
+
+const notebookUserName = 'notebook';
+const notebookPassword = 'notebook';
+let notebookUserToken = '';
 
 describe('API tests', () => {
   beforeEach(async () => {
@@ -58,10 +75,26 @@ describe('API tests', () => {
     if (adminUser) {
       adminToken = await createAuthKey(adminUser, signing_key);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const [user, _error] = await createUser('', username);
+      const [user, _error] = await createUser('', localUserName);
       if (user) {
         await saveUser(user);
       }
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [localUser, _error] = await createUser('', localUserName);
+    if (localUser) {
+      await saveUser(localUser);
+      await addLocalPasswordForUser(localUser, localUserPassword); // saves the user
+      localUserToken = await createAuthKey(localUser, signing_key);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [nbUser, _nberror] = await createUser('', notebookUserName);
+    if (nbUser) {
+      await addOtherRoleToUser(nbUser, NOTEBOOK_CREATOR_GROUP_NAME);
+      await addLocalPasswordForUser(nbUser, notebookPassword); // saves the user
+      notebookUserToken = await createAuthKey(nbUser, signing_key);
     }
   });
 
@@ -93,7 +126,7 @@ describe('API tests', () => {
       });
   });
 
-  it('create notebook', () => {
+  it('can create a notebook', () => {
     const filename = 'notebooks/sample_notebook.json';
     const jsonText = fs.readFileSync(filename, 'utf-8');
     const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
@@ -113,15 +146,59 @@ describe('API tests', () => {
       });
   });
 
-  it('update notebook', () => {
+  it('will not create a notebook if not authorised', () => {
     const filename = 'notebooks/sample_notebook.json';
     const jsonText = fs.readFileSync(filename, 'utf-8');
     const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
 
-    let projectID;
+    return request(app)
+      .post('/api/notebooks')
+      .send({
+        'ui-specification': uiSpec,
+        metadata: metadata,
+        name: 'test notebook',
+      })
+      .set('Authorization', `Bearer ${localUserToken}`)
+      .set('Content-Type', 'application/json')
+      .expect(401);
+  });
+
+  it('can create a notebook and set up ownership', async () => {
+    const filename = 'notebooks/sample_notebook.json';
+    const jsonText = fs.readFileSync(filename, 'utf-8');
+    const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
+    const response = await request(app)
+      .post('/api/notebooks')
+      .send({
+        'ui-specification': uiSpec,
+        metadata: metadata,
+        name: 'test notebook',
+      })
+      .set('Authorization', `Bearer ${notebookUserToken}`)
+      .set('Content-Type', 'application/json')
+      .expect(200);
+
+    const project_id = response.body.notebook;
+    expect(project_id).not.to.be.undefined;
+    expect(project_id).to.include('-test-notebook');
+
+    const notebookUser = await getUserFromEmailOrUsername(notebookUserName);
+    if (notebookUser) {
+      // check that this user now has the right roles on this notebook
+      expect(userHasProjectRole(notebookUser, project_id, 'admin')).to.be.true;
+    } else {
+      console.log('notebookUser', notebookUser);
+      expect(notebookUser).not.to.be.null;
+    }
+  });
+
+  it('update notebook', async () => {
+    const filename = 'notebooks/sample_notebook.json';
+    const jsonText = fs.readFileSync(filename, 'utf-8');
+    const {metadata, 'ui-specification': uiSpec} = JSON.parse(jsonText);
 
     // create notebook
-    return request(app)
+    const response = await request(app)
       .post('/api/notebooks')
       .send({
         'ui-specification': uiSpec,
@@ -130,59 +207,62 @@ describe('API tests', () => {
       })
       .set('Authorization', `Bearer ${adminToken}`)
       .set('Content-Type', 'application/json')
-      .expect(200)
-      .expect(async response => {
-        projectID = response.body.notebook;
-        console.log('got response', response.body);
+      .expect(200);
 
-        metadata['name'] = 'Updated Test Notebook';
-        metadata['project_lead'] = 'Bob Bobalooba';
-        uiSpec.fviews['FORM1SECTION1']['label'] = 'Updated Label';
+    const projectID = response.body.notebook;
+    // update the notebook
+    metadata['name'] = 'Updated Test Notebook';
+    metadata['project_lead'] = 'Bob Bobalooba';
+    uiSpec.fviews['FORM1SECTION1']['label'] = 'Updated Label';
 
-        // add a new autoincrementer field
-        const newField = {
-          'component-namespace': 'faims-custom',
-          'component-name': 'BasicAutoIncrementer',
-          'type-returned': 'faims-core::String',
-          'component-parameters': {
-            name: 'newincrementor',
-            id: 'newincrementor',
-            variant: 'outlined',
-            required: false,
-            num_digits: 5,
-            form_id: 'FORM1SECTION1',
-            label: 'FeatureIDincrementor',
-          },
-          validationSchema: [['yup.string'], ['yup.required']],
-          initialValue: null,
-          access: ['admin'],
-          meta: {
-            annotation_label: 'annotation',
-            annotation: true,
-            uncertainty: {
-              include: false,
-              label: 'uncertainty',
-            },
-          },
-        };
+    // add a new autoincrementer field
+    const newField = {
+      'component-namespace': 'faims-custom',
+      'component-name': 'BasicAutoIncrementer',
+      'type-returned': 'faims-core::String',
+      'component-parameters': {
+        name: 'newincrementor',
+        id: 'newincrementor',
+        variant: 'outlined',
+        required: false,
+        num_digits: 5,
+        form_id: 'FORM1SECTION1',
+        label: 'FeatureIDincrementor',
+      },
+      validationSchema: [['yup.string'], ['yup.required']],
+      initialValue: null,
+      access: ['admin'],
+      meta: {
+        annotation_label: 'annotation',
+        annotation: true,
+        uncertainty: {
+          include: false,
+          label: 'uncertainty',
+        },
+      },
+    };
 
-        uiSpec.fields['newincrementor'] = newField;
-        uiSpec.fviews['FORM1SECTION1']['fields'].push('newincrementor');
+    uiSpec.fields['newincrementor'] = newField;
+    uiSpec.fviews['FORM1SECTION1']['fields'].push('newincrementor');
 
-        await request(app)
-          .put(`/api/notebooks/${projectID}`)
-          .send({
-            'ui-specification': uiSpec,
-            metadata: metadata,
-            name: 'test notebook',
-          })
-          .set('Authorization', `Bearer ${adminToken}`)
-          .set('Content-Type', 'application/json')
-          .expect(200)
-          .expect(response => {
-            expect(response.body.notebook).to.include('-test-notebook');
-          });
-      });
+    const newResponse = await request(app)
+      .put(`/api/notebooks/${projectID}`)
+      .send({
+        'ui-specification': uiSpec,
+        metadata: metadata,
+        name: 'test notebook',
+      })
+      .set('Authorization', `Bearer ${adminToken}`)
+      .set('Content-Type', 'application/json')
+      .expect(200);
+
+    expect(newResponse.body.notebook).to.include('-test-notebook');
+    const newNotebook = await getNotebookMetadata(projectID);
+    if (newNotebook) {
+      expect(newNotebook.name).to.equal('Updated Test Notebook');
+    } else {
+      expect(newNotebook).not.to.be.null;
+    }
   });
 
   it('get notebook', async () => {
@@ -217,7 +297,6 @@ describe('API tests', () => {
       );
       let notebooks = await getNotebooks(adminUser);
       expect(notebooks).to.have.lengthOf(1);
-      console.log('deleting', project_id);
       expect(project_id).not.to.be.undefined;
       await request(app)
         .post('/api/notebooks/' + project_id + '/delete')
@@ -232,7 +311,7 @@ describe('API tests', () => {
 
   it('update admin user - no auth', async () => {
     return await request(app)
-      .post(`/api/users/${username}/admin`)
+      .post(`/api/users/${localUserName}/admin`)
       .send({addrole: true})
       .set('Content-Type', 'application/json')
       .expect(401);
@@ -240,7 +319,7 @@ describe('API tests', () => {
 
   it('update admin user - add cluster admin role', async () => {
     return await request(app)
-      .post(`/api/users/${username}/admin`)
+      .post(`/api/users/${localUserName}/admin`)
       .set('Authorization', `Bearer ${adminToken}`)
       .set('Content-Type', 'application/json')
       .send({addrole: true, role: CLUSTER_ADMIN_GROUP_NAME})
@@ -250,7 +329,7 @@ describe('API tests', () => {
 
   it('update admin user - remove cluster admin role', () => {
     return request(app)
-      .post(`/api/users/${username}/admin`)
+      .post(`/api/users/${localUserName}/admin`)
       .set('Authorization', `Bearer ${adminToken}`)
       .set('Content-Type', 'application/json')
       .send({addrole: false, role: CLUSTER_ADMIN_GROUP_NAME})
@@ -260,7 +339,7 @@ describe('API tests', () => {
 
   it('update admin user - add notebook creator role', async () => {
     return await request(app)
-      .post(`/api/users/${username}/admin`)
+      .post(`/api/users/${localUserName}/admin`)
       .set('Authorization', `Bearer ${adminToken}`)
       .set('Content-Type', 'application/json')
       .send({addrole: true, role: NOTEBOOK_CREATOR_GROUP_NAME})
@@ -270,7 +349,7 @@ describe('API tests', () => {
 
   it('update admin user - fail to add unknown role', async () => {
     return await request(app)
-      .post(`/api/users/${username}/admin`)
+      .post(`/api/users/${localUserName}/admin`)
       .set('Authorization', `Bearer ${adminToken}`)
       .set('Content-Type', 'application/json')
       .send({addrole: true, role: 'unknown-role'})
@@ -311,7 +390,7 @@ describe('API tests', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .set('Content-Type', 'application/json')
         .send({
-          username: username,
+          username: localUserName,
           role: 'user',
           addrole: true,
         })
@@ -324,7 +403,7 @@ describe('API tests', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .set('Content-Type', 'application/json')
         .send({
-          username: username,
+          username: localUserName,
           role: 'user',
           addrole: false,
         })
@@ -346,7 +425,7 @@ describe('API tests', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .set('Content-Type', 'application/json')
         .send({
-          username: username,
+          username: localUserName,
           role: 'user',
           addrole: true,
         })
@@ -359,7 +438,7 @@ describe('API tests', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .set('Content-Type', 'application/json')
         .send({
-          username: username,
+          username: localUserName,
           role: 'not a valid role',
           addrole: true,
         })
@@ -379,7 +458,7 @@ describe('API tests', () => {
         .expect({error: 'Unknown user fred dag', status: 'error'})
         .expect(404);
 
-      const bobby = await getUserFromEmailOrUsername(username);
+      const bobby = await getUserFromEmailOrUsername(localUserName);
       if (bobby) {
         const signing_key = await getSigningKey();
         const bobbyToken = await createAuthKey(bobby, signing_key);
@@ -390,7 +469,7 @@ describe('API tests', () => {
           .set('Authorization', `Bearer ${bobbyToken}`)
           .set('Content-Type', 'application/json')
           .send({
-            username: username,
+            username: localUserName,
             role: 'user',
             addrole: true,
           })
@@ -474,7 +553,7 @@ describe('API tests', () => {
   });
 
   if (DEVELOPER_MODE) {
-    it('create random record', async () => {
+    it('can create some random records', async () => {
       const nb1 = await createNotebook('NB1', uispec, {});
 
       if (nb1) {

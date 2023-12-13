@@ -857,6 +857,9 @@ export async function countRecordsInNotebook(
   const dataDB = await getDataDB(project_id);
   try {
     const res = await dataDB.query('index/recordCount');
+    if (res.rows.length === 0) {
+      return 0;
+    }
     return res.rows[0].value;
   } catch (error) {
     console.log(error);

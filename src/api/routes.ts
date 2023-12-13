@@ -44,6 +44,7 @@ import {
   saveUser,
   userHasPermission,
   userIsClusterAdmin,
+  userCanCreateNotebooks,
 } from '../couchdb/users';
 import {
   CLUSTER_ADMIN_GROUP_NAME,
@@ -87,20 +88,24 @@ api.get('/notebooks/', requireAuthenticationAPI, async (req, res) => {
  * POST to /notebooks/ to create a new notebook
  */
 api.post('/notebooks/', requireAuthenticationAPI, async (req, res) => {
-  // post a new notebook
-  // user must be cluster admin
-
-  if (userIsClusterAdmin(req.user)) {
+  if (req.user && userCanCreateNotebooks(req.user)) {
     const uiSpec = req.body['ui-specification'];
     const projectName = req.body.name;
     const metadata = req.body.metadata;
 
     try {
       const projectID = await createNotebook(projectName, uiSpec, metadata);
-      res.json({notebook: projectID});
+      if (projectID) {
+        // allow this user to modify the new notebook
+        addProjectRoleToUser(req.user, projectID, 'admin');
+        await saveUser(req.user);
+        res.json({notebook: projectID});
+      } else {
+        res.json({error: 'error creating the notebook'});
+        res.status(500).end();
+      }
     } catch (err) {
       res.json({error: 'there was an error creating the notebook'});
-      console.log('Error creating notebook', err);
       res.status(500).end();
     }
   } else {

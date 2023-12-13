@@ -21,7 +21,10 @@
 
 import {ProjectRole} from 'faims3-datamodel/build/src/types';
 import {getUsersDB} from '.';
-import {CLUSTER_ADMIN_GROUP_NAME, NOTEBOOK_CREATOR_GROUP_NAME} from '../buildconfig';
+import {
+  CLUSTER_ADMIN_GROUP_NAME,
+  NOTEBOOK_CREATOR_GROUP_NAME,
+} from '../buildconfig';
 import {NonUniqueProjectID, ProjectID} from 'faims3-datamodel';
 import {
   AllProjectRoles,
