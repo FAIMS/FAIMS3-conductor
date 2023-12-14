@@ -771,7 +771,7 @@ export const streamNotebookFilesAsZip = async (
   });
 
   archive.pipe(res);
-
+  let dataWritten = false;
   let {record, done} = await iterator.next();
   while (!done) {
     // iterate over the fields, if it's a file, then
@@ -805,6 +805,7 @@ export const streamNotebookFilesAsZip = async (
               await archive.append(stream, {
                 name: filename,
               });
+              dataWritten = true;
             });
           }
         }
@@ -814,6 +815,10 @@ export const streamNotebookFilesAsZip = async (
     const next = await iterator.next();
     record = next.record;
     done = next.done;
+  }
+  // if we didn't write any data then finalise because that won't happen elsewhere
+  if (!dataWritten) {
+    archive.finalize();
   }
   allFilesAdded = true;
 };
