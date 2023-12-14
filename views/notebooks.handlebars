@@ -14,49 +14,6 @@
             <td>
               <a href="/notebooks/{{this.non_unique_project_id}}">{{this.name}}</a>
             </td>
-            {{#if ../cluster_admin}}
-            <td>
-              <button type="button" class="btn btn-danger" 
-                      data-bs-toggle="modal" data-bs-target="#deleteNotebookModal{{this.non_unique_project_id}}">
-                Delete Notebook
-              </button>
-
-              <div class="modal fade" id="deleteNotebookModal{{this.non_unique_project_id}}" tabindex="-1" aria-labelledby="deleteNotebookModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h5 class="modal-title" id="deleteNotebookModalLabel{{this.non_unique_project_id}}">Delete Notebook "{{this.name}}"?</h5>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                          <p>Deleting this notebook will remove all records from 
-                            the database and cannot be recovered.
-                          </p>
-                          <label for="confirmationText{{this.non_unique_project_id}}" class="form-label">
-                            Type <span class="text-danger">delete {{this.name}} and all records</span> to confirm deletion
-                          </label>
-                          <input class="form-control" 
-                                 onkeyup="updateDeleteButton('{{this.non_unique_project_id}}', '{{this.name}}')"
-                                 id="confirmationText{{this.non_unique_project_id}}">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                      <button type="button"
-                              id="deleteButton{{this.non_unique_project_id}}"
-                              disabled
-                              class="btn btn-danger" 
-                              onclick="deleteNotebook('{{this.non_unique_project_id}}', '{{this.name}}')">
-                              Confirm Delete
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-            </td>
-            {{/if}}
           </tr>
       {{/each}}
   </table>
@@ -100,25 +57,6 @@
 
 
 <script>
-  const updateDeleteButton = (project_id, name) => {
-    const confirmationText = document.getElementById(`confirmationText${project_id}`).value;
-    if (confirmationText === `delete ${name} and all records`) {
-      document.getElementById(`deleteButton${project_id}`).disabled = false;
-    } else {
-      document.getElementById(`deleteButton${project_id}`).disabled = true;
-    }
-  }
-
-  const deleteNotebook = (project_id, name) => {
-
-    fetch(`/api/notebooks/${project_id}/delete`, {
-      method: 'POST',
-    })
-    .then(response => {
-      window.location.reload();
-    });
-  }
-
   const uploadNotebookHandler = (event) => {
     event.preventDefault();
     const url = '/api/notebooks/';

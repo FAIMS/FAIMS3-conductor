@@ -24,6 +24,7 @@ import QRCode from 'qrcode';
 import {app} from './core';
 import {NonUniqueProjectID} from 'faims3-datamodel';
 import {AllProjectRoles} from './datamodel/users';
+import markdownit from 'markdown-it';
 
 // BBS 20221101 Adding this as a proxy for the pouch db url
 import {
@@ -190,6 +191,10 @@ function render_project_roles(roles: AllProjectRoles): handlebars.SafeString {
   }
   return new handlebars.SafeString(all_project_sections.join(''));
 }
+
+handlebars.registerHelper('markdown', aString => {
+  return new handlebars.SafeString(markdownit().render(aString));
+});
 
 app.get('/', async (req, res) => {
   if (req.user) {
