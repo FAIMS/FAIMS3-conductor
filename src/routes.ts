@@ -193,7 +193,10 @@ function render_project_roles(roles: AllProjectRoles): handlebars.SafeString {
 }
 
 handlebars.registerHelper('markdown', aString => {
-  return new handlebars.SafeString(markdownit().render(aString));
+  let htmlText = markdownit().render(aString);
+  // add the bootstrap table class to any tables
+  htmlText = htmlText.replace(/<table>/g, '<table class="table">');
+  return new handlebars.SafeString(htmlText);
 });
 
 app.get('/', async (req, res) => {
