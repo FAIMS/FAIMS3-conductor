@@ -21,7 +21,10 @@
 
 import {ProjectRole} from 'faims3-datamodel/build/src/types';
 import {getUsersDB} from '.';
-import {CLUSTER_ADMIN_GROUP_NAME} from '../buildconfig';
+import {
+  CLUSTER_ADMIN_GROUP_NAME,
+  NOTEBOOK_CREATOR_GROUP_NAME,
+} from '../buildconfig';
 import {NonUniqueProjectID, ProjectID} from 'faims3-datamodel';
 import {
   AllProjectRoles,
@@ -401,6 +404,28 @@ export function userHasPermission(
     } else if (permission === 'modify') {
       return user.project_roles[project_id].indexOf('admin') >= 0;
     }
+  }
+  return false;
+}
+
+/**
+ * Check whether a user can create notebooks on this server
+ * @param user a user to check
+ * @returns true if this user is allowed to create notebooks
+ */
+export function userCanCreateNotebooks(user: Express.User | undefined | null) {
+  if (!user) {
+    return false;
+  }
+
+  // cluster admin can do anything
+  if (user.other_roles.indexOf(CLUSTER_ADMIN_GROUP_NAME) >= 0) {
+    return true;
+  }
+
+  // explicit notebook creator permssions
+  if (user.other_roles.indexOf(NOTEBOOK_CREATOR_GROUP_NAME) >= 0) {
+    return true;
   }
   return false;
 }

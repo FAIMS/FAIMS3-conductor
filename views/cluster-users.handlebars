@@ -17,6 +17,7 @@
 <table class="table">
     <thead>
       <th>Name</th>
+      <th>Create Notebooks</th>
       <th>Cluster Admin</th>
     </thead>
     <tbody>
@@ -28,6 +29,15 @@
             class="form-check-input" 
             value="{{this.name}}"
             data-username="{{this.username}}"
+            data-role="notebook-creator"
+            {{#if this.can_create_notebooks}}checked{{/if}}>
+        </td>
+        <td>
+          <input type="checkbox" 
+            class="form-check-input" 
+            value="{{this.name}}"
+            data-username="{{this.username}}"
+            data-role="cluster-admin"
             {{#if this.is_cluster_admin}}checked{{/if}}>
         </td>
       </tr>
@@ -42,7 +52,8 @@ function toggleRole(event) {
   const target = event.target;
   const url = `/api/users/${target.dataset.username}/admin`;
   const data = {
-    addrole: target.checked  // true/false
+    addrole: target.checked,  // true/false
+    role: target.dataset.role
   }
   fetch(url, {
     method: 'POST',

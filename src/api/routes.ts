@@ -44,8 +44,13 @@ import {
   saveUser,
   userHasPermission,
   userIsClusterAdmin,
+  userCanCreateNotebooks,
 } from '../couchdb/users';
-import {CLUSTER_ADMIN_GROUP_NAME, DEVELOPER_MODE} from '../buildconfig';
+import {
+  CLUSTER_ADMIN_GROUP_NAME,
+  DEVELOPER_MODE,
+  NOTEBOOK_CREATOR_GROUP_NAME,
+} from '../buildconfig';
 import {createManyRandomRecords} from '../couchdb/devtools';
 import {restoreFromBackup} from '../couchdb/backupRestore';
 
@@ -83,20 +88,24 @@ api.get('/notebooks/', requireAuthenticationAPI, async (req, res) => {
  * POST to /notebooks/ to create a new notebook
  */
 api.post('/notebooks/', requireAuthenticationAPI, async (req, res) => {
-  // post a new notebook
-  // user must be cluster admin
-
-  if (userIsClusterAdmin(req.user)) {
+  if (req.user && userCanCreateNotebooks(req.user)) {
     const uiSpec = req.body['ui-specification'];
     const projectName = req.body.name;
     const metadata = req.body.metadata;
 
     try {
       const projectID = await createNotebook(projectName, uiSpec, metadata);
-      res.json({notebook: projectID});
+      if (projectID) {
+        // allow this user to modify the new notebook
+        addProjectRoleToUser(req.user, projectID, 'admin');
+        await saveUser(req.user);
+        res.json({notebook: projectID});
+      } else {
+        res.json({error: 'error creating the notebook'});
+        res.status(500).end();
+      }
     } catch (err) {
       res.json({error: 'there was an error creating the notebook'});
-      console.log('Error creating notebook', err);
       res.status(500).end();
     }
   } else {
@@ -278,30 +287,40 @@ api.post('/users/:id/admin', requireAuthenticationAPI, async (req, res) => {
     let error = '';
     const username = req.params.id;
     const addrole = req.body.addrole;
+    const role = req.body.role;
 
+    console.log('addrole', addrole, 'role', role, NOTEBOOK_CREATOR_GROUP_NAME);
     const user = await getUserFromEmailOrUsername(username);
     if (user) {
-      if (addrole) {
-        await addOtherRoleToUser(user, CLUSTER_ADMIN_GROUP_NAME);
+      if (
+        role === CLUSTER_ADMIN_GROUP_NAME ||
+        role === NOTEBOOK_CREATOR_GROUP_NAME
+      ) {
+        if (addrole) {
+          await addOtherRoleToUser(user, role);
+        } else {
+          await removeOtherRoleFromUser(user, role);
+        }
+        await saveUser(user);
+        res.json({status: 'success'});
+        return;
       } else {
-        await removeOtherRoleFromUser(user, CLUSTER_ADMIN_GROUP_NAME);
+        error = 'Unknown role';
       }
-      await saveUser(user);
-      res.json({status: 'success'});
-      return;
     } else {
       error = 'Unknown user ' + username;
     }
 
     // user or project not found or bad role
-    res.json({status: 'error', error});
-    res.status(404).end();
+    res.status(404).json({status: 'error', error}).end();
   } else {
-    res.json({
-      error:
-        'you do not have permission to modify user permissions for this server',
-    });
-    res.status(401).end();
+    res
+      .status(401)
+      .json({
+        error:
+         'you do not have permission to modify user permissions for this server',
+      })
+      .end();
   }
 });
 

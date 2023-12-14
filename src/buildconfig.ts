@@ -24,6 +24,10 @@ import nodemailer from 'nodemailer';
 const TRUTHY_STRINGS = ['true', '1', 'on', 'yes'];
 const FALSEY_STRINGS = ['false', '0', 'off', 'no'];
 
+// Some non-configurable constants
+export const CLUSTER_ADMIN_GROUP_NAME = 'cluster-admin';
+export const NOTEBOOK_CREATOR_GROUP_NAME = 'notebook-creator';
+
 /*
  * This is designed to get useful commit information data from
  * environment variables for the testing server. While more sophisticated
@@ -206,13 +210,6 @@ function google_client_secret(): string {
   }
 }
 
-function cluster_admin_group_name(): string {
-  const name = process.env.CLUSTER_ADMIN_GROUP_NAME;
-  if (name === '' || name === undefined) {
-    return 'cluster-admin';
-  }
-  return name;
-}
 
 function get_providers_to_use(): string[] {
   const providers = process.env.CONDUCTOR_AUTH_PROVIDERS;
@@ -275,7 +272,6 @@ export const CONDUCTOR_INSTANCE_NAME = instance_name();
 export const COOKIE_SECRET = cookie_secret();
 export const GOOGLE_CLIENT_ID = google_client_id();
 export const GOOGLE_CLIENT_SECRET = google_client_secret();
-export const CLUSTER_ADMIN_GROUP_NAME = cluster_admin_group_name();
 export const CONDUCTOR_AUTH_PROVIDERS = get_providers_to_use();
 export const EMAIL_FROM_ADDRESS = email_from_address();
 export const EMAIL_TRANSPORTER = email_transporter();

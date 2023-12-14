@@ -26,6 +26,7 @@ import {
   getProjectDB,
   resolve_project_id,
   notebookRecordIterator,
+  addDesignDocsForNotebook,
 } from 'faims3-datamodel';
 import {
   ProjectMetadata,
@@ -173,104 +174,6 @@ const getAutoIncrementers = (uiSpec: ProjectUIModel) => {
   } else {
     return undefined;
   }
-};
-
-type DesignDocument = {
-  _id: string;
-  _rev?: string;
-  views?: {
-    [key: string]: {
-      map: string;
-    };
-  };
-  language?: string;
-  validate_doc_update?: string;
-};
-
-const isEqualObjects = (a: any, b: any) => {
-  for (const key in a) {
-    const a_value = a[key];
-    const b_value = b[key];
-    if (a_value instanceof Object && b_value instanceof Object) {
-      if (!isEqualObjects(a_value, b_value)) {
-        return false;
-      }
-    } else {
-      if (a_value !== b_value) {
-        console.log('objects differ on', key);
-        return false;
-      }
-    }
-  }
-  return true;
-};
-
-export const addDesignDocsForNotebook = async (
-  dataDB: PouchDB.Database<any>
-) => {
-  const documents: DesignDocument[] = [];
-  documents.push({
-    _id: '_design/attachment_filter',
-    views: {
-      attachment_filter: {
-        map: `function (doc) {
-          if (doc.attach_format_version === undefined) {
-            emit(doc._id);
-          }
-        }`,
-      },
-    },
-  });
-  documents.push({
-    _id: '_design/permissions',
-    validate_doc_update: `function (newDoc, oldDoc, userCtx, _secObj) {
-      if (userCtx === null || userCtx === undefined) {
-        throw {unauthorized: 'You must be logged in. No token given.'};
-      }
-      if (userCtx.name === null || userCtx.name === undefined) {
-        throw {unauthorized: 'You must be logged in. No username given.'};
-      }
-      return;
-    }`,
-  });
-
-  // create indexes for each kind of document in the database
-  documents.push({
-    _id: '_design/index',
-    views: {
-      record: {
-        map: 'function (doc) {\n  if (doc.record_format_version === 1)\n    emit(doc._id, doc);\n}',
-      },
-      revision: {
-        map: 'function (doc) {\n  if (doc.revision_format_version === 1)  \n    emit(doc._id, doc);\n}',
-      },
-      avp: {
-        map: 'function (doc) {\n  if (doc.avp_format_version === 1)\n    emit(doc._id, doc);\n}',
-      },
-    },
-    language: 'javascript',
-  });
-
-  // add or update each of the documents
-  documents.forEach(async (doc: DesignDocument) => {
-    try {
-      const existing = await dataDB.get(doc._id);
-      if (existing) {
-        doc['_rev'] = existing['_rev'];
-        // are they the same?
-        if (isEqualObjects(existing, doc)) {
-          return;
-        }
-      }
-      await dataDB.put(doc);
-    } catch (error) {
-      try {
-        await dataDB.put(doc);
-      } catch (error) {
-        console.log('Error adding design documents to database:', error);
-      }
-    }
-  });
 };
 
 /**
@@ -868,7 +771,7 @@ export const streamNotebookFilesAsZip = async (
   });
 
   archive.pipe(res);
-
+  let dataWritten = false;
   let {record, done} = await iterator.next();
   while (!done) {
     // iterate over the fields, if it's a file, then
@@ -902,6 +805,7 @@ export const streamNotebookFilesAsZip = async (
               await archive.append(stream, {
                 name: filename,
               });
+              dataWritten = true;
             });
           }
         }
@@ -911,6 +815,10 @@ export const streamNotebookFilesAsZip = async (
     const next = await iterator.next();
     record = next.record;
     done = next.done;
+  }
+  // if we didn't write any data then finalise because that won't happen elsewhere
+  if (!dataWritten) {
+    archive.finalize();
   }
   allFilesAdded = true;
 };
@@ -953,9 +861,13 @@ export async function countRecordsInNotebook(
 ): Promise<Number> {
   const dataDB = await getDataDB(project_id);
   try {
-    const res = await dataDB.query('index/record');
-    return res.docs.length;
-  } catch {
+    const res = await dataDB.query('index/recordCount');
+    if (res.rows.length === 0) {
+      return 0;
+    }
+    return res.rows[0].value;
+  } catch (error) {
+    console.log(error);
     return 0;
   }
 }
