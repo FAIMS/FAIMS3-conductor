@@ -31,6 +31,7 @@ import {
   updateNotebook,
   streamNotebookRecordsAsCSV,
   streamNotebookFilesAsZip,
+  getProjects,
 } from '../couchdb/notebooks';
 import {requireAuthenticationAPI} from '../middleware';
 import {initialiseDatabases} from '../couchdb';
@@ -72,6 +73,16 @@ api.get('/hello/', requireAuthenticationAPI, (_req: any, res: any) => {
 api.post('/initialise/', async (req, res) => {
   initialiseDatabases();
   res.json({success: true});
+});
+
+api.get('/directory/', requireAuthenticationAPI, async (req, res) => {
+  // get the directory of notebooks on this server
+  if (req.user) {
+    const projects = await getProjects(req.user);
+    res.json(projects);
+  } else {
+    res.json([]);
+  }
 });
 
 api.get('/notebooks/', requireAuthenticationAPI, async (req, res) => {
@@ -318,7 +329,7 @@ api.post('/users/:id/admin', requireAuthenticationAPI, async (req, res) => {
       .status(401)
       .json({
         error:
-         'you do not have permission to modify user permissions for this server',
+          'you do not have permission to modify user permissions for this server',
       })
       .end();
   }

@@ -54,6 +54,35 @@ PouchDB.plugin(securityPlugin);
 import {Stringifier, stringify} from 'csv-stringify';
 
 /**
+ * getProjects - get the internal project documents that reference
+ * the project databases that the front end will connnect to
+ * @param user - only return projects visible to this user
+ */
+export const getProjects = async (
+  user: Express.User
+): Promise<ProjectObject[]> => {
+  const projects: ProjectObject[] = [];
+
+  const projects_db = getProjectsDB();
+  if (projects_db) {
+    const res = await projects_db.allDocs({
+      include_docs: true,
+    });
+    res.rows.forEach(e => {
+      if (e.doc !== undefined && !e.id.startsWith('_')) {
+        const doc = e.doc as any;
+        if (userHasPermission(user, e.id, 'read')) {
+          delete doc._rev;
+          const project = doc as unknown as ProjectObject;
+          projects.push(project);
+        }
+      }
+    });
+  }
+  return projects;
+};
+
+/**
  * getNotebooks -- return an array of notebooks from the database
  * @oaram user - only return notebooks that this user can see
  * @returns an array of ProjectObject objects
