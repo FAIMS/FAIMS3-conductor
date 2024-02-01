@@ -20,17 +20,17 @@
 
 import PouchDB from 'pouchdb';
 import {getProjectsDB} from '.';
-import {CLUSTER_ADMIN_GROUP_NAME} from '../buildconfig';
+import {CLUSTER_ADMIN_GROUP_NAME, COUCHDB_PUBLIC_URL} from '../buildconfig';
 import {
   ProjectID,
   getProjectDB,
+  ProjectObject,
   resolve_project_id,
   notebookRecordIterator,
   addDesignDocsForNotebook,
 } from 'faims3-datamodel';
 import {
   ProjectMetadata,
-  ProjectObject,
   ProjectUIFields,
   ProjectUIModel,
   PROJECT_METADATA_PREFIX,
@@ -74,6 +74,10 @@ export const getProjects = async (
         if (userHasPermission(user, e.id, 'read')) {
           delete doc._rev;
           const project = doc as unknown as ProjectObject;
+          // add database connection details
+          if (project.metadata_db)
+            project.metadata_db.base_url = COUCHDB_PUBLIC_URL;
+          if (project.data_db) project.data_db.base_url = COUCHDB_PUBLIC_URL;
           projects.push(project);
         }
       }
