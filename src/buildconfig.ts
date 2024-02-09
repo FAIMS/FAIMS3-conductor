@@ -210,7 +210,6 @@ function google_client_secret(): string {
   }
 }
 
-
 function get_providers_to_use(): string[] {
   const providers = process.env.CONDUCTOR_AUTH_PROVIDERS;
   if (providers === '' || providers === undefined) {
