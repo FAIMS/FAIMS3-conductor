@@ -157,7 +157,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-warning">Update Notebook</button>
+          <button type="button" class="btn btn-warning" onclick="uploadNotebookHandler()">Update Notebook</button>
         </div>
       </div>
     </div>
@@ -245,10 +245,9 @@ const copyToClipboard = (text) => {
   }
 
 
-  const uploadNotebookHandler = (event) => {
-    event.preventDefault();
+  const uploadNotebookHandler = () => {
     const url = '/api/notebooks/{{notebook.project_id}}';
-    const form = event.target;
+    const form = document.querySelector('#upload-notebook-form');
     const fileInput = form.querySelector('[name="notebook"]');
     if (fileInput) {
       // parse the contents of the uploaded file as JSON

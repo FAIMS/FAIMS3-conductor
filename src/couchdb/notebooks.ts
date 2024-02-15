@@ -20,17 +20,17 @@
 
 import PouchDB from 'pouchdb';
 import {getProjectsDB} from '.';
-import {CLUSTER_ADMIN_GROUP_NAME} from '../buildconfig';
+import {CLUSTER_ADMIN_GROUP_NAME, COUCHDB_PUBLIC_URL} from '../buildconfig';
 import {
   ProjectID,
   getProjectDB,
+  ProjectObject,
   resolve_project_id,
   notebookRecordIterator,
   addDesignDocsForNotebook,
 } from 'faims3-datamodel';
 import {
   ProjectMetadata,
-  ProjectObject,
   ProjectUIFields,
   ProjectUIModel,
   PROJECT_METADATA_PREFIX,
@@ -52,6 +52,39 @@ import {
 import {userHasPermission} from './users';
 PouchDB.plugin(securityPlugin);
 import {Stringifier, stringify} from 'csv-stringify';
+
+/**
+ * getProjects - get the internal project documents that reference
+ * the project databases that the front end will connnect to
+ * @param user - only return projects visible to this user
+ */
+export const getProjects = async (
+  user: Express.User
+): Promise<ProjectObject[]> => {
+  const projects: ProjectObject[] = [];
+
+  const projects_db = getProjectsDB();
+  if (projects_db) {
+    const res = await projects_db.allDocs({
+      include_docs: true,
+    });
+    res.rows.forEach(e => {
+      if (e.doc !== undefined && !e.id.startsWith('_')) {
+        const doc = e.doc as any;
+        if (userHasPermission(user, e.id, 'read')) {
+          delete doc._rev;
+          const project = doc as unknown as ProjectObject;
+          // add database connection details
+          if (project.metadata_db)
+            project.metadata_db.base_url = COUCHDB_PUBLIC_URL;
+          if (project.data_db) project.data_db.base_url = COUCHDB_PUBLIC_URL;
+          projects.push(project);
+        }
+      }
+    });
+  }
+  return projects;
+};
 
 /**
  * getNotebooks -- return an array of notebooks from the database

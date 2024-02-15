@@ -18,14 +18,7 @@
  *   TODO
  */
 
-import {
-  NonUniqueProjectID,
-  RecordID,
-  RevisionID,
-  AttributeValuePairID,
-  ProjectID,
-  ListingID,
-} from 'faims3-datamodel';
+import {RecordID, RevisionID, AttributeValuePairID} from 'faims3-datamodel';
 
 export const UI_SPECIFICATION_NAME = 'ui-specification';
 export const PROJECT_SPECIFICATION_PREFIX = 'project-specification';
@@ -40,18 +33,6 @@ export interface PouchAttachments {
   [key: string]: any; // any for now until we work out what we need
 }
 
-export interface ConnectionInfo {
-  proto: string;
-  host: string;
-  port: number;
-  lan?: boolean;
-  db_name: string;
-  auth?: {
-    username: string;
-    password: string;
-  };
-}
-
 /**
  * User-facing description of an Authentication mechanism.
  * The actual auth mechanisms are stored in authconfig.ts in the FAIMS3-conductor
@@ -63,87 +44,9 @@ export type AuthInfo = {
   name: string;
 };
 
-export type PossibleConnectionInfo =
-  | undefined
-  | {
-      proto?: string | undefined;
-      host?: string | undefined;
-      port?: number | undefined;
-      lan?: boolean | undefined;
-      db_name?: string | undefined;
-      auth?: {
-        username: string;
-        password: string;
-      };
-    };
-
-export type DirectoryEntry =
-  | undefined
-  | {
-      _id: string;
-      name: string;
-      description: string;
-      people_db?: PossibleConnectionInfo;
-      projects_db?: PossibleConnectionInfo;
-      auth_mechanisms: {[key: string]: AuthInfo};
-    };
-
-export interface ListingsObject {
-  _id: string;
-  name: string;
-  description: string;
-  projects_db?: PossibleConnectionInfo;
-  auth_mechanisms: {[key: string]: AuthInfo};
-}
-
-export interface NonNullListingsObject extends ListingsObject {
-  projects_db: ConnectionInfo;
-}
-
-export interface ActiveDoc {
-  _id: ProjectID;
-  listing_id: string;
-  project_id: NonUniqueProjectID;
-  username: string | null;
-  password: string | null;
-  friendly_name?: string;
-  is_sync: boolean;
-}
-
 export interface LocalAuthDoc {
   _id: string; //Corresponds to a listings ID
   dc_token: string;
-}
-
-/**
- * Describes a project, with connection, name, description, and schema
- * Part of the Projects DB
- * Do not use with UI code; sync code only
- */
-export interface ProjectObject {
-  _id: string;
-  name: string;
-  description?: string;
-  data_db?: PossibleConnectionInfo;
-  metadata_db?: PossibleConnectionInfo;
-  last_updated?: string;
-  created?: string;
-  status?: string;
-}
-
-export type ProjectsList = {
-  [key: string]: ProjectObject;
-};
-
-export interface ProjectInformation {
-  project_id: ProjectID;
-  name: string;
-  description?: string;
-  last_updated?: string;
-  created?: string;
-  status?: string;
-  listing_id: ListingID;
-  non_unique_project_id: NonUniqueProjectID;
 }
 
 export interface EncodedProjectMetadata {
