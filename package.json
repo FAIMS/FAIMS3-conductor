@@ -54,7 +54,7 @@
     "uuid": "9.0.1"
   },
   "devDependencies": {
-    "@types/archiver": "^5.3.4",
+    "@types/archiver": "^6.0.2",
     "@types/chai": "^4.3.9",
     "@types/cookie-session": "2.0.47",
     "@types/cors": "2.8.17",
