@@ -71,6 +71,25 @@ app.use(
     maxAge: 24 * 60 * 60 * 1000 * 365, // BBS 20220831 changed to 1 year
   })
 );
+// https://github.com/jaredhanson/passport/issues/904
+// register regenerate & save after the cookieSession middleware initialization
+// fix for bug in passport 0.7.0 and compatibility with cookie-session
+app.use((request, response, next) => {
+  if (request.session && !request.session.regenerate) {
+    request.session.regenerate = cb => {
+      if (cb) cb('');
+      return request.session;
+    };
+  }
+  if (request.session && !request.session.save) {
+    request.session.save = cb => {
+      if (cb) cb('');
+      return request.session;
+    };
+  }
+  next();
+});
+
 app.use(express.urlencoded({extended: true}));
 // allow large JSON objects to be posted
 app.use(express.json({limit: '200mb'}));
