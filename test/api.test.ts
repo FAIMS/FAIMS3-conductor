@@ -551,7 +551,7 @@ describe('API tests', () => {
         .expect('Content-Type', 'application/zip')
         .expect(response => {
           const zipContent = response.text;
-          // check for _1 filename which should be there because of 
+          // check for _1 filename which should be there because of
           // a clash of names
           expect(zipContent).to.contain(
             'take-photo/DuplicateHRID-take-photo_1.png'
