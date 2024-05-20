@@ -846,7 +846,6 @@ export const streamNotebookFilesAsZip = async (
               }
               const stream = Stream.Readable.from(chunks);
               const filename = generateFilename(file, key, hrid, fileNames);
-              console.log('adding to zip: ', filename);
               fileNames.push(filename);
               await archive.append(stream, {
                 name: filename,
