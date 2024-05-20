@@ -19,6 +19,7 @@
  *   which server to use and whether to include test data
  */
 
+import {v4 as uuidv4} from 'uuid';
 import nodemailer from 'nodemailer';
 
 const TRUTHY_STRINGS = ['true', '1', 'on', 'yes'];
@@ -183,8 +184,8 @@ function instance_name(): string {
 function cookie_secret(): string {
   const cookie = process.env.FAIMS_COOKIE_SECRET;
   if (cookie === '' || cookie === undefined) {
-    console.log('FAIMS_COOKIE_SECRET not set, using default');
-    return 'ahquoo4ohfaGh1oozoinai9ulah8ouge';
+    console.log('FAIMS_COOKIE_SECRET not set, using generated secret');
+    return uuidv4();
   } else {
     return cookie;
   }
