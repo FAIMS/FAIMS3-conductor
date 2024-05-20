@@ -548,7 +548,15 @@ describe('API tests', () => {
         .get('/api/notebooks/1693291182736-campus-survey-demo/FORM2.zip')
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200)
-        .expect('Content-Type', 'application/zip');
+        .expect('Content-Type', 'application/zip')
+        .expect(response => {
+          const zipContent = response.text;
+          // check for _1 filename which should be there because of
+          // a clash of names
+          expect(zipContent).to.contain(
+            'take-photo/DuplicateHRID-take-photo_1.png'
+          );
+        });
     }
   });
 

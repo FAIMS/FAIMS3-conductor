@@ -10,6 +10,7 @@
     "fix": "gts fix",
     "prestart": "npm run-script compile",
     "start": "node .",
+    "local": "env-cmd nodemon --ignore build --ext ts --exec 'tsc --incremental && node .'",
     "watch": "nodemon --ignore build --ext ts --exec 'tsc --incremental && node .'",
     "initdb": "env-cmd node scripts/initialise.js",
     "load-notebooks": "env-cmd node scripts/loadNotebook.js ./notebooks/*.json",

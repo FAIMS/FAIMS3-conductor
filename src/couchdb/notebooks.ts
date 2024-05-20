@@ -593,7 +593,8 @@ const csvFormatValue = (
   fieldName: string,
   fieldType: string,
   value: any,
-  hrid: string
+  hrid: string,
+  filenames: string[]
 ) => {
   const result: {[key: string]: any} = {};
   if (fieldType === 'faims-attachment::Files') {
@@ -604,7 +605,9 @@ const csvFormatValue = (
       }
       const valueList = value.map((v: any) => {
         if (v instanceof File) {
-          return generateFilename(v, fieldName, hrid);
+          const filename = generateFilename(v, fieldName, hrid, filenames);
+          filenames.push(filename);
+          return filename;
         } else {
           return v;
         }
@@ -651,7 +654,8 @@ const csvFormatValue = (
 const convertDataForOutput = (
   fields: {name: string; type: string}[],
   data: any,
-  hrid: string
+  hrid: string,
+  filenames: string[]
 ) => {
   let result: {[key: string]: any} = {};
   fields.map((field: any) => {
@@ -660,7 +664,8 @@ const convertDataForOutput = (
         field.name,
         field.type,
         data[field.name],
-        hrid
+        hrid,
+        filenames
       );
       result = {...result, ...formattedValue};
     } else {
@@ -718,14 +723,13 @@ export const streamNotebookRecordsAsCSV = async (
   viewID: string,
   res: NodeJS.WritableStream
 ) => {
-  const start = Date.now();
-
   const iterator = await notebookRecordIterator(project_id, viewID);
   const fields = await getNotebookFieldTypes(project_id, viewID);
 
   let stringifier: Stringifier | null = null;
   let {record, done} = await iterator.next();
   let header_done = false;
+  const filenames: string[] = [];
   while (record && !done) {
     const hrid = getRecordHRID(record);
     const row = [
@@ -736,7 +740,12 @@ export const streamNotebookRecordsAsCSV = async (
       record.updated_by,
       record.updated.toISOString(),
     ];
-    const outputData = convertDataForOutput(fields, record.data, hrid);
+    const outputData = convertDataForOutput(
+      fields,
+      record.data,
+      hrid,
+      filenames
+    );
     Object.keys(outputData).forEach((property: string) => {
       row.push(outputData[property]);
     });
@@ -766,8 +775,6 @@ export const streamNotebookRecordsAsCSV = async (
     done = next.done;
   }
   if (stringifier) stringifier.end();
-  const end = Date.now();
-  console.log('streamNotebookRecordsAsCSV', end - start);
 };
 
 export const streamNotebookFilesAsZip = async (
@@ -796,8 +803,12 @@ export const streamNotebookFilesAsZip = async (
 
   // check on progress, if we've finished adding files and they are
   // all processed then we can finalize the archive
-  archive.on('progress', (entries: any) => {
-    if (!doneFinalize && allFilesAdded && entries.total === entries.processed) {
+  archive.on('progress', (ev: any) => {
+    if (
+      !doneFinalize &&
+      allFilesAdded &&
+      ev.entries.total === ev.entries.processed
+    ) {
       archive.finalize();
       doneFinalize = true;
     }
@@ -806,12 +817,12 @@ export const streamNotebookFilesAsZip = async (
   archive.pipe(res);
   let dataWritten = false;
   let {record, done} = await iterator.next();
+  const fileNames: string[] = [];
   while (!done) {
     // iterate over the fields, if it's a file, then
     // append it to the archive
     if (record !== null) {
       const hrid = getRecordHRID(record);
-
       Object.keys(record.data).forEach(async (key: string) => {
         if (record && record.data[key] instanceof Array) {
           if (record.data[key].length === 0) {
@@ -834,7 +845,9 @@ export const streamNotebookFilesAsZip = async (
                 chunks.push(value);
               }
               const stream = Stream.Readable.from(chunks);
-              const filename = generateFilename(file, key, hrid);
+              const filename = generateFilename(file, key, hrid, fileNames);
+              console.log('adding to zip: ', filename);
+              fileNames.push(filename);
               await archive.append(stream, {
                 name: filename,
               });
@@ -844,7 +857,6 @@ export const streamNotebookFilesAsZip = async (
         }
       });
     }
-
     const next = await iterator.next();
     record = next.record;
     done = next.done;
@@ -854,9 +866,17 @@ export const streamNotebookFilesAsZip = async (
     archive.finalize();
   }
   allFilesAdded = true;
+  // fire a progress event here because short/empty zip files don't
+  // trigger it late enough for us to call finalize above
+  archive.emit('progress', {entries: {processed: 0, total: 0}});
 };
 
-const generateFilename = (file: File, key: string, hrid: string) => {
+const generateFilename = (
+  file: File,
+  key: string,
+  hrid: string,
+  filenames: string[]
+) => {
   const fileTypes: {[key: string]: string} = {
     'image/jpeg': 'jpg',
     'image/png': 'png',
@@ -869,7 +889,12 @@ const generateFilename = (file: File, key: string, hrid: string) => {
 
   const type = file.type;
   const extension = fileTypes[type] || 'dat';
-  const filename = `${key}/${hrid}-${key}.${extension}`;
+  let filename = `${key}/${hrid}-${key}.${extension}`;
+  let postfix = 1;
+  while (filenames.find(f => f.localeCompare(filename) === 0)) {
+    filename = `${key}/${hrid}-${key}_${postfix}.${extension}`;
+    postfix += 1;
+  }
   return filename;
 };
 
