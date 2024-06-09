@@ -637,7 +637,10 @@ const csvFormatValue = (
     if (value instanceof Array) {
       result[fieldName] = value
         .map((v: any) => {
-          return `${v.relation_type_vocabPair[0]}/${v.record_id}`;
+          const relation_name = v.relation_type_vocabPair
+            ? v.relation_type_vocabPair[0]
+            : 'unknown relation';
+          return `${relation_name}/${v.record_id}`;
         })
         .join(';');
     } else {
@@ -809,8 +812,12 @@ export const streamNotebookFilesAsZip = async (
       allFilesAdded &&
       ev.entries.total === ev.entries.processed
     ) {
-      archive.finalize();
-      doneFinalize = true;
+      try {
+        archive.finalize();
+        doneFinalize = true;
+      } catch {
+        // ignore ArchiveError
+      }
     }
   });
 
@@ -862,7 +869,8 @@ export const streamNotebookFilesAsZip = async (
   }
   // if we didn't write any data then finalise because that won't happen elsewhere
   if (!dataWritten) {
-    archive.finalize();
+    console.log('no data written');
+    archive.abort();
   }
   allFilesAdded = true;
   // fire a progress event here because short/empty zip files don't
