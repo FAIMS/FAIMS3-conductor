@@ -1,6 +1,7 @@
-# FAIMS3-conductor
 
-[![codecov](https://codecov.io/gh/FAIMS/FAIMS3-conductor/branch/main/graph/badge.svg?token=CJ4U0H7AKA)](https://codecov.io/gh/FAIMS/FAIMS3-conductor)
+**This project has been merged into the [main FAIMS3](https://github.com/FAIMS/FAIMS3) repository.**
+
+# FAIMS3-conductor
 
 The server-side of FAIMS3 handling authentication and authorization
 
